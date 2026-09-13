@@ -1,0 +1,37 @@
+import { View } from 'react-native';
+
+import Text from '@/src/components/ui/text';
+import type { WeeklyEpisode } from '@/src/features/home/types';
+import { formatEpisodeLabel } from '@/src/features/home/utils/format-episode';
+
+interface EpisodeThumbnailCardProps {
+  episode: WeeklyEpisode;
+}
+
+/**
+ * 이번주 에피소드 썸네일.
+ *
+ * Figma: `메인-우린` 의 `썸네일` 컴포넌트 — 분홍 점선 테두리 + REC 배지.
+ * REC 배지(상단)와 텍스트(카드 상단에서 70px) 사이는 Figma 좌표 그대로 스페이서로 벌린다.
+ */
+export default function EpisodeThumbnailCard({ episode }: EpisodeThumbnailCardProps) {
+  return (
+    <View className="h-[144px] w-full overflow-hidden rounded-[12px] border-2 border-dashed border-pink-500 p-[11px]">
+      <View className="flex-row items-center gap-[4px] self-start">
+        <View className="size-[8px] rounded-full bg-pink-500" />
+        <Text variant="body-xs" className="text-pink-500">
+          REC
+        </Text>
+      </View>
+      <View className="h-[40px]" />
+      <View className="flex-col items-start gap-[2px] pl-[12px]">
+        <Text variant="body-s" className="text-text-primary">
+          {formatEpisodeLabel(episode.order)}
+        </Text>
+        <Text variant="heading-h3" className="text-text-primary">
+          {episode.title}
+        </Text>
+      </View>
+    </View>
+  );
+}

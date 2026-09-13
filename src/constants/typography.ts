@@ -27,23 +27,23 @@ export const heading = {
   },
   h2: {
     fontFamily: fontFamily.ydeStreetB,
+    fontSize: 20,
+    lineHeight: 20 * lineHeightRatio,
+  },
+  h3: {
+    fontFamily: fontFamily.ydeStreetB,
     fontSize: 18,
     lineHeight: 18 * lineHeightRatio,
   },
-  h3: {
+  h4: {
     fontFamily: fontFamily.ydeStreetB,
     fontSize: 16,
     lineHeight: 16 * lineHeightRatio,
   },
-  h4: {
+  h5: {
     fontFamily: fontFamily.ydeStreetB,
     fontSize: 14,
     lineHeight: 14 * lineHeightRatio,
-  },
-  h5: {
-    fontFamily: fontFamily.ydeStreetB,
-    fontSize: 12,
-    lineHeight: 12 * lineHeightRatio,
   },
 };
 
@@ -51,33 +51,33 @@ export const heading = {
 export const body = {
   xl: {
     fontFamily: fontFamily.ydeStreetL,
+    fontSize: 20,
+    lineHeight: 20 * lineHeightRatio,
+  },
+  l: {
+    fontFamily: fontFamily.ydeStreetL,
     fontSize: 18,
     lineHeight: 18 * lineHeightRatio,
   },
-  l: {
+  m: {
     fontFamily: fontFamily.ydeStreetL,
     fontSize: 16,
     lineHeight: 16 * lineHeightRatio,
   },
-  m: {
+  s: {
     fontFamily: fontFamily.ydeStreetL,
     fontSize: 14,
     lineHeight: 14 * lineHeightRatio,
   },
-  s: {
+  xs: {
     fontFamily: fontFamily.ydeStreetL,
     fontSize: 12,
     lineHeight: 12 * lineHeightRatio,
   },
-  xs: {
+  xxs: {
     fontFamily: fontFamily.ydeStreetL,
     fontSize: 10,
     lineHeight: 10 * lineHeightRatio,
-  },
-  xxs: {
-    fontFamily: fontFamily.ydeStreetL,
-    fontSize: 8,
-    lineHeight: 8 * lineHeightRatio,
   },
 };
 
