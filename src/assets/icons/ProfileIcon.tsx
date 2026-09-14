@@ -3,15 +3,9 @@ import Svg, { Path, Rect } from 'react-native-svg';
 import theme from '@/src/constants/theme';
 
 interface ProfileIconProps {
-  /**
-   * SVG fill 색.
-   *
-   * className 이 아니라 값으로 받는 이유: NativeWind 의 `nativeStyleToProp` 은 네이티브 전용이라
-   * 웹에서는 fill 이 비어서 아이콘이 투명하게 그려진다. 양 플랫폼 동일 동작을 위해 값으로 넘긴다.
-   */
-  /** 사람 모양 글리프 색 (Figma: pink color/400) */
+  /** 사람 모양 글리프 색 (pink 400) */
   color?: string;
-  /** 원형 배경 색 (Figma: pink color/100) */
+  /** 원형 배경 색 (pink 100) */
   backgroundColor?: string;
   size?: number;
 }

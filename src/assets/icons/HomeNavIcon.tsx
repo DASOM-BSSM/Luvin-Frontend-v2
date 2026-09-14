@@ -3,12 +3,6 @@ import Svg, { Path } from 'react-native-svg';
 import theme from '@/src/constants/theme';
 
 interface HomeNavIconProps {
-  /**
-   * SVG fill 색.
-   *
-   * className 이 아니라 값으로 받는 이유: NativeWind 의 `nativeStyleToProp` 은 네이티브 전용이라
-   * 웹에서는 fill 이 비어서 아이콘이 투명하게 그려진다. 양 플랫폼 동일 동작을 위해 값으로 넘긴다.
-   */
   color?: string;
   size?: number;
 }

@@ -8,7 +8,7 @@ import theme from '@/src/constants/theme';
 
 export type BottomNavItem = 'home' | 'oven' | 'diary' | 'bread';
 
-/** Figma: 선택된 항목은 `brown color/900`, 나머지는 `brown color/300`. */
+/** 선택된 항목은 brown 900, 나머지는 brown 300 을 쓴다. */
 const ACTIVE_COLOR = theme.brown[900];
 const INACTIVE_COLOR = theme.brown[300];
 
@@ -20,12 +20,7 @@ interface BottomNavProps {
   active?: BottomNavItem;
 }
 
-/**
- * 하단 알약형 내비게이션.
- *
- * Figma: `Nav` 컴포넌트 (variant `nav=home`).
- * 아직 다른 탭 화면이 없어서 표시 전용이다. 라우팅은 탭 화면이 생길 때 연결한다.
- */
+/** 하단 알약형 내비게이션. */
 export default function BottomNav({ active = 'home' }: BottomNavProps) {
   return (
     <View className="flex-row items-center justify-center gap-[64px] self-center rounded-[24px] bg-yellow-200 px-[30px] py-[16px]">

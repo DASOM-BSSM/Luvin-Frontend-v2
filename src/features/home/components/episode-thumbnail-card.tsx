@@ -8,12 +8,7 @@ interface EpisodeThumbnailCardProps {
   episode: WeeklyEpisode;
 }
 
-/**
- * 이번주 에피소드 썸네일.
- *
- * Figma: `메인-우린` 의 `썸네일` 컴포넌트 — 분홍 점선 테두리 + REC 배지.
- * REC 배지(상단)와 텍스트(카드 상단에서 70px) 사이는 Figma 좌표 그대로 스페이서로 벌린다.
- */
+/** 이번주 에피소드 썸네일. */
 export default function EpisodeThumbnailCard({ episode }: EpisodeThumbnailCardProps) {
   return (
     <View className="h-[144px] w-full overflow-hidden rounded-[12px] border-2 border-dashed border-pink-500 p-[11px]">

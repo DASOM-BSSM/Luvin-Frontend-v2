@@ -13,7 +13,7 @@ import theme from '@/src/constants/theme';
 // 컴포넌트 밖(모듈 스코프)에서 호출해야 한다. 훅 안에서 부르면 이미 늦은 경우가 있다.
 SplashScreen.preventAutoHideAsync();
 
-// Figma 의 Color system 컬렉션은 모드가 하나뿐이라 다크 팔레트가 없다.
+// 색상 팔레트에 모드가 하나뿐이라 다크 팔레트가 없다.
 // app.json 의 userInterfaceStyle 이 "automatic" 이므로 라이트로 고정한다.
 //
 // 네이티브에서만 부르는 이유: NativeWind 의 web 구현은 이 호출을 두 군데서 막는다.
@@ -46,7 +46,7 @@ export default function RootLayout() {
 
   return (
     <>
-      {/* Figma 시안의 상태바는 밝은 배경 위 어두운 글씨다. */}
+      {/* 밝은 배경 위 어두운 글씨. */}
       <StatusBar style="dark" />
       <Stack
         screenOptions={{

@@ -8,11 +8,7 @@ interface DiaryPreviewCardProps {
   diary: DiaryPreview;
 }
 
-/**
- * 감정일기 미리보기 카드.
- *
- * Figma: `메인-우린` 의 `쫀쫀한 조합들` 섹션 카드.
- */
+/** 감정일기 미리보기 카드. */
 export default function DiaryPreviewCard({ diary }: DiaryPreviewCardProps) {
   return (
     <View className="w-full flex-col items-start gap-[8px] rounded-[8px] border border-default-gray p-[12px]">

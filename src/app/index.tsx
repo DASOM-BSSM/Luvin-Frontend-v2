@@ -6,34 +6,25 @@ import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
+import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
+import CreateQuestionCard from '@/src/features/home/components/create-question-card';
 import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
+import DiaryStartCard from '@/src/features/home/components/diary-start-card';
+import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import type { BreadProfile, DiaryPreview, WeeklyEpisode } from '@/src/features/home/types';
 
-// HTTP 클라이언트가 아직 정해지지 않아 API 연동 전이다(AGENTS.md §2).
-// 값은 Figma `메인-우린` 시안의 내용을 그대로 쓰고, 서버가 붙으면 이 상수만 쿼리로 교체한다.
-const MY_PROFILE: BreadProfile = {
-  type: 'salt',
-  state: 'dough',
-  name: '쫀쫀한 소금빵 반죽',
-  description: '저는 오직 제 사람에게만 따뜻해요',
-};
+// API 연동 전. 세 상수를 null 로 바꾸면 빵을 만들기 전 상태가 된다.
+const MY_PROFILE: BreadProfile | null = null;
 
-const WEEKLY_EPISODE: WeeklyEpisode = {
-  order: 1,
-  title: '안녕하세요 소금빵입니다!',
-};
+const WEEKLY_EPISODE: WeeklyEpisode | null = null;
 
-const DIARY_PREVIEW: DiaryPreview = {
-  authorType: 'castella',
-  authorState: 'dough',
-  authorName: '쫀쫀한 카스테라',
-  relativeTime: '1시간 전',
-  message: '쫀쫀한 카스테라님이 15:00의 질문을 생성했어요!\n질문에 대한 나의 일기를 채워주세요',
-};
+const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
+  const hasBread = MY_PROFILE !== null;
+
   return (
     <Screen>
       <ScrollView
@@ -56,17 +47,34 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-          <MyProfileCard profile={MY_PROFILE} />
+          {MY_PROFILE ? <MyProfileCard profile={MY_PROFILE} /> : <BreadSurveyPromptCard />}
         </View>
 
         <View className="w-full flex-col items-start gap-[12px]">
-          <SectionHeader title="이번주 에피소드" actionLabel="러빈지옥 바로가기→" />
-          <EpisodeThumbnailCard episode={WEEKLY_EPISODE} />
+          <SectionHeader
+            title="이번주 에피소드"
+            actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
+          />
+          {WEEKLY_EPISODE ? (
+            <EpisodeThumbnailCard episode={WEEKLY_EPISODE} />
+          ) : (
+            <EpisodeEmptyCard />
+          )}
         </View>
 
         <View className="w-full flex-col items-start gap-[12px]">
-          <SectionHeader title="쫀쫀한 조합들" actionLabel="감정일기 바로가기→" />
-          <DiaryPreviewCard diary={DIARY_PREVIEW} />
+          <SectionHeader
+            title={hasBread ? '쫀쫀한 조합들' : '감정일기'}
+            actionLabel={hasBread ? '감정일기 바로가기→' : undefined}
+          />
+          {DIARY_PREVIEW ? (
+            <>
+              <DiaryPreviewCard diary={DIARY_PREVIEW} />
+              <CreateQuestionCard />
+            </>
+          ) : (
+            <DiaryStartCard />
+          )}
         </View>
       </ScrollView>
 
