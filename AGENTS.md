@@ -53,16 +53,16 @@ This repository is `luvin-frontend-v2` — a fresh Expo SDK 57 rewrite. Most of 
 
 Do NOT assume any of these exist, and do NOT install them on your own initiative. Each one is a decision the user has to make; several also require a native rebuild.
 
-| Need                     | Intended choice                                     | Section |
-| ------------------------ | --------------------------------------------------- | ------- |
-| HTTP client              | `axios` or plain `fetch` — undecided                | §11     |
-| Lint / format / hooks    | `eslint` + `eslint-config-expo`, `prettier`, `husky`, `lint-staged` | §5 |
-| Unit / e2e tests         | `jest-expo` + `@testing-library/react-native`, Maestro | §6   |
-| Secure token storage     | `expo-secure-store`                                 | §12     |
-| Push notifications       | `expo-notifications`                                | §13     |
-| Crash reporting          | `@sentry/react-native`                              | §14     |
-| Analytics                | none chosen                                         | §14     |
-| Toast / snackbar         | in-house component preferred over a new dependency  | §11     |
+| Need                  | Intended choice                                                     | Section |
+| --------------------- | ------------------------------------------------------------------- | ------- |
+| HTTP client           | `axios` or plain `fetch` — undecided                                | §11     |
+| Lint / format / hooks | `eslint` + `eslint-config-expo`, `prettier`, `husky`, `lint-staged` | §5      |
+| Unit / e2e tests      | `jest-expo` + `@testing-library/react-native`, Maestro              | §6      |
+| Secure token storage  | `expo-secure-store`                                                 | §12     |
+| Push notifications    | `expo-notifications`                                                | §13     |
+| Crash reporting       | `@sentry/react-native`                                              | §14     |
+| Analytics             | none chosen                                                         | §14     |
+| Toast / snackbar      | in-house component preferred over a new dependency                  | §11     |
 
 `prettier-plugin-tailwindcss` is in `devDependencies`, but **`prettier` itself is not installed and there is no Prettier config** — the plugin currently does nothing. See §5.
 
@@ -148,10 +148,10 @@ Even without a test runner, keep pure logic out of components — this is requir
 
 ## When testing is turned on (the intended shape)
 
-| Layer     | Tool                                          | Scope                                                      |
-| --------- | --------------------------------------------- | ---------------------------------------------------------- |
-| Unit      | `jest-expo` + `@testing-library/react-native` | Pure logic first (scoring, matching), then shared UI in `src/components/ui/` |
-| E2E       | Maestro (YAML flows in `.maestro/`)           | Onboarding → Google OAuth → survey → result                |
+| Layer | Tool                                          | Scope                                                                        |
+| ----- | --------------------------------------------- | ---------------------------------------------------------------------------- |
+| Unit  | `jest-expo` + `@testing-library/react-native` | Pure logic first (scoring, matching), then shared UI in `src/components/ui/` |
+| E2E   | Maestro (YAML flows in `.maestro/`)           | Onboarding → Google OAuth → survey → result                                  |
 
 Unit tests live next to the code under test in a `__tests__/` folder. Do not aim for a coverage number; cover the scoring/matching rules and the auth flow.
 
@@ -200,19 +200,28 @@ Unit tests live next to the code under test in a `__tests__/` folder. Do not aim
 
 ## Typography
 
-Only two fonts are used in Luvin:
+Three fonts are used in Luvin:
 
-| Font               | Registered family | Usage                                   |
-| ------------------ | ----------------- | --------------------------------------- |
-| `Yde street B`     | `YdestreetB`      | Headlines, brand elements, display text |
-| `Yde street L`     | `YdestreetL`      | Body text, descriptions, subtext        |
+| Font           | Registered family | Usage                                                                             |
+| -------------- | ----------------- | --------------------------------------------------------------------------------- |
+| `Yde street B` | `YdestreetB`      | Headlines, brand elements, display text                                           |
+| `Yde street L` | `YdestreetL`      | Body text, descriptions, subtext                                                  |
+| `OK Mallang B` | `OKMallangB`      | 러빈지옥 titles and emphasis copy (episode titles, mission banners, key callouts) |
 
 Do NOT use any other font. All font usage details are defined in Figma.
 
-- The two `.ttf` files live in `src/assets/fonts/` and are loaded with `useFonts` in `src/app/_layout.tsx`
+- The three `.ttf` files live in `src/assets/fonts/` and are loaded with `useFonts` in `src/app/_layout.tsx`
 - **One invariant, three places**: the `useFonts` key, the PostScript name in the `.ttf`, and `fontFamily` in `src/constants/typography.ts` (which feeds Tailwind) must all be the same string. Changing one without the others silently falls back to the system font
-- RN cannot synthesize weight across static font files, so weight is expressed by **switching family** (`YdestreetB` vs `YdestreetL`) — never with `fontWeight` or `font-bold`
+- RN cannot synthesize weight across static font files, so weight is expressed by **switching family** (`YdestreetB` / `YdestreetL` / `OKMallangB`) — never with `fontWeight` or `font-bold`
 - Use the Tailwind `fontSize`/`fontFamily` tokens generated from `typography.ts` (Figma `Heading/H1`–`H5`, `Body/XL`–`XXS`, all at a 160% line-height ratio) — do not set a raw `fontSize`
+
+### Exception: `OK Mallang B` has no registered font-size scale
+
+Unlike `YdestreetB`/`YdestreetL`, `OK Mallang B` is **not** covered by the `Heading/*` / `Body/*` text styles in Figma — there is no size token for it in `typography.ts`.
+
+- Every time `OK Mallang B` is used, **check the exact font size in Figma for that specific instance** (episode title, mission banner, etc.) — do not reuse a size from another `OKMallangB` usage without checking, since each one may differ
+- This is the one place a raw `fontSize` value is allowed, since no token exists to reference. Still route it through NativeWind (a one-off Tailwind class or `className` value backed by the Figma-read px value) rather than a `style={{}}` object
+- If the same size is reused across 2+ places, add it to `typography.ts` as a named token at that point — don't leave duplicated raw values scattered across components
 
 ---
 
@@ -357,11 +366,11 @@ Always use `@/`-prefixed absolute imports — no `../../` relative climbing out 
 
 ## The three states
 
-| State       | Pattern                                                                                      |
-| ----------- | -------------------------------------------------------------------------------------------- |
+| State       | Pattern                                                                                                                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Loading** | Skeleton that mirrors the real layout — `<Skeleton />` from `src/components/ui/`, composed into a screen-level `<HomeSkeleton />` in the feature folder. No full-screen spinners, no layout shift when data arrives. |
-| **Error**   | Inline `<ErrorState message onRetry />` wired to the query's `refetch` — the user must always have a way to retry. |
-| **Empty**   | `<EmptyState />` with the Figma illustration and copy — never an empty scroll view.           |
+| **Error**   | Inline `<ErrorState message onRetry />` wired to the query's `refetch` — the user must always have a way to retry.                                                                                                   |
+| **Empty**   | `<EmptyState />` with the Figma illustration and copy — never an empty scroll view.                                                                                                                                  |
 
 ## Mutations and feedback
 
@@ -384,11 +393,11 @@ Google OAuth only; the first login auto-creates the account, so there is no sepa
 
 ## Where tokens go — this split is mandatory
 
-| Data                                        | Storage                                              |
-| ------------------------------------------- | ---------------------------------------------------- |
-| Access token, refresh token, OAuth code     | **`expo-secure-store` only** (iOS Keychain / Android Keystore) |
-| Session status, user profile, bread type    | In-memory Zustand store (`src/features/auth/store/`) |
-| Non-sensitive prefs (onboarding seen, survey draft, theme) | MMKV wrapper in `src/lib/storage.ts`  |
+| Data                                                       | Storage                                                        |
+| ---------------------------------------------------------- | -------------------------------------------------------------- |
+| Access token, refresh token, OAuth code                    | **`expo-secure-store` only** (iOS Keychain / Android Keystore) |
+| Session status, user profile, bread type                   | In-memory Zustand store (`src/features/auth/store/`)           |
+| Non-sensitive prefs (onboarding seen, survey draft, theme) | MMKV wrapper in `src/lib/storage.ts`                           |
 
 - **Never** put a token in MMKV, in a Zustand `persist` store, in the query cache, in an `.env` file, in a log, or in a URL / query parameter
 - `src/features/auth/lib/token-storage.ts` is the **only** module that touches SecureStore — everything else calls it. Do not read SecureStore from a component
