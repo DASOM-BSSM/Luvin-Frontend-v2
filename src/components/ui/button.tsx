@@ -1,21 +1,38 @@
 import { Pressable, type PressableProps } from 'react-native';
 
-import Text from '@/src/components/ui/text';
+import Text, { type TextVariant } from '@/src/components/ui/text';
 
 /**
- * - `outline` : 밝은 배경 + 검은 테두리
- * - `filled`  : 노란 배경 + 노란 테두리
+ * Figma 에 Button 컴포넌트가 따로 없어서(전부 일반 프레임) 화면별 인스턴스에서 뽑았다.
+ * - `outline`   : 밝은 배경 + 검은 테두리 (홈 카드 안의 작은 버튼)
+ * - `filled`    : 노란 배경 + 노란 테두리 (홈 카드 안의 작은 버튼)
+ * - `primary`   : 온보딩 로그인 버튼 (6031:2839) — yellow/400, 높이 38, 가로 꽉
+ * - `secondary` : 설문 시작하기 버튼 (6248:5304) — yellow/300, 높이 42, 가로 꽉
+ *
+ * 이름은 Figma 가 아니라 이쪽에서 붙인 것이라, 디자인에 정식 Button 이 생기면 맞출 것.
  */
-export type ButtonVariant = 'outline' | 'filled';
+export type ButtonVariant = 'outline' | 'filled' | 'primary' | 'secondary';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
-  outline: 'border-default-black bg-default-bg',
-  filled: 'border-yellow-300 bg-yellow-200',
+  outline: 'border border-default-black bg-default-bg px-[20px] py-[6px]',
+  filled: 'border border-yellow-300 bg-yellow-200 px-[20px] py-[6px]',
+  primary: 'h-[38px] w-full bg-yellow-400 px-[10px]',
+  secondary: 'h-[42px] w-full bg-yellow-300 px-[20px]',
 };
 
+/** 네 값 모두 #1D1D1D 지만 Figma 가 서로 다른 토큰을 물려 놨다. */
 const VARIANT_LABEL: Record<ButtonVariant, string> = {
   outline: 'text-default-black',
   filled: 'text-text-primary',
+  primary: 'text-text-primary',
+  secondary: 'text-default-black',
+};
+
+const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
+  outline: 'body-xs',
+  filled: 'body-xs',
+  primary: 'body-m',
+  secondary: 'body-m',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {
@@ -23,19 +40,18 @@ interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: ButtonVariant;
 }
 
-export default function Button({
-  label,
-  variant = 'outline',
-  className,
-  ...rest
-}: ButtonProps) {
+/**
+ * NOTE: Figma 에 pressed / disabled / loading 상태 정의가 아직 없어서 기본 상태만 구현했다.
+ * 상태 디자인이 나오면 여기에 추가할 것.
+ */
+export default function Button({ label, variant = 'outline', className, ...rest }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      className={`flex-row items-center justify-center rounded-[8px] border px-[20px] py-[6px] ${VARIANT_CONTAINER[variant]} ${className ?? ''}`}
+      className={`flex-row items-center justify-center rounded-[8px] ${VARIANT_CONTAINER[variant]} ${className ?? ''}`}
       {...rest}
     >
-      <Text variant="body-xs" className={VARIANT_LABEL[variant]}>
+      <Text variant={VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
         {label}
       </Text>
     </Pressable>
