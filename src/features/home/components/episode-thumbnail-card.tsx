@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 
+import RecBadge from '@/src/components/ui/rec-badge';
 import Text from '@/src/components/ui/text';
 import type { WeeklyEpisode } from '@/src/features/home/types';
 import { formatEpisodeLabel } from '@/src/features/home/utils/format-episode';
@@ -12,12 +13,7 @@ interface EpisodeThumbnailCardProps {
 export default function EpisodeThumbnailCard({ episode }: EpisodeThumbnailCardProps) {
   return (
     <View className="h-[144px] w-full overflow-hidden rounded-[12px] border-2 border-dashed border-pink-500 p-[11px]">
-      <View className="flex-row items-center gap-[4px] self-start">
-        <View className="size-[8px] rounded-full bg-pink-500" />
-        <Text variant="body-xs" className="text-pink-500">
-          REC
-        </Text>
-      </View>
+      <RecBadge />
       <View className="h-[40px]" />
       <View className="flex-col items-start gap-[2px] pl-[12px]">
         <Text variant="body-s" className="text-text-primary">

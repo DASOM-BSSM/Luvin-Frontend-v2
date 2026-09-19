@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import theme from '@/src/constants/theme';
+import useLandscapeRoutes from '@/src/hooks/use-landscape-routes';
 
 // 컴포넌트 밖(모듈 스코프)에서 호출해야 한다. 훅 안에서 부르면 이미 늦은 경우가 있다.
 SplashScreen.preventAutoHideAsync();
@@ -33,6 +34,10 @@ export default function RootLayout() {
     YdestreetL: require('@/src/assets/fonts/YdestreetL.ttf'),
     OkMallangBRegular: require('@/src/assets/fonts/OkMallangB-Regular.ttf'),
   });
+
+  // 화면 방향과 상태바는 지금 경로를 보고 이 훅이 한 곳에서 정한다.
+  // app.json 의 orientation 이 "default" 인 것도 그래서다(자세한 이유는 훅 주석 참고).
+  useLandscapeRoutes();
 
   useEffect(() => {
     // 폰트 로드에 실패해도 스플래시에 갇히지 않게 error 도 함께 본다.

@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
@@ -14,17 +15,44 @@ import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
-import type { BreadProfile, DiaryPreview, WeeklyEpisode } from '@/src/features/home/types';
+import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
+import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
+import type { BreadProfile, DiaryPreview } from '@/src/features/home/types';
 
-// API 연동 전. 세 상수를 null 로 바꾸면 빵을 만들기 전 상태가 된다.
+// API 연동 전. 두 상수를 값으로 채우면 반죽이 있고 감정일기가 쌓인 상태가 된다.
+// 이번주 에피소드는 상수가 아니라 러빈지옥 진행 상태(useInfernoStore)에서 나온다.
 const MY_PROFILE: BreadProfile | null = null;
-
-const WEEKLY_EPISODE: WeeklyEpisode | null = null;
 
 const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
   const hasBread = MY_PROFILE !== null;
+  const [isNoticeVisible, setIsNoticeVisible] = useState(false);
+  const completedOrders = useInfernoStore((state) => state.completedOrders);
+
+  // ep0 을 끝내기 전에는 보여줄 회차가 없다. 끝내면 다음 회차가 이번주 에피소드가 된다.
+  const hasStartedInferno = completedOrders.length > 0;
+  const weeklyEpisode = hasStartedInferno ? findNextInfernoEpisode(completedOrders) : undefined;
+
+  // 반죽이 없으면 러빈지옥을 시작할 수 없다. 막기만 하지 않고 설문으로 갈 길을 열어 준다.
+  function handleInfernoStartPress() {
+    if (hasBread) {
+      router.push('/inferno');
+      return;
+    }
+
+    setIsNoticeVisible(true);
+  }
+
+  function handleNoticeClose() {
+    setIsNoticeVisible(false);
+  }
+
+  function handleNoticeSurveyPress() {
+    setIsNoticeVisible(false);
+    router.push('/survey');
+  }
 
   function handleOvenNavigate() {
     router.push('/oven');
@@ -61,10 +89,10 @@ export default function HomeScreen() {
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
             onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
-          {WEEKLY_EPISODE ? (
-            <EpisodeThumbnailCard episode={WEEKLY_EPISODE} />
+          {weeklyEpisode ? (
+            <EpisodeThumbnailCard episode={weeklyEpisode} />
           ) : (
-            <EpisodeEmptyCard onStartPress={handleOvenNavigate} />
+            <EpisodeEmptyCard onStartPress={handleInfernoStartPress} />
           )}
         </View>
 
@@ -87,6 +115,12 @@ export default function HomeScreen() {
       <View className="pb-[10px]">
         <BottomNav active="home" />
       </View>
+
+      <InfernoNoticeModal
+        visible={isNoticeVisible}
+        onClose={handleNoticeClose}
+        onSurveyPress={handleNoticeSurveyPress}
+      />
     </Screen>
   );
 }

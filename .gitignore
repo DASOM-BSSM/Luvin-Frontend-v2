@@ -45,3 +45,6 @@ example
 
 # local tooling
 .claude/
+
+# IDE
+.idea/

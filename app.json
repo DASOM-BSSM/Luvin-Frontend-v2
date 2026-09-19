@@ -3,7 +3,7 @@
     "name": "luvin-frontend-v2",
     "slug": "luvin-frontend-v2",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "luvinfrontendv2",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -21,6 +21,7 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/logo.png",
           "backgroundColor": "#208AEF"
         }
       ],

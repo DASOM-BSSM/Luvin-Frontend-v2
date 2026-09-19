@@ -13,6 +13,7 @@ import Text, { type TextVariant } from '@/src/components/ui/text';
  *   `filled`를 재사용하면 다른 화면(홈 카드 등)까지 같이 바뀌므로 전용 variant로 분리했다.
  * - `gameInfo`        : 미니게임 Ready/Result 화면의 "게임 설명" 버튼(6285:7061 등) — bg white,
  *   테두리 gray, py-6, 라벨 14px. `outline`과 border/폰트 크기가 달라 분리했다.
+ * - `notice`          : 안내 모달 버튼 (6602:3957) — yellow/300 바탕에 yellow/400 테두리, 가로 꽉
  *
  * 이름은 Figma 가 아니라 이쪽에서 붙인 것이라, 디자인에 정식 Button 이 생기면 맞출 것.
  */
@@ -23,7 +24,8 @@ export type ButtonVariant =
   | 'secondary'
   | 'modeSelectPrimary'
   | 'modeSelectSecondary'
-  | 'gameInfo';
+  | 'gameInfo'
+  | 'notice';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   outline: 'border border-default-black bg-default-bg px-[20px] py-[6px]',
@@ -33,6 +35,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   modeSelectPrimary: 'border border-default-gray bg-yellow-300 px-[20px] py-[8px]',
   modeSelectSecondary: 'border border-default-gray bg-default-bg px-[20px] py-[8px]',
   gameInfo: 'border border-default-gray bg-default-bg px-[20px] py-[6px]',
+  notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
 };
 
 /** 대부분 #1D1D1D 지만 Figma 가 서로 다른 토큰을 물려 놨다. */
@@ -44,6 +47,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   modeSelectPrimary: 'text-default-black',
   modeSelectSecondary: 'text-default-black',
   gameInfo: 'text-text-primary',
+  notice: 'text-text-primary',
 };
 
 const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
@@ -54,6 +58,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   modeSelectPrimary: 'body-m',
   modeSelectSecondary: 'body-m',
   gameInfo: 'body-s',
+  notice: 'body-m',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {
