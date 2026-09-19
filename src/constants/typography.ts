@@ -38,6 +38,18 @@ export const okMallangBStyle = { fontFamily: fontFamily.okMallangB };
 /** Figma 텍스트 스타일 공통 line-height (160%) */
 export const lineHeightRatio = 1.6;
 
+/**
+ * Ok Mallang B 로 쓰는 한 줄짜리 강조 제목. Figma 모달의 "NOTICE" (6602:3955).
+ *
+ * Figma 에 이름 붙은 텍스트 스타일이 아니라 그 자리에서만 쓰는 22px 값이라 Heading/Body
+ * 척도에는 넣지 않았다. 같은 크기가 다른 화면에도 나오면 그때 정식 토큰으로 올릴 것.
+ */
+export const okMallangBTitleStyle = {
+  ...okMallangBStyle,
+  fontSize: 22,
+  lineHeight: 22 * lineHeightRatio,
+};
+
 /** Figma: `Heading/H1` ~ `Heading/H5` */
 export const heading = {
   h1: {
