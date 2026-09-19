@@ -31,6 +31,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     YdestreetB: require('@/src/assets/fonts/YdestreetB.ttf'),
     YdestreetL: require('@/src/assets/fonts/YdestreetL.ttf'),
+    OkMallangBRegular: require('@/src/assets/fonts/OkMallangB-Regular.ttf'),
   });
 
   useEffect(() => {

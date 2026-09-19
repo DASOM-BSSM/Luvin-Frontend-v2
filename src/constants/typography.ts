@@ -9,11 +9,31 @@
  * Heading = "Yde street B", Body = "Yde street L" 로 서로 다른 패밀리를 쓴다.
  * RN 은 정적 폰트 파일 간 굵기 합성을 못 하므로 fontWeight 대신 패밀리를 나눈다.
  * 값 = ttf 의 PostScript 이름 = src/app/_layout.tsx 의 useFonts 키.
+ *
+ * okMallangB 폰트 파일은 "OkMallangB-Regular.ttf" (Calligraphr 제작, 원본 파일명
+ * "Ok Mallang B.ttf"에서 공백 제거하여 리네임 — Android에서 Metro가 공백 포함 파일명의 폰트
+ * asset을 정상 로드하지 못해 커스텀 폰트가 조용히 시스템 기본 폰트로 폴백되는 문제가 있었음).
+ *
+ * 등록 키(useFonts)와 이 값은 ttf의 실제 PostScript 이름("OkMallangB-Regular")과 달리
+ * "OkMallangBRegular"를 쓴다 — expo-font의 Android 커스텀 폰트 레지스트리는 useFonts에 넘긴
+ * 키 문자열 그대로 등록/조회하므로 ttf 내부 이름과 달라도 무방하다.
+ *
+ * 실기기(Android) 확인된 별도 버그: 이 값을 `font-ok-mallang-b` Tailwind 클래스(NativeWind
+ * className 경로)로 적용하면 하이픈 유무와 무관하게 항상 시스템 기본 폰트로 조용히 폴백된다
+ * (raw `style={{ fontFamily: fontFamily.okMallangB }}`는 정상 렌더 — RN/폰트 등록 자체는
+ * 문제없고, NativeWind v4의 CSS→RN 스타일 변환 파이프라인에서만 이 패밀리가 깨짐. 원인을
+ * 하이픈으로 의심해 제거해봤지만 재현됨 — NativeWind 자체의 한계로 결론). 그래서 이 폰트는
+ * className(`font-ok-mallang-b`)이 아니라 아래 `okMallangBStyle`을 `style` prop으로 직접
+ * 적용한다 — §16 인라인 스타일 금지의 예외(측정된 이유 있음, Reanimated 예외와 동급).
  */
 export const fontFamily = {
   ydeStreetB: 'YdestreetB',
   ydeStreetL: 'YdestreetL',
+  okMallangB: 'OkMallangBRegular',
 };
+
+/** `font-ok-mallang-b` 클래스가 실기기에서 깨지는 문제의 우회 — 위 주석 참고. */
+export const okMallangBStyle = { fontFamily: fontFamily.okMallangB };
 
 /** Figma 텍스트 스타일 공통 line-height (160%) */
 export const lineHeightRatio = 1.6;
@@ -94,7 +114,11 @@ const toTailwindFontSize = (size: number): TailwindFontSize => [
   { lineHeight: String(lineHeightRatio) },
 ];
 
-/** `font-yde-street-b` / `font-yde-street-l` */
+/**
+ * `font-yde-street-b` / `font-yde-street-l`. Ok Mallang B는 여기 없다 — `font-ok-mallang-b`
+ * Tailwind 클래스는 실기기에서 항상 폰트가 깨진다(위 okMallangBStyle 주석 참고). 일부러
+ * 제외해 그 클래스 자체가 존재할 수 없게 한다.
+ */
 export const tailwindFontFamily = {
   'yde-street-b': [fontFamily.ydeStreetB],
   'yde-street-l': [fontFamily.ydeStreetL],

@@ -202,17 +202,18 @@ Unit tests live next to the code under test in a `__tests__/` folder. Do not aim
 
 Three fonts are used in Luvin:
 
-| Font           | Registered family | Usage                                                                             |
-| -------------- | ----------------- | --------------------------------------------------------------------------------- |
-| `Yde street B` | `YdestreetB`      | Headlines, brand elements, display text                                           |
-| `Yde street L` | `YdestreetL`      | Body text, descriptions, subtext                                                  |
-| `OK Mallang B` | `OKMallangB`      | 러빈지옥 titles and emphasis copy (episode titles, mission banners, key callouts) |
+| Font           | Registered family   | Usage                                                                             |
+| -------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `Yde street B` | `YdestreetB`         | Headlines, brand elements, display text                                           |
+| `Yde street L` | `YdestreetL`         | Body text, descriptions, subtext                                                  |
+| `Ok Mallang B` | `OkMallangBRegular`  | 러빈지옥 titles and emphasis copy (episode titles, mission banners, key callouts) |
 
 Do NOT use any other font. All font usage details are defined in Figma.
 
-- The three `.ttf` files live in `src/assets/fonts/` and are loaded with `useFonts` in `src/app/_layout.tsx`
-- **One invariant, three places**: the `useFonts` key, the PostScript name in the `.ttf`, and `fontFamily` in `src/constants/typography.ts` (which feeds Tailwind) must all be the same string. Changing one without the others silently falls back to the system font
-- RN cannot synthesize weight across static font files, so weight is expressed by **switching family** (`YdestreetB` / `YdestreetL` / `OKMallangB`) — never with `fontWeight` or `font-bold`
+- The three `.ttf` files live in `src/assets/fonts/` and are loaded with `useFonts` in `src/app/_layout.tsx`. The Ok Mallang B file is `OkMallangB-Regular.ttf`, renamed from its original `Ok Mallang B.ttf` — a space in the filename broke Metro's font asset resolution on Android (the font silently fell back to the system font while every other style still applied). Never reintroduce a space in a font filename
+- **One invariant, everywhere the registered family is referenced**: the `useFonts` key and `fontFamily` in `src/constants/typography.ts` (which feeds Tailwind) must be the same string. Changing one without the other silently falls back to the system font. For Ok Mallang B this registered string is `OkMallangBRegular` — deliberately **not** the same as the `.ttf`'s actual PostScript name (`OkMallangB-Regular`, verified via the `name` table). They don't need to match: expo-font's Android font registry looks fonts up by whatever key you pass to `useFonts`, not by the file's internal PostScript name
+- **Verified on-device bug: never apply Ok Mallang B via the `font-ok-mallang-b` Tailwind class.** NativeWind v4's CSS-to-RN-style pipeline silently drops this font family on the `className` path — confirmed on a real Android device, reproduced with and without a hyphen in the registered name (so it isn't a hyphen-parsing issue, just a NativeWind limitation with this font) — while the exact same string applied as a raw `style={{ fontFamily: fontFamily.okMallangB }}` renders correctly every time. Use the exported `okMallangBStyle` object from `typography.ts` as a `style` prop wherever Ok Mallang B is needed (the `Text` component's `display-title`/`display-score` variants already do this) — this is a deliberate, measured exception to the inline-style ban (§16), on the same footing as the Reanimated exception. `text-display-title` / `text-display-score` (font SIZE only) remain fine as Tailwind classes; only the font-FAMILY utility is broken
+- RN cannot synthesize weight across static font files, so weight is expressed by **switching family** (`YdestreetB` / `YdestreetL` / `OkMallangBRegular`) — never with `fontWeight` or `font-bold`
 - Use the Tailwind `fontSize`/`fontFamily` tokens generated from `typography.ts` (Figma `Heading/H1`–`H5`, `Body/XL`–`XXS`, all at a 160% line-height ratio) — do not set a raw `fontSize`
 
 ### Exception: `OK Mallang B` has no registered font-size scale
@@ -220,7 +221,7 @@ Do NOT use any other font. All font usage details are defined in Figma.
 Unlike `YdestreetB`/`YdestreetL`, `OK Mallang B` is **not** covered by the `Heading/*` / `Body/*` text styles in Figma — there is no size token for it in `typography.ts`.
 
 - Every time `OK Mallang B` is used, **check the exact font size in Figma for that specific instance** (episode title, mission banner, etc.) — do not reuse a size from another `OKMallangB` usage without checking, since each one may differ
-- This is the one place a raw `fontSize` value is allowed, since no token exists to reference. Still route it through NativeWind (a one-off Tailwind class or `className` value backed by the Figma-read px value) rather than a `style={{}}` object
+- This is the one place a raw `fontSize` value is allowed, since no token exists to reference. Route the SIZE through NativeWind (a one-off Tailwind class like `text-[50px]`) — but the FAMILY still goes through `okMallangBStyle` as a `style` prop, per the on-device bug noted above, never `font-ok-mallang-b`
 - If the same size is reused across 2+ places, add it to `typography.ts` as a named token at that point — don't leave duplicated raw values scattered across components
 
 ---
