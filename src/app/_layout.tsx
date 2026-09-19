@@ -32,6 +32,7 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     YdestreetB: require('@/src/assets/fonts/YdestreetB.ttf'),
     YdestreetL: require('@/src/assets/fonts/YdestreetL.ttf'),
+    OkMallangBRegular: require('@/src/assets/fonts/OkMallangB-Regular.ttf'),
   });
 
   // 화면 방향과 상태바는 지금 경로를 보고 이 훅이 한 곳에서 정한다.
