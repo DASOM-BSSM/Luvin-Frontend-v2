@@ -8,16 +8,18 @@ import Text, { type TextVariant } from '@/src/components/ui/text';
  * - `filled`    : 노란 배경 + 노란 테두리 (홈 카드 안의 작은 버튼)
  * - `primary`   : 온보딩 로그인 버튼 (6031:2839) — yellow/400, 높이 38, 가로 꽉
  * - `secondary` : 설문 시작하기 버튼 (6248:5304) — yellow/300, 높이 42, 가로 꽉
+ * - `notice`    : 안내 모달 버튼 (6602:3957) — yellow/300 바탕에 yellow/400 테두리, 가로 꽉
  *
  * 이름은 Figma 가 아니라 이쪽에서 붙인 것이라, 디자인에 정식 Button 이 생기면 맞출 것.
  */
-export type ButtonVariant = 'outline' | 'filled' | 'primary' | 'secondary';
+export type ButtonVariant = 'outline' | 'filled' | 'primary' | 'secondary' | 'notice';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   outline: 'border border-default-black bg-default-bg px-[20px] py-[6px]',
   filled: 'border border-yellow-300 bg-yellow-200 px-[20px] py-[6px]',
   primary: 'h-[38px] w-full bg-yellow-400 px-[10px]',
   secondary: 'h-[42px] w-full bg-yellow-300 px-[20px]',
+  notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
 };
 
 /** 네 값 모두 #1D1D1D 지만 Figma 가 서로 다른 토큰을 물려 놨다. */
@@ -26,6 +28,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   filled: 'text-text-primary',
   primary: 'text-text-primary',
   secondary: 'text-default-black',
+  notice: 'text-text-primary',
 };
 
 const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
@@ -33,6 +36,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   filled: 'body-xs',
   primary: 'body-m',
   secondary: 'body-m',
+  notice: 'body-m',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {
