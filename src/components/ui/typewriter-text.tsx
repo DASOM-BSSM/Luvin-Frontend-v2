@@ -2,8 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 
 import Text, { type TextVariant } from '@/src/components/ui/text';
 
-/** 한 글자가 더 나오기까지 걸리는 시간. */
-export const TYPEWRITER_SPEED_MS = 45;
+/**
+ * 한 글자가 더 나오기까지 걸리는 시간.
+ *
+ * 가장 긴 본문(구성 안내 88자)이 약 1.5초에 끝나도록 잡은 값이다.
+ * 짧은 본문(진행 안내 54자)은 같은 속도로 약 0.9초에 끝난다.
+ */
+export const TYPEWRITER_SPEED_MS = 17;
 
 interface TypewriterTextProps {
   text: string;
