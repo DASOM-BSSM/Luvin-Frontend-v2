@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
@@ -24,6 +25,10 @@ const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
   const hasBread = MY_PROFILE !== null;
+
+  function handleOvenNavigate() {
+    router.push('/oven');
+  }
 
   return (
     <Screen>
@@ -54,11 +59,12 @@ export default function HomeScreen() {
           <SectionHeader
             title="이번주 에피소드"
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
+            onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
           {WEEKLY_EPISODE ? (
             <EpisodeThumbnailCard episode={WEEKLY_EPISODE} />
           ) : (
-            <EpisodeEmptyCard />
+            <EpisodeEmptyCard onStartPress={handleOvenNavigate} />
           )}
         </View>
 

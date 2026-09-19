@@ -3,8 +3,12 @@ import { View } from 'react-native';
 import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
 
+interface EpisodeEmptyCardProps {
+  onStartPress?: () => void;
+}
+
 /** 진행 중인 에피소드가 없을 때의 썸네일 카드. */
-export default function EpisodeEmptyCard() {
+export default function EpisodeEmptyCard({ onStartPress }: EpisodeEmptyCardProps) {
   return (
     <View className="h-[144px] w-full overflow-hidden rounded-[12px] border-2 border-dashed border-pink-500 p-[11px]">
       <View className="flex-row items-center gap-[4px] self-start">
@@ -18,7 +22,7 @@ export default function EpisodeEmptyCard() {
         <Text variant="body-s" className="text-text-primary">
           진행 중인 에피소드가 없어요
         </Text>
-        <Button label="러빈지옥 시작하기" />
+        <Button label="러빈지옥 시작하기" onPress={onStartPress} />
       </View>
     </View>
   );
