@@ -54,6 +54,10 @@ export default function HomeScreen() {
     router.push('/survey');
   }
 
+  function handleOvenNavigate() {
+    router.push('/oven');
+  }
+
   return (
     <Screen>
       <ScrollView
@@ -83,6 +87,7 @@ export default function HomeScreen() {
           <SectionHeader
             title="이번주 에피소드"
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
+            onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
           {weeklyEpisode ? (
             <EpisodeThumbnailCard episode={weeklyEpisode} />
