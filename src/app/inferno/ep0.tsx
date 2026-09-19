@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import { EP0_SCENES } from '@/src/features/inferno/constants/scenes';
+import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 
 /** 이 화면이 보여주는 회차. */
@@ -22,6 +23,7 @@ const EPISODE_ORDER = 0;
  */
 export default function InfernoEp0Screen() {
   const [sceneIndex, setSceneIndex] = useState(0);
+  const completeEpisode = useInfernoStore((state) => state.completeEpisode);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
 
@@ -38,9 +40,15 @@ export default function InfernoEp0Screen() {
     setSceneIndex((index) => index - 1);
   }
 
+  // 끝까지 보든 건너뛰든 이 회차는 본 것으로 친다. ep0 은 안내라서 굳이 붙잡아 둘 이유가 없다.
+  function finishEpisode() {
+    completeEpisode(EPISODE_ORDER);
+    router.dismissTo('/');
+  }
+
   function handleNextPress() {
     if (isLastScene) {
-      router.dismissTo('/');
+      finishEpisode();
       return;
     }
 
@@ -48,7 +56,7 @@ export default function InfernoEp0Screen() {
   }
 
   function handleSkipPress() {
-    router.dismissTo('/');
+    finishEpisode();
   }
 
   return (
