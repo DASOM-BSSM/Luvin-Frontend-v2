@@ -118,7 +118,7 @@ export const SHELL_LIFT_DISTANCE = 52;
 // --- Episode 03 카드 뒤집기 ---
 
 /** 시작할 때 16장을 전부 보여주는 시간. */
-export const CARDFLIP_PREVIEW_MS = 3000;
+export const CARDFLIP_PREVIEW_MS = 6000;
 
 /** 짝이 틀렸을 때 다시 덮기 전까지 보여주는 시간. */
 export const CARDFLIP_MISMATCH_HOLD_MS = 700;
