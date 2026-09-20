@@ -20,6 +20,10 @@ interface InfernoChatRowProps {
  * 줄 높이를 따로 정하지 않는 이유: 반죽이 말풍선보다 늘 커서 줄 높이가 반죽 높이로 정해지고,
  * 그래야 시안처럼 줄 사이 간격 없이 붙여 쌓아도 전체 높이가 맞는다(1쪽 59+72+65=196,
  * 2쪽 67+59+72=198).
+ *
+ * 대화하는 반죽이라 personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
+ * 이 컴포넌트는 ep1 전체대화뿐 아니라 다른 회차의 group 단계(InfernoChatScene)도 그대로
+ * 재사용하므로, 여기 하나만 바꾸면 모든 회차가 같이 바뀐다.
  */
 export default function InfernoChatRow({
   message,
@@ -32,7 +36,7 @@ export default function InfernoChatRow({
   const avatar = (
     <BreadCharacter
       type={participant.type}
-      state="dough"
+      state="personDough"
       className={figure.chatSizeClass}
       accessibilityLabel={participant.name}
     />

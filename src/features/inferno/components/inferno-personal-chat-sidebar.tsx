@@ -79,6 +79,8 @@ interface InfernoPersonalChatSidebarProps {
  *
  * "다시 굽기" 를 다 쓰면(onRebakePress 를 넘기지 않으면) 폴더가 회색(default/gray)으로,
  * 글자가 반투명(rgba(29,29,29,0.5))으로 바뀐다(시안 5467:5876).
+ *
+ * 반죽 둘은 personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
  */
 export default function InfernoPersonalChatSidebar({
   mine,
@@ -110,7 +112,7 @@ export default function InfernoPersonalChatSidebar({
         {mine ? (
           <BreadCharacter
             type={mine.type}
-            state="dough"
+            state="personDough"
             className={findDoughFigure(mine.type).chatSizeClass}
             accessibilityLabel={mine.name}
           />
@@ -118,7 +120,7 @@ export default function InfernoPersonalChatSidebar({
         {partner ? (
           <BreadCharacter
             type={partner.type}
-            state="dough"
+            state="personDough"
             className={findDoughFigure(partner.type).chatSizeClass}
             accessibilityLabel={partner.name}
           />

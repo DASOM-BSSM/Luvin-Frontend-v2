@@ -17,6 +17,8 @@ interface InfernoVoteOptionProps {
  *
  * 고른 것만 바탕이 진해진다(yellow/300). 시안에 테두리나 체크 표시가 없어서 색이 유일한
  * 표시라, 화면 낭독기에는 accessibilityState 로 따로 알린다.
+ *
+ * personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
  */
 export default function InfernoVoteOption({
   participant,
@@ -39,7 +41,11 @@ export default function InfernoVoteOption({
       }`}
       onPress={handlePress}
     >
-      <BreadCharacter type={participant.type} state="dough" className={figure.optionSizeClass} />
+      <BreadCharacter
+        type={participant.type}
+        state="personDough"
+        className={figure.optionSizeClass}
+      />
       <Text variant="body-m" className="text-text-primary">
         {participant.name}
       </Text>
