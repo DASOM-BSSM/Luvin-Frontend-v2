@@ -1,6 +1,6 @@
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
 import LuvinLogo from '@/src/assets/images/LuvinLogo';
@@ -85,6 +85,10 @@ export default function HomeScreen() {
     router.push('/oven');
   }
 
+  function handleProfilePress() {
+    router.push('/my-page');
+  }
+
   return (
     <Screen>
       <ScrollView
@@ -96,7 +100,9 @@ export default function HomeScreen() {
           <View className="w-full flex-col items-start gap-[24px]">
             <View className="w-full flex-row items-start justify-between">
               <LuvinLogo />
-              <ProfileIcon />
+              <Pressable accessibilityRole="button" accessibilityLabel="마이페이지" onPress={handleProfilePress}>
+                <ProfileIcon />
+              </Pressable>
             </View>
             <View className="w-full flex-col items-start px-[4px]">
               <Text variant="heading-h2" className="text-default-black">

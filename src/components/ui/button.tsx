@@ -20,6 +20,8 @@ import { defaultColor, yellow } from '@/src/constants/colors';
  * - `noticeSoft`      : `notice` 의 한 단계 연한 짝 (5482:1895) — yellow/200 바탕에 yellow/300
  *   테두리. Figma `button2` 의 `status=activate, hover=off` 에 해당하고, `notice` 가 그
  *   `hover=on` 이다. "나의 빵에게" 피드백 화면처럼 두 버튼이 한 화면에 같이 놓일 때 쓴다.
+ * - `infoSave`        : 마이페이지 "내 정보 저장하기" 버튼 (6300:8070) — yellow/300, 테두리 없음,
+ *   px10/py8, 라벨 14px, 가로 꽉. `secondary`(16px, 높이 42, px20)와 달라 분리했다.
  *
  * 이름은 Figma 가 아니라 이쪽에서 붙인 것이라, 디자인에 정식 Button 이 생기면 맞출 것.
  *
@@ -35,7 +37,8 @@ export type ButtonVariant =
   | 'modeSelectSecondary'
   | 'gameInfo'
   | 'notice'
-  | 'noticeSoft';
+  | 'noticeSoft'
+  | 'infoSave';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   outline: 'border border-default-black bg-default-bg px-[20px] py-[6px]',
@@ -47,6 +50,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   gameInfo: 'border border-default-gray bg-default-bg px-[20px] py-[6px]',
   notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
   noticeSoft: 'w-full border border-yellow-300 bg-yellow-200 px-[16px] py-[6px]',
+  infoSave: 'w-full bg-yellow-300 px-[10px] py-[8px]',
 };
 
 /** 비활성일 때 덮어쓰는 바탕. Figma `status=deactivate` (5760:4346) 는 테두리 없이 회색이다. */
@@ -63,6 +67,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   gameInfo: 'text-text-primary',
   notice: 'text-text-primary',
   noticeSoft: 'text-text-primary',
+  infoSave: 'text-text-primary',
 };
 
 const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
@@ -75,6 +80,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   gameInfo: 'body-s',
   notice: 'body-m',
   noticeSoft: 'body-m',
+  infoSave: 'body-s',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {

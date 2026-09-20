@@ -7,7 +7,8 @@ import OvenNavIcon from '@/src/assets/icons/OvenNavIcon';
 import SentimentNavIcon from '@/src/assets/icons/SentimentNavIcon';
 import theme from '@/src/constants/theme';
 
-export type BottomNavItem = 'home' | 'oven' | 'diary' | 'bread';
+/** 'none' 은 마이페이지처럼 탭 바에 없는 화면에서 쓴다 — 네 아이콘 다 비활성 색으로 보인다. */
+export type BottomNavItem = 'home' | 'oven' | 'diary' | 'bread' | 'none';
 
 /** 선택된 항목은 brown 900, 나머지는 brown 300 을 쓴다. */
 const ACTIVE_COLOR = theme.brown[900];
