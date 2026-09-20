@@ -3,11 +3,14 @@ import { Pressable, View } from 'react-native';
 import FolderIcon from '@/src/assets/icons/FolderIcon';
 import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import Text from '@/src/components/ui/text';
+import theme from '@/src/constants/theme';
 import { findDoughFigure } from '@/src/features/inferno/constants/dough-figures';
 import type { InfernoParticipant } from '@/src/features/inferno/types';
 
 interface PersonalChatShortcutProps {
   label: string;
+  /** 폴더 색. 시안이 바로가기마다 다르게 칠해 놨다(아래 주석 참고). */
+  iconColor: string;
   /** 넘기지 않으면 갈 곳이 없다는 뜻이라 눌러도 아무 일도 하지 않는다. */
   onPress?: () => void;
 }
@@ -17,7 +20,7 @@ interface PersonalChatShortcutProps {
  *
  * 폴더(60)와 글자(26)가 간격 없이 맞붙는다 — 시안의 묶음 높이가 86 이라 사이가 0 이다.
  */
-function PersonalChatShortcut({ label, onPress }: PersonalChatShortcutProps) {
+function PersonalChatShortcut({ label, iconColor, onPress }: PersonalChatShortcutProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,7 +29,7 @@ function PersonalChatShortcut({ label, onPress }: PersonalChatShortcutProps) {
       className="flex-col items-center"
       onPress={onPress}
     >
-      <FolderIcon />
+      <FolderIcon color={iconColor} />
       <Text variant="body-m" className="text-text-primary">
         {label}
       </Text>
@@ -59,6 +62,11 @@ interface InfernoPersonalChatSidebarProps {
  *
  * "다시 굽기" 는 아직 갈 곳이 없어서 눌러도 아무 동작을 하지 않는다(BottomNav 의 감정일기
  * 탭과 같은 이유 — 목적지가 정해지면 그때 연결한다).
+ *
+ * NOTE: 폴더 색이 둘이 다르다 — "다시 굽기" 는 pink/400, "나의 빵에게" 는 pink/300 이다.
+ * 시안 두 장이 서로 어긋나 있는데(`ep2-대화` 5379:3570 은 둘 다 pink/400, `ep2-대화 끝`
+ * 5467:5564 는 "나의 빵에게" 만 pink/300), 나중에 그려진 5467:5564 를 따랐다. 쪽마다 색이
+ * 달라질 이유가 없어 보여서 두 쪽 모두 같은 색으로 둔다.
  */
 export default function InfernoPersonalChatSidebar({
   mine,
@@ -70,8 +78,12 @@ export default function InfernoPersonalChatSidebar({
       <View className="h-[25px]" />
 
       <View className="w-[205px] flex-col items-center gap-[12px]">
-        <PersonalChatShortcut label="다시 굽기" />
-        <PersonalChatShortcut label="나의 빵에게" onPress={onFeedbackPress} />
+        <PersonalChatShortcut label="다시 굽기" iconColor={theme.pink[400]} />
+        <PersonalChatShortcut
+          label="나의 빵에게"
+          iconColor={theme.pink[300]}
+          onPress={onFeedbackPress}
+        />
       </View>
 
       <View className="flex-1" />
