@@ -91,3 +91,37 @@ export const GUIDE_ITEM_RISE = 12;
  * 곧바로 띄우면 "대화가 종료되었습니다" 안내를 읽기도 전에 모달이 덮는다.
  */
 export const VOTE_MODAL_DELAY_MS = 800;
+
+/** 마지막 대화가 끝난 뒤 미니게임 안내를 띄우기까지의 간격. */
+export const GAME_MODAL_DELAY_MS = 800;
+
+// --- Episode 03 야바위 ---
+
+/** 처음 화면을 읽을 시간을 준 뒤 정답 컵을 들어 올린다. */
+export const SHELL_REVEAL_DELAY_MS = 1000;
+
+/** 컵 하나를 들거나 내리는 시간. */
+export const SHELL_LIFT_MS = 320;
+
+/** 프레첼을 보여 주는 시간. */
+export const SHELL_REVEAL_HOLD_MS = 1400;
+
+/** 컵 한 쌍이 자리를 바꾸는 시간. */
+export const SHELL_SWAP_MS = 420;
+
+/** 컵을 섞는 횟수. */
+export const SHELL_SWAP_COUNT = 5;
+
+/** 컵을 들어 프레첼이 보이게 하는 거리. */
+export const SHELL_LIFT_DISTANCE = 52;
+
+// --- Episode 03 카드 뒤집기 ---
+
+/** 시작할 때 16장을 전부 보여주는 시간. */
+export const CARDFLIP_PREVIEW_MS = 6000;
+
+/** 짝이 틀렸을 때 다시 덮기 전까지 보여주는 시간. */
+export const CARDFLIP_MISMATCH_HOLD_MS = 700;
+
+/** 목숨 개수. Figma `Frame 107`(6219:4039) 이 하트 4개다. */
+export const CARDFLIP_LIVES = 4;

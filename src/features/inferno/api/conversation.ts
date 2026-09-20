@@ -199,6 +199,74 @@ const EP2_CONVERSATION: InfernoConversation = {
 };
 
 /**
+ * ep3 게임 전 대화. Figma `ep3-게임전 전체대화` (5659:2163),
+ * `ep3-전체대화 끝` (5726:3113), `ep3-미니게임` (5726:3187).
+ */
+const EP3_CONVERSATION: InfernoConversation = {
+  episodeOrder: 3,
+  participants: [
+    { id: 'me', type: 'salt', name: '고소한 소금빵 반죽', isMine: true },
+    { id: 'castella', type: 'castella', name: '유쾌한 카스테라 반죽', isMine: false },
+    { id: 'donut', type: 'donut', name: '차가운 도넛 반죽', isMine: false },
+    { id: 'pretzel', type: 'pretzel', name: '엉뚱한 프레첼 반죽', isMine: false },
+  ],
+  pages: [
+    {
+      id: 'ep3-p1',
+      question: '- 여러분은 사랑한다는 말에 집착하는 편인가요? -',
+      messages: [
+        {
+          id: 'ep3-p1-1',
+          participantId: 'me',
+          side: 'right',
+          text: '음... 저는 말보단 행동으로 보여줬으면 좋겠어요',
+        },
+        {
+          id: 'ep3-p1-2',
+          participantId: 'donut',
+          side: 'left',
+          text: '사랑하면 사랑한다는 말이 저절로 나온다고 생각해요',
+        },
+        {
+          id: 'ep3-p1-3',
+          participantId: 'pretzel',
+          side: 'right',
+          text: '저는 사랑한다고 꼭 말해줘야해요.. 아니면 불안해요',
+        },
+      ],
+    },
+    {
+      id: 'ep3-p2',
+      notice: '- 대화가 종료되었습니다 투표를 진행해주세요 -',
+      messages: [
+        {
+          id: 'ep3-p2-1',
+          participantId: 'castella',
+          side: 'left',
+          text: '아ㅋㅋㅋㅋ 많은 의미가 담겨있군요..',
+        },
+        {
+          id: 'ep3-p2-2',
+          participantId: 'me',
+          side: 'right',
+          text: '도넛님ㅋㅋㅋㅋㅋㅋㅋㅋ 원래 이렇게 웃긴 분이세요?',
+        },
+        {
+          id: 'ep3-p2-3',
+          participantId: 'donut',
+          side: 'left',
+          text: '네? 저는 웃길려고 한 말이 아니에요..',
+        },
+      ],
+    },
+  ],
+  vote: {
+    modalMessage: '게임에 성공해서 원하는 상대와 대화해요!',
+    ballotMessage: '당신과 단둘이 대화하고 싶어요',
+  },
+};
+
+/**
  * ep4 대화. Figma `ep4-매칭전 전체대화`(5467:4661), `ep4-매칭`(5467:5196),
  * `ep4-대화`(5449:1735), `ep4-끝`(5467:5675).
  *
@@ -318,6 +386,7 @@ const EP4_CONVERSATION: InfernoConversation = {
 const CONVERSATIONS: Record<number, InfernoConversation | undefined> = {
   1: EP1_CONVERSATION,
   2: EP2_CONVERSATION,
+  3: EP3_CONVERSATION,
   4: EP4_CONVERSATION,
 };
 
