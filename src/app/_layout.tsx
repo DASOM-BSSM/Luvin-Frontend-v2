@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { colorScheme } from 'nativewind';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import theme from '@/src/constants/theme';
 import useLandscapeRoutes from '@/src/hooks/use-landscape-routes';
@@ -51,7 +52,10 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    // react-native-gesture-handler는 GestureDetector/Gesture API를 쓰려면 앱 루트가
+    // 이 안에 있어야 한다(러빈지옥 미니게임에서 처음 씀 — 이전엔 gesture-handler가
+    // 설치만 되어 있고 실제로 쓰이지 않아 필요 없었다).
+    <GestureHandlerRootView style={{ flex: 1 }}>
       {/* 밝은 배경 위 어두운 글씨. */}
       <StatusBar style="dark" />
       <Stack
@@ -62,6 +66,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: theme.colors.default.bg },
         }}
       />
-    </>
+    </GestureHandlerRootView>
   );
 }

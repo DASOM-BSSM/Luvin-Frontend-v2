@@ -5,6 +5,8 @@
  * tailwind.config.js 가 이 파일을 require 해서 쓴다. 값은 여기서만 고칠 것.
  */
 
+import { defaultColor, pink } from './colors';
+
 /**
  * Heading = "Yde street B", Body = "Yde street L" 로 서로 다른 패밀리를 쓴다.
  * RN 은 정적 폰트 파일 간 굵기 합성을 못 하므로 fontWeight 대신 패밀리를 나눈다.
@@ -23,8 +25,10 @@
  * (raw `style={{ fontFamily: fontFamily.okMallangB }}`는 정상 렌더 — RN/폰트 등록 자체는
  * 문제없고, NativeWind v4의 CSS→RN 스타일 변환 파이프라인에서만 이 패밀리가 깨짐. 원인을
  * 하이픈으로 의심해 제거해봤지만 재현됨 — NativeWind 자체의 한계로 결론). 그래서 이 폰트는
- * className(`font-ok-mallang-b`)이 아니라 아래 `okMallangBStyle`을 `style` prop으로 직접
- * 적용한다 — §16 인라인 스타일 금지의 예외(측정된 이유 있음, Reanimated 예외와 동급).
+ * className(`font-ok-mallang-b`)이 아니라 항상 `style` prop으로 직접 적용한다 — §16 인라인
+ * 스타일 금지의 예외(측정된 이유 있음, Reanimated 예외와 동급). 테두리가 있는 텍스트는
+ * `OkMallangBText`(아래 `display.*`/§8 참고)로, 테두리 없는 단순 텍스트는 아래
+ * `okMallangBStyle`/`okMallangBTitleStyle`을 `style` prop으로 직접 적용한다.
  */
 export const fontFamily = {
   ydeStreetB: 'YdestreetB',
@@ -32,7 +36,11 @@ export const fontFamily = {
   okMallangB: 'OkMallangBRegular',
 };
 
-/** `font-ok-mallang-b` 클래스가 실기기에서 깨지는 문제의 우회 — 위 주석 참고. */
+/**
+ * className(`font-ok-mallang-b`)이 실기기에서 깨지는 문제의 우회로 남겨둔 style 객체 —
+ * 테두리 없는 단순 Ok Mallang B 텍스트(예: `okMallangBTitleStyle`)에 쓴다. 테두리가 있는
+ * 텍스트는 `OkMallangBText`(위 주석 참고)를 쓸 것.
+ */
 export const okMallangBStyle = { fontFamily: fontFamily.okMallangB };
 
 /** Figma 텍스트 스타일 공통 line-height (160%) */
@@ -113,23 +121,57 @@ export const body = {
   },
 };
 
-export const typography = { fontFamily, heading, body };
+/** `Ok Mallang B` 표시용 텍스트의 line-height 비율. Figma: `leading-[1.1]` (Heading/Body 의 1.6 과 다름). */
+const DISPLAY_LINE_HEIGHT_RATIO = 1.1;
+
+/**
+ * `Ok Mallang B` 전용 사이즈. Figma 에 Heading/Body 처럼 정식 텍스트 스타일이 없어서
+ * (§8 "OK Mallang B has no registered font-size scale") 인라인 값이 원칙이지만,
+ * 러빈지옥 미니게임 화면에서 2곳 이상 재사용되는 값만 여기 토큰으로 올린다.
+ *
+ * `fill`/`stroke`도 Figma에 인스턴스별로 박혀 있는 실제 값이다(코드젠 도구가 텍스트 stroke를
+ * CSS로 뽑아주지 않아 스크린샷을 픽셀 단위로 확인해 값을 구했다 — Figma 인스펙터의 정확한 px
+ * 값과 다를 수 있으니 추후 실제 값을 알게 되면 여기만 고치면 된다). 이 색/두께는 텍스트마다
+ * 다를 수 있어(§8) 절대 서로 재사용하지 않는다 — title은 pink-200 얇은 테두리, score는 진한
+ * 검정 두꺼운 테두리로 서로 다르다.
+ */
+export const display = {
+  /** "Ready?" / "Game Over" 오버레이 타이틀. Figma: 6285:6955, 6263:6495 등 40px, pink-500 위 pink-200 stroke ~2px. */
+  title: {
+    fontFamily: fontFamily.okMallangB,
+    fontSize: 40,
+    lineHeight: 40 * DISPLAY_LINE_HEIGHT_RATIO,
+    fill: pink[500],
+    stroke: { color: pink[200], width: 2 },
+  },
+  /** 게임 프레임 좌상단 기록 카운터. Figma: 6285:7097, 6263:6384 등 28px, white 위 black(#1D1D1D) stroke ~3px. */
+  score: {
+    fontFamily: fontFamily.okMallangB,
+    fontSize: 28,
+    lineHeight: 28 * DISPLAY_LINE_HEIGHT_RATIO,
+    fill: defaultColor.white,
+    stroke: { color: defaultColor.black, width: 3 },
+  },
+};
+
+export const typography = { fontFamily, heading, body, display };
 
 // --- 아래는 tailwind.config.js 가 그대로 쓰는 형태로 위 값에서 파생시킨 것 ---
 
 /** tailwind.config.js 의 fontSize 항목 형태: [크기, { lineHeight }] */
 type TailwindFontSize = [string, { lineHeight: string }];
 
-const toTailwindFontSize = (size: number): TailwindFontSize => [
+const toTailwindFontSize = (size: number, ratio: number = lineHeightRatio): TailwindFontSize => [
   `${size}px`,
   // '160%' 로 쓰면 react-native-css-interop 이 버리므로 단위 없는 숫자 문자열을 쓴다.
-  { lineHeight: String(lineHeightRatio) },
+  { lineHeight: String(ratio) },
 ];
 
 /**
  * `font-yde-street-b` / `font-yde-street-l`. Ok Mallang B는 여기 없다 — `font-ok-mallang-b`
- * Tailwind 클래스는 실기기에서 항상 폰트가 깨진다(위 okMallangBStyle 주석 참고). 일부러
- * 제외해 그 클래스 자체가 존재할 수 없게 한다.
+ * Tailwind 클래스는 실기기에서 항상 폰트가 깨진다(위 `fontFamily.okMallangB` 주석 참고).
+ * display-*는 테두리(stroke)까지 있어 애초에 Tailwind 클래스가 아니라 `OkMallangBText`
+ * 컴포넌트가 `display.title`/`display.score` 토큰을 style로 직접 읽어 그린다.
  */
 export const tailwindFontFamily = {
   'yde-street-b': [fontFamily.ydeStreetB],
@@ -152,3 +194,4 @@ export const tailwindFontSize: Record<string, TailwindFontSize> =
 export type Typography = typeof typography;
 export type HeadingLevel = keyof typeof heading;
 export type BodySize = keyof typeof body;
+export type DisplaySize = keyof typeof display;
