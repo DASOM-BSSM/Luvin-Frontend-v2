@@ -1,6 +1,6 @@
 import { Pressable } from 'react-native';
 
-import BreadCharacter from '@/src/assets/images/BreadCharacter';
+import PersonDoughCharacter from '@/src/assets/images/PersonDoughCharacter';
 import type { InfernoCardState } from '@/src/features/inferno/hooks/use-inferno-cardflip-game';
 
 interface InfernoFlipCardProps {
@@ -32,9 +32,8 @@ export default function InfernoFlipCard({ card, disabled, onPress }: InfernoFlip
       onPress={handlePress}
     >
       {card.isFaceUp ? (
-        <BreadCharacter
+        <PersonDoughCharacter
           type={card.type}
-          state="dough"
           className="h-[40px] w-[48px]"
           accessibilityLabel={`${card.type} 반죽`}
         />

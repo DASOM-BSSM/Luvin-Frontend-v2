@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import BreadCharacter from '@/src/assets/images/BreadCharacter';
+import PersonDoughCharacter from '@/src/assets/images/PersonDoughCharacter';
 import TypewriterText from '@/src/components/ui/typewriter-text';
 import InfernoChatBubble from '@/src/features/inferno/components/inferno-chat-bubble';
 import { findDoughFigure } from '@/src/features/inferno/constants/dough-figures';
@@ -30,9 +30,8 @@ export default function InfernoChatRow({
   const isRight = message.side === 'right';
 
   const avatar = (
-    <BreadCharacter
+    <PersonDoughCharacter
       type={participant.type}
-      state="dough"
       className={figure.chatSizeClass}
       accessibilityLabel={participant.name}
     />
