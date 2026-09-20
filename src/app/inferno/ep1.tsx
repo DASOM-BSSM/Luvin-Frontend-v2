@@ -40,8 +40,9 @@ export default function InfernoEp1Screen() {
   const flow = useInfernoEp1Flow(conversation);
 
   // 둘 다 상수 목록에서 찾는 것이라 실제로는 비어 있을 수 없다. 타입을 좁히기 위한 처리.
-  // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11).
-  if (!episode || !conversation) {
+  // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11). vote 는 회차마다 있을 수도 없을 수도
+  // 있는 필드라(types/index.ts 주석 참고) ep1 데이터에는 항상 있지만 타입상 좁혀 둬야 한다.
+  if (!episode || !conversation || !conversation.vote) {
     return null;
   }
 

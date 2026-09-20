@@ -47,6 +47,12 @@ export const pink = {
   1000: '#593B41',
 };
 
+/**
+ * Figma `Color system` 변수 컬렉션에는 없는 값. `ep2-대화 끝`(5467:5765)의 하트 배지 SVG
+ * 에셋 자체에 이 값이 그대로 박혀 있어서(변수 바인딩 없음) 그대로 옮겨 왔다.
+ */
+export const heart = '#FF5454';
+
 /** Figma: `state color/*` */
 export const state = {
   error: '#FF0030',
@@ -73,6 +79,7 @@ export const colors = {
   brown,
   yellow,
   pink,
+  heart,
   state,
   text,
   default: defaultColor,
