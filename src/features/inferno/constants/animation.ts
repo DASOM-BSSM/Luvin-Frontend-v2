@@ -82,3 +82,12 @@ export const GUIDE_ITEM_FADE_MS = 620;
 
 /** 떠오를 때 아래에서 올라오는 거리(px). */
 export const GUIDE_ITEM_RISE = 12;
+
+// --- 대화 끝 투표 안내 ---
+
+/**
+ * 마지막 줄이 다 쳐지고 투표 모달이 뜨기까지의 간격.
+ *
+ * 곧바로 띄우면 "대화가 종료되었습니다" 안내를 읽기도 전에 모달이 덮는다.
+ */
+export const VOTE_MODAL_DELAY_MS = 800;

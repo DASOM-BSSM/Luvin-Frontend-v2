@@ -16,6 +16,10 @@ import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card'
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
+import {
+  INFERNO_EPISODE_HREFS,
+  infernoIntroHref,
+} from '@/src/features/inferno/constants/routes';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
 import type { BreadProfile, DiaryPreview } from '@/src/features/home/types';
@@ -35,6 +39,10 @@ export default function HomeScreen() {
   const hasStartedInferno = completedOrders.length > 0;
   const weeklyEpisode = hasStartedInferno ? findNextInfernoEpisode(completedOrders) : undefined;
 
+  // 본문이 아직 없는 회차는 눌러도 갈 곳이 없다. 그런 회차는 카드를 누르지 못하게 둔다.
+  const canOpenWeeklyEpisode =
+    weeklyEpisode !== undefined && INFERNO_EPISODE_HREFS[weeklyEpisode.order] !== undefined;
+
   // 반죽이 없으면 러빈지옥을 시작할 수 없다. 막기만 하지 않고 설문으로 갈 길을 열어 준다.
   function handleInfernoStartPress() {
     if (hasBread) {
@@ -43,6 +51,15 @@ export default function HomeScreen() {
     }
 
     setIsNoticeVisible(true);
+  }
+
+  // 이번주 에피소드는 시작 화면부터 본다. 본문으로 바로 뛰지 않는 건 ep0 과 같은 흐름이다.
+  function handleWeeklyEpisodePress() {
+    if (!weeklyEpisode) {
+      return;
+    }
+
+    router.push(infernoIntroHref(weeklyEpisode.order));
   }
 
   function handleNoticeClose() {
@@ -90,7 +107,10 @@ export default function HomeScreen() {
             onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
           {weeklyEpisode ? (
-            <EpisodeThumbnailCard episode={weeklyEpisode} />
+            <EpisodeThumbnailCard
+              episode={weeklyEpisode}
+              onPress={canOpenWeeklyEpisode ? handleWeeklyEpisodePress : undefined}
+            />
           ) : (
             <EpisodeEmptyCard onStartPress={handleInfernoStartPress} />
           )}
