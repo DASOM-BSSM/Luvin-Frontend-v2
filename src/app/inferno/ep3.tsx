@@ -27,7 +27,7 @@ export default function InfernoEp3Screen() {
   const { conversation } = useInfernoConversation(EPISODE_ORDER);
   const flow = useInfernoEp3Flow(conversation);
 
-  if (!episode || !conversation) return null;
+  if (!episode || !conversation || !conversation.vote) return null;
 
   const page = conversation.pages[flow.pageIndex];
   const voteOptions = conversation.participants.filter(({ isMine }) => !isMine);

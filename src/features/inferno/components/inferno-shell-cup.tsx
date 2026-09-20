@@ -1,8 +1,8 @@
 import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
+import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import InfernoMiniGameCup from '@/src/assets/images/InfernoMiniGameCup';
-import PersonDoughCharacter from '@/src/assets/images/PersonDoughCharacter';
 import type { InfernoShellCupState } from '@/src/features/inferno/hooks/use-inferno-shell-game';
 
 interface InfernoShellCupProps {
@@ -28,8 +28,9 @@ export default function InfernoShellCup({ cup, disabled, onPress }: InfernoShell
     <Animated.View className="h-[130px] w-[100px] items-center justify-end" style={positionStyle}>
       {cup.isTarget ? (
         <View className="h-[40px] w-[76px] items-center justify-end">
-          <PersonDoughCharacter
+          <BreadCharacter
             type="pretzel"
+            state="personDough"
             className="h-[40px] w-[76px]"
             accessibilityLabel="프레첼 반죽"
           />
