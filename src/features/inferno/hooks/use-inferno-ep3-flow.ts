@@ -1,0 +1,140 @@
+import { useEffect, useState } from 'react';
+
+import { submitInfernoVote } from '@/src/features/inferno/api/conversation';
+import { GAME_MODAL_DELAY_MS } from '@/src/features/inferno/constants/animation';
+import type { InfernoConversation } from '@/src/features/inferno/types';
+
+/** 지금 떠 있는 모달. 없으면 undefined. */
+export type InfernoEp3Modal = 'done';
+
+interface InfernoEp3Flow {
+  pageIndex: number;
+  isGameOpen: boolean;
+  isGamePromptOpen: boolean;
+  /** 야바위 성공 뒤 투표지를 보고 있는지. */
+  isBallotOpen: boolean;
+  openModal?: InfernoEp3Modal;
+  /** 아직 고르지 않았으면 undefined. */
+  selectedId?: string;
+  goPrevious?: () => void;
+  goNext?: () => void;
+  handlePageDone: () => void;
+  handlePromptClose: () => void;
+  handleGameStart: () => void;
+  handleGameSuccess: () => void;
+  handleModalClose: () => void;
+  handleSelect: (participantId: string) => void;
+  handleSubmit: () => void;
+}
+
+/**
+ * ep3 게임 전 대화 두 쪽 → 야바위 → (성공 시) 투표지 → 완료까지의 순서를 관리한다.
+ *
+ * 실패는 흐름에 남기지 않는다. 실패 쪽지의 "에피소드 끝내기"는 바로 화면 밖(메인)으로
+ * 나가는 동작이라 화면(src/app/inferno/ep3.tsx)이 직접 처리한다.
+ */
+export default function useInfernoEp3Flow(
+  conversation: InfernoConversation | undefined,
+): InfernoEp3Flow {
+  const [pageIndex, setPageIndex] = useState(0);
+  const [isLastPageTyped, setIsLastPageTyped] = useState(false);
+  const [isGamePromptOpen, setIsGamePromptOpen] = useState(false);
+  const [isGameOpen, setIsGameOpen] = useState(false);
+  const [isBallotOpen, setIsBallotOpen] = useState(false);
+  const [openModal, setOpenModal] = useState<InfernoEp3Modal | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+
+  const lastPageIndex = conversation ? conversation.pages.length - 1 : 0;
+  const isLastPage = pageIndex >= lastPageIndex;
+
+  useEffect(() => {
+    if (!isLastPageTyped) return;
+
+    const timer = setTimeout(() => setIsGamePromptOpen(true), GAME_MODAL_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [isLastPageTyped]);
+
+  function handlePageDone() {
+    if (isLastPage) setIsLastPageTyped(true);
+  }
+
+  function handlePromptClose() {
+    setIsGamePromptOpen(false);
+  }
+
+  function handleGameStart() {
+    setIsGamePromptOpen(false);
+    setIsGameOpen(true);
+  }
+
+  // 야바위 성공 쪽지의 "투표하기". 게임 화면을 접고 투표지를 연다.
+  function handleGameSuccess() {
+    setIsGameOpen(false);
+    setIsBallotOpen(true);
+  }
+
+  function handleSelect(participantId: string) {
+    setSelectedId(participantId);
+  }
+
+  // 투표지의 "투표하기". ep1(use-inferno-ep1-flow)과 같은 규칙:
+  // 고르지 않고 누르면 아무 일도 하지 않는다(§11, 없는 디자인을 지어내지 않는다).
+  function handleSubmit() {
+    if (!conversation || !selectedId) return;
+
+    submitInfernoVote(conversation.episodeOrder, selectedId);
+    setOpenModal('done');
+  }
+
+  function handleModalClose() {
+    setOpenModal(undefined);
+  }
+
+  function showPreviousPage() {
+    setIsLastPageTyped(false);
+    setPageIndex((index) => index - 1);
+  }
+
+  function showNextPage() {
+    setIsLastPageTyped(false);
+    setPageIndex((index) => index + 1);
+  }
+
+  function showGamePrompt() {
+    setIsGamePromptOpen(true);
+  }
+
+  function closeGame() {
+    setIsGameOpen(false);
+  }
+
+  function resolveGoPrevious() {
+    // 투표지에서는 ep1 과 같이 상단 바로 더 갈 곳이 없다("투표하기"로만 이어진다).
+    if (isBallotOpen) return undefined;
+    if (isGameOpen) return closeGame;
+    return pageIndex > 0 ? showPreviousPage : undefined;
+  }
+
+  function resolveGoNext() {
+    if (isBallotOpen || isGameOpen) return undefined;
+    return isLastPage ? showGamePrompt : showNextPage;
+  }
+
+  return {
+    pageIndex,
+    isGameOpen,
+    isGamePromptOpen,
+    isBallotOpen,
+    openModal,
+    selectedId,
+    goPrevious: resolveGoPrevious(),
+    goNext: resolveGoNext(),
+    handlePageDone,
+    handlePromptClose,
+    handleGameStart,
+    handleGameSuccess,
+    handleModalClose,
+    handleSelect,
+    handleSubmit,
+  };
+}

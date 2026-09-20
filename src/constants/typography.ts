@@ -51,11 +51,25 @@ export const lineHeightRatio = 1.6;
  *
  * Figma 에 이름 붙은 텍스트 스타일이 아니라 그 자리에서만 쓰는 22px 값이라 Heading/Body
  * 척도에는 넣지 않았다. 같은 크기가 다른 화면에도 나오면 그때 정식 토큰으로 올릴 것.
+ * Episode 03의 "MINI GAME"(5726:3280)도 동일한 22px/160%여서 이 토큰을 공유한다.
  */
 export const okMallangBTitleStyle = {
   ...okMallangBStyle,
   fontSize: 22,
   lineHeight: 22 * lineHeightRatio,
+};
+
+/** Figma 5726:3271: 781×300 쪽지 안의 컵·테이블 배치. */
+export const infernoMiniGameLayout = {
+  width: { 'inferno-cup': '100px' },
+  height: {
+    'inferno-cup': '114px',
+    // 테이블은 쪽지 상단에서 256px. 제목 60.8 + 간격 44 + 상단 여백 48을 뺀다.
+    'inferno-cup-visible': '103.2px',
+    'inferno-game-gap': '44px',
+    'inferno-table': '44px',
+  },
+  spacing: { 'inferno-cup-gap': '70px' },
 };
 
 /** Figma: `Heading/H1` ~ `Heading/H5` */
