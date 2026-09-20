@@ -12,6 +12,7 @@ import type { Href } from 'expo-router';
 export const INFERNO_EPISODE_HREFS: Record<number, Href | undefined> = {
   0: '/inferno/ep0',
   1: '/inferno/ep1',
+  2: '/inferno/ep2',
   4: '/inferno/ep4',
 };
 

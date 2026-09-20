@@ -10,7 +10,7 @@
  *   theme.typography.heading.h1
  */
 
-import { brown, colors, defaultColor, pink, state, text, yellow } from './colors';
+import { brown, colors, defaultColor, heart, pink, state, text, yellow } from './colors';
 import { body, display, fontFamily, heading, lineHeightRatio, typography } from './typography';
 
 const theme = {
@@ -21,6 +21,7 @@ const theme = {
   brown,
   yellow,
   pink,
+  heart,
   state,
   text,
   default: defaultColor,
