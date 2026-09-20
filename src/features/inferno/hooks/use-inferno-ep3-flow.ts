@@ -7,11 +7,16 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
 /** 지금 떠 있는 모달. 없으면 undefined. */
 export type InfernoEp3Modal = 'done';
 
+/** 같은 결과·문구를 공유하는 두 미니게임 중 어느 쪽인지. 시안이 둘 다 "Episode 03"이다. */
+export type InfernoEp3Game = 'shell' | 'cardflip';
+
 interface InfernoEp3Flow {
   pageIndex: number;
   isGameOpen: boolean;
   isGamePromptOpen: boolean;
-  /** 야바위 성공 뒤 투표지를 보고 있는지. */
+  /** 게임하기를 누를 때마다 둘 중 하나로 무작위로 정해진다. */
+  selectedGame: InfernoEp3Game;
+  /** 야바위/카드 뒤집기 성공 뒤 투표지를 보고 있는지. */
   isBallotOpen: boolean;
   openModal?: InfernoEp3Modal;
   /** 아직 고르지 않았으면 undefined. */
@@ -40,6 +45,7 @@ export default function useInfernoEp3Flow(
   const [isLastPageTyped, setIsLastPageTyped] = useState(false);
   const [isGamePromptOpen, setIsGamePromptOpen] = useState(false);
   const [isGameOpen, setIsGameOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<InfernoEp3Game>('shell');
   const [isBallotOpen, setIsBallotOpen] = useState(false);
   const [openModal, setOpenModal] = useState<InfernoEp3Modal | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
@@ -62,12 +68,14 @@ export default function useInfernoEp3Flow(
     setIsGamePromptOpen(false);
   }
 
+  // 두 미니게임이 승패 문구·다음 동작을 그대로 공유해서 매번 무작위로 하나를 고른다.
   function handleGameStart() {
     setIsGamePromptOpen(false);
+    setSelectedGame(Math.random() < 0.5 ? 'shell' : 'cardflip');
     setIsGameOpen(true);
   }
 
-  // 야바위 성공 쪽지의 "투표하기". 게임 화면을 접고 투표지를 연다.
+  // 미니게임 성공 쪽지의 "투표하기". 게임 화면을 접고 투표지를 연다.
   function handleGameSuccess() {
     setIsGameOpen(false);
     setIsBallotOpen(true);
@@ -124,6 +132,7 @@ export default function useInfernoEp3Flow(
     pageIndex,
     isGameOpen,
     isGamePromptOpen,
+    selectedGame,
     isBallotOpen,
     openModal,
     selectedId,

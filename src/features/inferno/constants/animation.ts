@@ -114,3 +114,14 @@ export const SHELL_SWAP_COUNT = 5;
 
 /** 컵을 들어 프레첼이 보이게 하는 거리. */
 export const SHELL_LIFT_DISTANCE = 52;
+
+// --- Episode 03 카드 뒤집기 ---
+
+/** 시작할 때 16장을 전부 보여주는 시간. */
+export const CARDFLIP_PREVIEW_MS = 3000;
+
+/** 짝이 틀렸을 때 다시 덮기 전까지 보여주는 시간. */
+export const CARDFLIP_MISMATCH_HOLD_MS = 700;
+
+/** 목숨 개수. Figma `Frame 107`(6219:4039) 이 하트 4개다. */
+export const CARDFLIP_LIVES = 4;

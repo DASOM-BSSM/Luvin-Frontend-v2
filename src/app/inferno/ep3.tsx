@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 
+import InfernoCardFlipScene from '@/src/features/inferno/components/inferno-cardflip-scene';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoMiniGameScene from '@/src/features/inferno/components/inferno-minigame-scene';
@@ -69,7 +70,11 @@ export default function InfernoEp3Screen() {
           onSubmit={flow.handleSubmit}
         />
       ) : flow.isGameOpen ? (
-        <InfernoMiniGameScene onVotePress={flow.handleGameSuccess} onExitPress={finishEpisode} />
+        flow.selectedGame === 'cardflip' ? (
+          <InfernoCardFlipScene onVotePress={flow.handleGameSuccess} onExitPress={finishEpisode} />
+        ) : (
+          <InfernoMiniGameScene onVotePress={flow.handleGameSuccess} onExitPress={finishEpisode} />
+        )
       ) : (
         <InfernoChatScene
           key={page.id}

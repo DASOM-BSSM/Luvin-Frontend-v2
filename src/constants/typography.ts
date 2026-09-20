@@ -61,7 +61,12 @@ export const okMallangBTitleStyle = {
 
 /** Figma 5726:3271: 781×300 쪽지 안의 컵·테이블 배치. */
 export const infernoMiniGameLayout = {
-  width: { 'inferno-cup': '100px' },
+  width: {
+    'inferno-cup': '100px',
+    // 카드 뒤집기 HUD 좌우 칸. 오른쪽 하트 4개 폭(6219:4039)만큼 왼쪽에도 빈 칸을 둬서
+    // "MINI GAME" 제목이 가운데 오게 한다.
+    'inferno-hud-side': '88px',
+  },
   height: {
     'inferno-cup': '114px',
     // 테이블은 쪽지 상단에서 256px. 제목 60.8 + 간격 44 + 상단 여백 48을 뺀다.
