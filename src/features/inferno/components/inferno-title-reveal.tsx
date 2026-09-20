@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -64,12 +65,26 @@ export default function InfernoTitleReveal() {
         false,
       ),
     );
+
+    // 러빈지옥은 가로로 잠기는 화면이라 마운트 직후 방향이 정리되며 onLayout 이 한 번 더
+    // 뜰 수 있다(width 가 다시 바뀜). 그때 이 effect 가 다시 돌면서 정리 없이 새 애니메이션을
+    // 얹으면, 이전 체인이 끝나기 전에 겹쳐서 boil.value 가 BOIL_FRAMES 범위를 벗어난 값에
+    // 잠깐 머무를 수 있다(실기기 Android 에서 "Cannot read property 'x' of undefined" 로
+    // 확인됨). 새 애니메이션을 걸기 전에 이전 것부터 반드시 취소한다.
+    return () => {
+      cancelAnimation(progress);
+      cancelAnimation(boil);
+    };
   }, [width, progress, boil]);
 
   const clipStyle = useAnimatedStyle(() => ({ width: progress.value * width }));
 
   const boilStyle = useAnimatedStyle(() => {
-    const frame = BOIL_FRAMES[Math.floor(boil.value) % BOIL_FRAMES.length];
+    // 위 cancelAnimation 으로 대부분 막히지만, 혹시 모를 경계값(음수, length 이상)에도
+    // 안전하게 프레임 하나를 고르도록 나머지 연산을 한 번 더 감싼다(방어적 이중 안전장치).
+    const index =
+      ((Math.floor(boil.value) % BOIL_FRAMES.length) + BOIL_FRAMES.length) % BOIL_FRAMES.length;
+    const frame = BOIL_FRAMES[index] ?? BOIL_FRAMES[0];
 
     // 크기는 1 에서 얼마나 벗어났는지에 강도를 곱해야 한다. scale 자체에 곱하면 타이틀이 줄어든다.
     return {

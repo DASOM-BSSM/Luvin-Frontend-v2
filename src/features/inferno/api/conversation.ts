@@ -76,9 +76,124 @@ const EP1_CONVERSATION: InfernoConversation = {
   },
 };
 
+/**
+ * ep2 대화. Figma `ep2-매칭전 전체대화`(5458:2968), `ep2-매칭`(5467:5123), `ep2-대화`(5379:3570),
+ * `ep2-대화 끝`(5467:5564).
+ *
+ * 전체대화(pages)는 ep1 투표에서 고른 세 후보(카스테라·도넛·프레첼)가 저희끼리 나누는
+ * 대화라 내 분신(소금빵)이 등장하지 않지만, 매칭 뒤 1:1 대화(personalChatPages)는 소금빵과
+ * 도넛 둘만 나누므로 참가자 목록에는 넷 다 넣어 둔다(소금빵은 전체대화 쪽 메시지에서만 안 쓰인다).
+ */
+const EP2_CONVERSATION: InfernoConversation = {
+  episodeOrder: 2,
+  participants: [
+    { id: 'me', type: 'salt', name: '고소한 소금빵 반죽', isMine: true },
+    { id: 'castella', type: 'castella', name: '유쾌한 카스테라 반죽', isMine: false },
+    { id: 'donut', type: 'donut', name: '차가운 도넛 반죽', isMine: false },
+    { id: 'pretzel', type: 'pretzel', name: '엉뚱한 프레첼 반죽', isMine: false },
+  ],
+  pages: [
+    {
+      id: 'ep2-p1',
+      messages: [
+        {
+          id: 'ep2-p1-1',
+          participantId: 'castella',
+          side: 'left',
+          text: '소금빵씨가 고른 분에 따라 매칭이 달라지겠네요',
+        },
+        {
+          id: 'ep2-p1-2',
+          participantId: 'donut',
+          side: 'left',
+          text: '매칭 결과는 언제 나올까요? 지금 나오려나',
+        },
+        {
+          id: 'ep2-p1-3',
+          participantId: 'pretzel',
+          side: 'right',
+          text: '곧 나올것 같아요 소금빵님과 대화 해보고 싶네용',
+        },
+      ],
+    },
+  ],
+  matchReveal: {
+    noticeMessage: '쫀쫀한 소금빵 반죽 → 차가운 도넛 반죽',
+    actionLabel: '도넛 반죽과 오븐 가기',
+  },
+  // 1:1 대화에서 내 분신(소금빵)이 한 네 줄. 이유 문구는 시안(5467:6213)에 있는 한 줄만 있다.
+  feedbackTopics: [
+    { messageId: 'ep2-personal-p1-1', message: '안녕하세용 도넛님 저 소금빵이에요!!!' },
+    {
+      messageId: 'ep2-personal-p1-3',
+      message: '그러네요! 둘만 있으니까 살짝 떨리는것 같아요..',
+      reason: '여기서 나의 호감을 표현하고 싶었고\n상대에게 확신을 주고 싶었어요',
+    },
+    { messageId: 'ep2-personal-p2-1', message: 'ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ 그러니까요' },
+    { messageId: 'ep2-personal-p2-2', message: '도넛님이랑 통하는게 되게 많은것 같아요' },
+  ],
+  personalChatPages: [
+    {
+      id: 'ep2-personal-p1',
+      messages: [
+        {
+          id: 'ep2-personal-p1-1',
+          participantId: 'me',
+          side: 'right',
+          text: '안녕하세용 도넛님 저 소금빵이에요!!!',
+        },
+        {
+          id: 'ep2-personal-p1-2',
+          participantId: 'donut',
+          side: 'left',
+          text: '안녕하세요 둘이서 대화 나누는건 처음이네요',
+        },
+        {
+          id: 'ep2-personal-p1-3',
+          participantId: 'me',
+          side: 'right',
+          text: '그러네요! 둘만 있으니까 살짝 떨리는것 같아요..',
+        },
+        {
+          id: 'ep2-personal-p1-4',
+          participantId: 'donut',
+          side: 'left',
+          text: '왜 저를 고르셨어요?',
+        },
+      ],
+    },
+    {
+      id: 'ep2-personal-p2',
+      notice: '- 대화가 종료되었습니다 -',
+      messages: [
+        {
+          id: 'ep2-personal-p2-1',
+          participantId: 'me',
+          side: 'right',
+          text: 'ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ 그러니까요',
+        },
+        {
+          id: 'ep2-personal-p2-2',
+          participantId: 'me',
+          side: 'right',
+          text: '도넛님이랑 통하는게 되게 많은것 같아요',
+        },
+        {
+          id: 'ep2-personal-p2-3',
+          participantId: 'donut',
+          side: 'left',
+          text: '그러게요 우리 조금 잘 맞는 것 같아요',
+          showHeart: true,
+        },
+      ],
+    },
+  ],
+};
+
 /** 회차별 대화. 회차가 늘면 여기에 추가한다. */
 const CONVERSATIONS: Record<number, InfernoConversation | undefined> = {
   1: EP1_CONVERSATION,
+  2: EP2_CONVERSATION,
 };
 
 /** 회차의 대화를 가져온다. 아직 대화가 없는 회차면 undefined. */
@@ -96,4 +211,15 @@ export function getInfernoConversation(order: number): InfernoConversation | und
 export function submitInfernoVote(order: number, participantId: string): void {
   void order;
   void participantId;
+}
+
+/**
+ * "나의 빵에게" 피드백을 보낸다.
+ *
+ * submitInfernoVote 와 같은 이유로 아직 속이 비어 있다. 서버가 생기면 여기만 채우면 된다.
+ */
+export function submitInfernoFeedback(order: number, messageId: string, feedback: string): void {
+  void order;
+  void messageId;
+  void feedback;
 }
