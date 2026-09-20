@@ -74,13 +74,30 @@ export interface InfernoVotePrompt {
 }
 
 /**
+ * 투표 없이 곧장 정해지는 매칭 결과 쪽지. Figma `ep4-매칭전 전체대화` (5467:5196).
+ *
+ * ep1 은 대화가 끝나면 투표로 이어지지만(InfernoVotePrompt), ep4 는 고를 것 없이 결과만
+ * 통보받는다. 회차마다 대화 뒤에 오는 게 다르므로 둘 다 대화와 같이 내려오되 따로 둔다.
+ */
+export interface InfernoMatchReveal {
+  /** 쪽지에 뜨는 매칭 문구. 예: "쫀쫀한 소금빵 반죽 → 차가운 도넛 반죽" */
+  noticeMessage: string;
+  /** 쪽지 버튼 문구. 예: "도넛 반죽과 오븐 가기" */
+  actionLabel: string;
+}
+
+/**
  * 에피소드 한 편의 대화 전체.
  *
  * API 가 붙으면 이 타입이 응답 본문이 된다. 그래서 JSON 으로 그대로 직렬화되는 값만 담는다.
+ *
+ * 대화 뒤에 오는 게 회차마다 달라서(ep1 은 투표, ep4 는 매칭 결과) vote 와 matchReveal 을
+ * 둘 다 옵셔널로 두고 회차 데이터가 자기한테 맞는 것만 채운다.
  */
 export interface InfernoConversation {
   episodeOrder: number;
   participants: InfernoParticipant[];
   pages: InfernoChatPage[];
-  vote: InfernoVotePrompt;
+  vote?: InfernoVotePrompt;
+  matchReveal?: InfernoMatchReveal;
 }

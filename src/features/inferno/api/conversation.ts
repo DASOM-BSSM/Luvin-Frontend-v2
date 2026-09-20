@@ -76,9 +76,55 @@ const EP1_CONVERSATION: InfernoConversation = {
   },
 };
 
+/**
+ * ep4 대화. Figma `ep4-매칭전 전체대화`(5467:4661), `ep4-매칭`(5467:5196).
+ *
+ * ep2 와 뼈대가 같다 — 투표 없이 저희끼리 나누는 전체대화 한 쪽 뒤에 매칭 결과 쪽지가
+ * 뜬다. 매칭 결과 문구는 ep2 와 글자까지 같다(시안 그대로).
+ */
+const EP4_CONVERSATION: InfernoConversation = {
+  episodeOrder: 4,
+  participants: [
+    { id: 'me', type: 'salt', name: '고소한 소금빵 반죽', isMine: true },
+    { id: 'castella', type: 'castella', name: '유쾌한 카스테라 반죽', isMine: false },
+    { id: 'donut', type: 'donut', name: '차가운 도넛 반죽', isMine: false },
+    { id: 'pretzel', type: 'pretzel', name: '엉뚱한 프레첼 반죽', isMine: false },
+  ],
+  pages: [
+    {
+      id: 'ep4-p1',
+      messages: [
+        {
+          id: 'ep4-p1-1',
+          participantId: 'castella',
+          side: 'left',
+          text: '이번에는 저도 소금빵님과 대화 해보고 싶어요ㅠㅠ',
+        },
+        {
+          id: 'ep4-p1-2',
+          participantId: 'donut',
+          side: 'left',
+          text: '소금빵님 인기 많네요 성격이 워낙 밝고 좋으셔서 그런가봐요',
+        },
+        {
+          id: 'ep4-p1-3',
+          participantId: 'pretzel',
+          side: 'right',
+          text: '근데 소금빵님은 도넛 반죽 또 선택하실것 같아요...ㅎㅎ',
+        },
+      ],
+    },
+  ],
+  matchReveal: {
+    noticeMessage: '쫀쫀한 소금빵 반죽 → 차가운 도넛 반죽',
+    actionLabel: '도넛 반죽과 오븐 가기',
+  },
+};
+
 /** 회차별 대화. 회차가 늘면 여기에 추가한다. */
 const CONVERSATIONS: Record<number, InfernoConversation | undefined> = {
   1: EP1_CONVERSATION,
+  4: EP4_CONVERSATION,
 };
 
 /** 회차의 대화를 가져온다. 아직 대화가 없는 회차면 undefined. */
