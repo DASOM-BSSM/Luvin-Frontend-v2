@@ -16,6 +16,7 @@ import { pink } from "@/src/constants/colors";
 import EpisodeThumbnailCard from "@/src/features/home/components/episode-thumbnail-card";
 import type { WeeklyEpisode } from "@/src/features/home/types";
 import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
+import { LANE_ROTATION_DEG } from "@/src/features/luvin-hell/games/bread-crossing/engine/constants";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import EpisodeHistoryRow from "@/src/features/oven/components/episode-history-row";
 
@@ -155,20 +156,13 @@ function DinoPreviewCard({ showLabel }: DinoPreviewCardProps) {
   );
 }
 
-/**
- * 빵건너친구들 미니게임 엔진(`games/bread-crossing/engine/constants.ts`)의 `LANE_ROTATION_DEG`와
- * 같은 값이다 — 이 화면은 미니게임 로직과 분리해서 커밋하는 중이라 그 파일을 import하지 않고
- * 값만 그대로 복제해 뒀다. 실제 게임 쪽 값이 바뀌면 이 미리보기도 같이 맞출 것.
- */
-const PREVIEW_LANE_ROTATION_DEG = 13.08;
-
 const BREAD_ROTATION_STYLE = {
-  transform: [{ rotate: `${PREVIEW_LANE_ROTATION_DEG}deg` }],
+  transform: [{ rotate: `${LANE_ROTATION_DEG}deg` }],
 } as const;
 
 const PREVIEW_CARD_WIDTH = 135;
 const PREVIEW_CARD_HEIGHT = 181;
-const PREVIEW_ROTATION_RAD = (PREVIEW_LANE_ROTATION_DEG * Math.PI) / 180;
+const PREVIEW_ROTATION_RAD = (LANE_ROTATION_DEG * Math.PI) / 180;
 /**
  * 레인 배경 전체를 하나로 묶어 통째로 회전시킨다(개별 줄마다 따로 회전시키면 각 줄 안에서만
  * 각도가 상쇄돼 사선이 거의 안 보이는 문제가 있었음 — 디자인 QA 재확인). 회전 후에도 카드
@@ -239,7 +233,7 @@ interface BreadCrossingPreviewCardProps {
 
 /**
  * 빵건너친구들 미리보기 썸네일. 마찬가지로 실제 `BreadCrossingScene`(라이브 엔진)을 마운트하지
- * 않고, 같은 대각선 레인 회전 기법(`PREVIEW_LANE_ROTATION_DEG`)과 색 토큰으로 정지 장면을 흉내낸다.
+ * 않고, 같은 대각선 레인 회전 기법(`LANE_ROTATION_DEG`)과 색 토큰으로 정지 장면을 흉내낸다.
  * 탭 시 `rgba(29,29,29,0.5)` 오버레이 + 흰 텍스트가 뜬다 — 공룡빵 카드와 동일한 반응(§디자인 QA).
  */
 function BreadCrossingPreviewCard({

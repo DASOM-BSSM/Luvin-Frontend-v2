@@ -69,6 +69,17 @@ export const defaultColor = {
   gray: '#D9D9D9',
 };
 
+/**
+ * 미니게임 HUD 하트 전용 색. `Color system` 컬렉션에는 없는 값이라 Figma "미니게임2 Playing"
+ * (5726:2608)의 하트 자산(Frame 107, 6219:4039)을 픽셀 샘플링해서 얻었다 — 채워진 하트는
+ * `state.error`(#FF0030)와도 `pink.*`와도 다른 별도 톤(#FF5454)이고, 빈 하트는 `default.gray`
+ * 와 정확히 같은 값이라 재사용한다.
+ */
+export const heart = {
+  filled: '#FF5454',
+  empty: defaultColor.gray,
+};
+
 export const colors = {
   brown,
   yellow,
@@ -76,6 +87,7 @@ export const colors = {
   state,
   text,
   default: defaultColor,
+  heart,
 };
 
 export type Colors = typeof colors;
