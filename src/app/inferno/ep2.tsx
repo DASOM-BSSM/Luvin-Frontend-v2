@@ -32,10 +32,13 @@ const EPISODE_ORDER = 2;
  */
 export default function InfernoEp2Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  const saveCheckpoint = useInfernoStore((state) => state.saveCheckpoint);
+  // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
+  const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation } = useInfernoConversation(EPISODE_ORDER);
-  const flow = useInfernoEp2Flow(conversation);
+  const flow = useInfernoEp2Flow(conversation, initialStep);
 
   // 전부 상수 목록에서 찾는 것이라 실제로는 비어 있을 수 없다. 타입을 좁히기 위한 처리.
   // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11).
@@ -56,8 +59,9 @@ export default function InfernoEp2Screen() {
     router.dismissTo('/');
   }
 
-  // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
+  // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
+    saveCheckpoint(EPISODE_ORDER, flow.step);
     router.dismissTo('/');
   }
 
