@@ -15,6 +15,7 @@ import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
 import {
   INFERNO_EPISODE_HREFS,
@@ -22,16 +23,15 @@ import {
 } from '@/src/features/inferno/constants/routes';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
-import type { BreadProfile, DiaryPreview } from '@/src/features/home/types';
+import type { DiaryPreview } from '@/src/features/home/types';
 
-// API 연동 전. 두 상수를 값으로 채우면 반죽이 있고 감정일기가 쌓인 상태가 된다.
-// 이번주 에피소드는 상수가 아니라 러빈지옥 진행 상태(useInfernoStore)에서 나온다.
-const MY_PROFILE: BreadProfile | null = null;
-
+// API 연동 전. 이 상수를 값으로 채우면 감정일기가 쌓인 상태가 된다.
+// 내 반죽은 useBreadStore, 이번주 에피소드는 useInfernoStore 에서 나온다.
 const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
-  const hasBread = MY_PROFILE !== null;
+  const profile = useBreadStore((state) => state.profile);
+  const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const completedOrders = useInfernoStore((state) => state.completedOrders);
 
@@ -107,7 +107,7 @@ export default function HomeScreen() {
               </Text>
             </View>
           </View>
-          {MY_PROFILE ? <MyProfileCard profile={MY_PROFILE} /> : <BreadSurveyPromptCard />}
+          {profile ? <MyProfileCard profile={profile} /> : <BreadSurveyPromptCard />}
         </View>
 
         <View className="w-full flex-col items-start gap-[12px]">
