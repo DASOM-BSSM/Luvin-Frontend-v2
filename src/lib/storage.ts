@@ -33,6 +33,36 @@ export function setStorageBoolean(key: string, value: boolean): void {
   mmkv.set(key, value);
 }
 
+/**
+ * 객체·배열을 JSON 문자열로 저장한다.
+ *
+ * MMKV 는 문자열/숫자/불리언만 다루므로 직렬화는 이 래퍼가 맡는다. 값은 화면이 다시 읽을
+ * 때 그대로 쓰이므로, 저장하는 쪽이 JSON 으로 표현되는 값만 넣을 것(함수·Date 금지).
+ */
+export function setStorageJson(key: string, value: unknown): void {
+  mmkv.set(key, JSON.stringify(value));
+}
+
+/**
+ * JSON 으로 저장해 둔 값을 읽는다. 없거나 깨졌으면 undefined.
+ *
+ * 깨진 값에 앱이 걸려 넘어지지 않도록 파싱 실패를 삼킨다. 저장 형식을 바꿨을 때 예전 값이
+ * 남아 있는 경우가 실제로 있어서, 호출부는 undefined 를 늘 감안해야 한다.
+ */
+export function getStorageJson<T>(key: string): T | undefined {
+  const raw = mmkv.getString(key);
+
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return undefined;
+  }
+}
+
 export function removeStorageItem(key: string): void {
   mmkv.remove(key);
 }

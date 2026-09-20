@@ -6,20 +6,11 @@ import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import BreadTraitList from '@/src/features/bread/components/bread-trait-list';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import RecommendedVideoCard from '@/src/features/bread/components/recommended-video-card';
 import type { RecommendedVideo } from '@/src/features/bread/types';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
-import type { BreadProfile } from '@/src/features/home/types';
-
-// API 연동 전. 시안의 값을 그대로 넣어 뒀다.
-// MY_PROFILE 을 null 로 바꾸면 설문 전(반죽 없음) 상태가 된다.
-const MY_PROFILE: BreadProfile | null = {
-  type: 'salt',
-  state: 'dough',
-  name: '쫀쫀한 소금빵 반죽',
-  description: '저는 오직 제 사람에게만 따뜻해요',
-};
 
 const BREAD_TRAITS: string[] = [
   '담백하고 표현이 과하지 않음',
@@ -40,6 +31,8 @@ const RECOMMENDED_VIDEO: RecommendedVideo | null = {
  * 홈 화면과 같은 방식이다.
  */
 export default function BreadScreen() {
+  const profile = useBreadStore((state) => state.profile);
+
   function handleBackPress() {
     // 탭으로 들어온 경우가 정상 경로고, 딥링크로 바로 열렸으면 돌아갈 곳이 없다.
     if (router.canGoBack()) {
@@ -75,8 +68,8 @@ export default function BreadScreen() {
             <Text variant="heading-h2" className="text-center text-default-black">
               나의 반죽 알아보기
             </Text>
-            {MY_PROFILE ? <MyProfileCard profile={MY_PROFILE} /> : <BreadSurveyPromptCard />}
-            {MY_PROFILE ? <BreadTraitList traits={BREAD_TRAITS} /> : null}
+            {profile ? <MyProfileCard profile={profile} /> : <BreadSurveyPromptCard />}
+            {profile ? <BreadTraitList traits={BREAD_TRAITS} /> : null}
           </View>
 
           {RECOMMENDED_VIDEO ? (

@@ -6,8 +6,9 @@ import type { SurveyAnswers, SurveyOptionId } from '@/src/features/survey/types'
 /**
  * 진행 중인 설문의 상태.
  *
- * 메모리에만 둔다. 앱을 껐다 켜도 이어서 하게 하려면 MMKV 래퍼(src/lib/storage.ts)로
- * 옮겨야 하는데, 그 래퍼가 아직 없다(§12).
+ * 메모리에만 둔다. 앱을 껐다 켜면 처음부터다. MMKV 래퍼(src/lib/storage.ts)는 이미 있으니
+ * 이어서 풀게 하려면 옮기면 되는데, 중간에 끊긴 설문을 이어서 보여줄지가 아직 제품 결정으로
+ * 정해지지 않아 그대로 둔다.
  */
 interface SurveyStore {
   /** 지금 보고 있는 문항 번호(1부터). */
