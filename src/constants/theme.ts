@@ -11,7 +11,7 @@
  */
 
 import { brown, colors, defaultColor, pink, state, text, yellow } from './colors';
-import { body, fontFamily, heading, lineHeightRatio, typography } from './typography';
+import { body, display, fontFamily, heading, lineHeightRatio, typography } from './typography';
 
 const theme = {
   colors,
@@ -27,6 +27,7 @@ const theme = {
   fontFamily,
   heading,
   body,
+  display,
   lineHeightRatio,
 } as const;
 

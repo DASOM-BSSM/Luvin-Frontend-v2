@@ -1,6 +1,8 @@
 import { Pressable, type PressableProps } from 'react-native';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import Text, { type TextVariant } from '@/src/components/ui/text';
+import { defaultColor, yellow } from '@/src/constants/colors';
 
 /**
  * Figma 에 Button 컴포넌트가 따로 없어서(전부 일반 프레임) 화면별 인스턴스에서 뽑았다.
@@ -11,6 +13,7 @@ import Text, { type TextVariant } from '@/src/components/ui/text';
  * - `modeSelectPrimary`/`modeSelectSecondary` : 러빈지옥 "Choose Your Mode" 화면(5916:5300)의
  *   두 게임 버튼 — `outline`/`filled`와 다르게 py-8, 라벨 16px, 테두리 gray. 공용 `outline`/
  *   `filled`를 재사용하면 다른 화면(홈 카드 등)까지 같이 바뀌므로 전용 variant로 분리했다.
+ *   기본은 흰색이고 누르는 동안만 yellow/300으로 바뀐다 — 아래 `PRESS_HIGHLIGHT_VARIANTS` 참고.
  * - `gameInfo`        : 미니게임 Ready/Result 화면의 "게임 설명" 버튼(6285:7061 등) — bg white,
  *   테두리 gray, py-6, 라벨 14px. `outline`과 border/폰트 크기가 달라 분리했다.
  * - `notice`          : 안내 모달 버튼 (6602:3957) — yellow/300 바탕에 yellow/400 테두리, 가로 꽉
@@ -32,8 +35,8 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   filled: 'border border-yellow-300 bg-yellow-200 px-[20px] py-[6px]',
   primary: 'h-[38px] w-full bg-yellow-400 px-[10px]',
   secondary: 'h-[42px] w-full bg-yellow-300 px-[20px]',
-  modeSelectPrimary: 'border border-default-gray bg-yellow-300 px-[20px] py-[8px]',
-  modeSelectSecondary: 'border border-default-gray bg-default-bg px-[20px] py-[8px]',
+  modeSelectPrimary: 'border border-default-gray',
+  modeSelectSecondary: 'border border-default-gray',
   gameInfo: 'border border-default-gray bg-default-bg px-[20px] py-[6px]',
   notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
 };
@@ -66,11 +69,68 @@ interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: ButtonVariant;
 }
 
+const PRESS_ANIMATION_DURATION_MS = 150;
+
 /**
- * NOTE: Figma 에 pressed / disabled / loading 상태 정의가 아직 없어서 기본 상태만 구현했다.
- * 상태 디자인이 나오면 여기에 추가할 것.
+ * Figma "Choose Your Mode"(5916:5300)는 두 버튼(공룡빵게임=yellow/300 고정, 빵건너친구들=흰색
+ * 고정)을 정적으로 다르게 그려놨고 press 상태를 따로 정의하지 않았다 — 재확인 완료. 그런데 이
+ * 정적 노랑이 "안 눌렀는데 눌린 것처럼 보인다"는 버그로 인식되어, 사용자 결정으로 두 버튼 다
+ * 기본은 흰색(default-bg)으로 통일하고 눌리는 동안만 yellow/300 으로 애니메이션하도록 바꿨다
+ * (Figma 정적 값과는 다른, 확인된 의도적 이탈).
  */
+const PRESS_HIGHLIGHT_VARIANTS: readonly ButtonVariant[] = ['modeSelectPrimary', 'modeSelectSecondary'];
+
+function hasPressHighlight(variant: ButtonVariant): boolean {
+  return PRESS_HIGHLIGHT_VARIANTS.includes(variant);
+}
+
+interface PressHighlightButtonProps extends Omit<PressableProps, 'children'> {
+  label: string;
+  variant: ButtonVariant;
+  className?: string;
+}
+
+/** 기본 흰색 → 누르는 동안 yellow/300 으로 배경을 애니메이션하는 버튼(EpisodeHistoryRow와 동일 패턴). */
+function PressHighlightButton({ label, variant, className, ...rest }: PressHighlightButtonProps) {
+  const pressProgress = useSharedValue(0);
+
+  function handlePressIn() {
+    pressProgress.value = withTiming(1, { duration: PRESS_ANIMATION_DURATION_MS });
+  }
+
+  function handlePressOut() {
+    pressProgress.value = withTiming(0, { duration: PRESS_ANIMATION_DURATION_MS });
+  }
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(pressProgress.value, [0, 1], [defaultColor.bg, yellow[300]]),
+  }));
+
+  return (
+    <Animated.View
+      className={`rounded-[8px] ${VARIANT_CONTAINER[variant]} ${className ?? ''}`}
+      style={animatedStyle}
+    >
+      <Pressable
+        accessibilityRole="button"
+        className="flex-row items-center justify-center px-[20px] py-[8px]"
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        {...rest}
+      >
+        <Text variant={VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 export default function Button({ label, variant = 'outline', className, ...rest }: ButtonProps) {
+  if (hasPressHighlight(variant)) {
+    return <PressHighlightButton label={label} variant={variant} className={className} {...rest} />;
+  }
+
   return (
     <Pressable
       accessibilityRole="button"

@@ -55,10 +55,14 @@ export default function LuvinHellModeSelectScreen() {
             <Text variant="body-m" className="text-default-black">
               현재 보유 토큰: 🥐x{balance}
             </Text>
-            {/* 미니게임 2종의 실제 화면/로직은 아직 별도로 커밋되지 않아, 두 버튼 모두
-                일부러 onPress 없이 둔다 — 눌러도 아무 데도 이동하지 않는다. */}
+            {/* 빵건너친구들은 아직 별도 PR로 진행 중이라 이번 범위에서 onPress를 넣지 않는다. */}
             <View className="w-full flex-col gap-[20px]">
-              <Button label="공룡빵게임" variant="modeSelectPrimary" className="w-full" />
+              <Button
+                label="공룡빵게임"
+                variant="modeSelectPrimary"
+                className="w-full"
+                onPress={() => router.push('/luvin-hell/dino-runner/play')}
+              />
               <Button label="빵건너친구들" variant="modeSelectSecondary" className="w-full" />
             </View>
           </View>
