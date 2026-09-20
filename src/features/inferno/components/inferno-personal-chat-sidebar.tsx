@@ -67,6 +67,8 @@ interface InfernoPersonalChatSidebarProps {
  * 시안 두 장이 서로 어긋나 있는데(`ep2-대화` 5379:3570 은 둘 다 pink/400, `ep2-대화 끝`
  * 5467:5564 는 "나의 빵에게" 만 pink/300), 나중에 그려진 5467:5564 를 따랐다. 쪽마다 색이
  * 달라질 이유가 없어 보여서 두 쪽 모두 같은 색으로 둔다.
+ *
+ * 반죽 둘은 personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
  */
 export default function InfernoPersonalChatSidebar({
   mine,
@@ -92,7 +94,7 @@ export default function InfernoPersonalChatSidebar({
         {mine ? (
           <BreadCharacter
             type={mine.type}
-            state="dough"
+            state="personDough"
             className={findDoughFigure(mine.type).chatSizeClass}
             accessibilityLabel={mine.name}
           />
@@ -100,7 +102,7 @@ export default function InfernoPersonalChatSidebar({
         {partner ? (
           <BreadCharacter
             type={partner.type}
-            state="dough"
+            state="personDough"
             className={findDoughFigure(partner.type).chatSizeClass}
             accessibilityLabel={partner.name}
           />
