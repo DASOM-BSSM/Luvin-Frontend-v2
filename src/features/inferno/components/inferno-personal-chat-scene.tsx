@@ -15,10 +15,13 @@ interface InfernoPersonalChatSceneProps {
   onPageDone?: () => void;
   /** "나의 빵에게" 를 눌렀을 때. 넘기지 않으면 눌러도 아무 일도 하지 않는다. */
   onFeedbackPress?: () => void;
+  /** "다시 굽기" 를 눌렀을 때. 넘기지 않으면 갈 곳이 없거나 이미 다시 굽기를 썼다는 뜻. */
+  onRebakePress?: () => void;
 }
 
 /**
- * 매칭 발표 뒤 1:1 대화. Figma `ep2-대화` (5379:3570), `ep2-대화 끝` (5467:5564).
+ * 매칭 발표 뒤 1:1 대화. Figma `ep2-대화` (5379:3570), `ep2-대화 끝` (5467:5564),
+ * `ep4-대화` (5449:1735), `ep4-끝` (5467:5675).
  *
  * 전체 대화(`InfernoChatScene`)와 생김새가 다르다: 아바타가 줄마다 붙지 않고 왼쪽 아래에 두
  * 반죽으로 고정돼 있고(InfernoPersonalChatSidebar), 말풍선은 분홍이다(palette="pink").
@@ -34,6 +37,7 @@ export default function InfernoPersonalChatScene({
   participants,
   onPageDone,
   onFeedbackPress,
+  onRebakePress,
 }: InfernoPersonalChatSceneProps) {
   /** 다 쳐진 줄 수. 지금 쳐지고 있는 줄의 인덱스이기도 하다. */
   const [typedCount, setTypedCount] = useState(0);
@@ -53,8 +57,8 @@ export default function InfernoPersonalChatScene({
   const mine = participants.find(({ isMine }) => isMine);
 
   // 1:1 상대는 "참가자 목록에서 내가 아닌 첫 반죽"이 아니라 이 쪽에서 말을 건 반죽이다.
-  // ep2 참가자 목록에는 전체대화에 나온 넷이 다 들어 있어서, 목록 순서로 고르면 매칭되지
-  // 않은 반죽(카스테라)이 선다.
+  // ep2·ep4 참가자 목록에는 전체대화에 나온 넷이 다 들어 있어서, 목록 순서로 고르면
+  // 매칭되지 않은 반죽이 설 수 있다.
   const partner = participants.find(
     ({ id, isMine }) => !isMine && page.messages.some((message) => message.participantId === id),
   );
@@ -65,6 +69,7 @@ export default function InfernoPersonalChatScene({
         mine={mine}
         partner={partner}
         onFeedbackPress={onFeedbackPress}
+        onRebakePress={onRebakePress}
       />
 
       <View className="flex-1 flex-col pr-[40px]">

@@ -41,7 +41,11 @@ export default function InfernoVoteOption({
       }`}
       onPress={handlePress}
     >
-      <BreadCharacter type={participant.type} state="personDough" className={figure.optionSizeClass} />
+      <BreadCharacter
+        type={participant.type}
+        state="personDough"
+        className={figure.optionSizeClass}
+      />
       <Text variant="body-m" className="text-text-primary">
         {participant.name}
       </Text>

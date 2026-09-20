@@ -14,11 +14,12 @@ interface HeartBadgeIconProps {
 }
 
 /**
- * Figma `heart` (I5467:5765;5370:2580) — 대화 말풍선에 붙는 하트 알약 배지.
+ * Figma `heart` (I5467:5765;5370:2580, I5467:5693;5370:2580) — 대화 말풍선에 붙는
+ * 하트 알약 배지.
  *
- * `ep2-대화 끝`(5467:5765)에서 대화의 결정적인 한 줄에만 붙는 장식. 하트 글리프 색은
- * Figma `Color system` 컬렉션에 없는 값이라 `theme.heart.filled` 로 옮겨 뒀다. 미니게임 HUD
- * 하트와 같은 값이라 토큰을 나눠 쓴다(colors.ts 주석 참고).
+ * `ep2-대화 끝`(5467:5765), `ep4-끝`(5467:5675)에서 대화의 결정적인 한 줄에만 붙는 장식.
+ * 하트 글리프 색은 Figma `Color system` 컬렉션에 없는 값이라 `theme.heart.filled` 로
+ * 옮겨 뒀다. 미니게임 HUD 하트와 같은 값이라 토큰을 나눠 쓴다(colors.ts 주석 참고).
  */
 export default function HeartBadgeIcon({
   backgroundColor = theme.pink[200],

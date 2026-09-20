@@ -22,8 +22,8 @@ interface InfernoChatRowProps {
  * 2쪽 67+59+72=198).
  *
  * 대화하는 반죽이라 personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
- * 이 컴포넌트는 ep1 전체대화뿐 아니라 ep2 의 group 단계(InfernoChatScene)도 그대로
- * 재사용하므로, 여기 하나만 바꾸면 두 회차가 같이 바뀐다.
+ * 이 컴포넌트는 ep1 전체대화뿐 아니라 다른 회차의 group 단계(InfernoChatScene)도 그대로
+ * 재사용하므로, 여기 하나만 바꾸면 모든 회차가 같이 바뀐다.
  */
 export default function InfernoChatRow({
   message,
