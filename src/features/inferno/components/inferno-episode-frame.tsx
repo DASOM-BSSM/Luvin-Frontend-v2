@@ -18,6 +18,7 @@ type InfernoSurface = 'note' | 'plain';
 
 interface InfernoEpisodeFrameProps {
   episode: InfernoEpisode;
+  titleVariant?: 'image' | 'text';
   /** 넘기지 않으면 note. 회차 대부분이 쪽지 위에 놓인다. */
   surface?: InfernoSurface;
   /** 하단 바 오른쪽 문구. 회차마다 다르다(inferno-bottom-bar 주석 참고). */
@@ -37,6 +38,7 @@ interface InfernoEpisodeFrameProps {
  */
 export default function InfernoEpisodeFrame({
   episode,
+  titleVariant,
   surface = 'note',
   skipLabel,
   onPreviousPress,
@@ -49,7 +51,11 @@ export default function InfernoEpisodeFrame({
   return (
     <View className="flex-1 bg-default-white">
       {isNote ? <InfernoDotBackground /> : null}
-      <InfernoTopBar onPreviousPress={onPreviousPress} onNextPress={onNextPress} />
+      <InfernoTopBar
+        titleVariant={titleVariant}
+        onPreviousPress={onPreviousPress}
+        onNextPress={onNextPress}
+      />
       {isNote ? (
         <View className="flex-1 px-[46px]">
           <InfernoNoteCard>{children}</InfernoNoteCard>
