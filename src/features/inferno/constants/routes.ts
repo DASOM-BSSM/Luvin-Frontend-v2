@@ -13,6 +13,7 @@ export const INFERNO_EPISODE_HREFS: Record<number, Href | undefined> = {
   0: '/inferno/ep0',
   1: '/inferno/ep1',
   2: '/inferno/ep2',
+  3: '/inferno/ep3',
 };
 
 /** 회차 시작 화면으로 가는 링크. 시작 화면은 회차를 검색 파라미터로 받는다. */

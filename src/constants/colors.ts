@@ -84,6 +84,8 @@ export const heart = {
 };
 
 export const colors = {
+  /** Figma 5726:3281은 text/primary가 아닌 순수 검정을 사용한다. */
+  inferno: { instruction: '#000000' },
   brown,
   yellow,
   pink,
