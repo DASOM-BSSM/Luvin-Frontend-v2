@@ -47,6 +47,11 @@ export interface InfernoChatMessage {
    */
   side: InfernoChatSide;
   text: string;
+  /**
+   * 이 줄 아래에 하트 배지를 붙일지. Figma `ep4-끝` (5467:5693) 처럼 대화의 결정적인
+   * 한 줄에만 붙는 장식이라 메시지 단위로 둔다.
+   */
+  showHeart?: boolean;
 }
 
 /**
@@ -87,6 +92,29 @@ export interface InfernoMatchReveal {
 }
 
 /**
+ * 1:1 대화 중 "다시 굽기"로 상대를 바꾸는 곁가지. Figma `다시굽기`
+ * (5467:5418 확인 모달, 5467:5840 투표지, 5467:5876 새 상대와의 대화).
+ *
+ * 투표로 새 상대를 고른다는 점은 ep1 투표(InfernoVotePrompt)와 같지만, 후보가 전체대화
+ * 참가자 중 이미 매칭된 상대를 뺀 나머지라는 점과 투표 뒤 곧장 1:1 대화로 이어진다는 점이
+ * 다르다. 대화 상대는 사용자가 고른 값이라 메시지 데이터가 실제 participant id 를 미리
+ * 알 수 없으므로, `chatMessages` 는 상대 쪽 줄에 `EP4_REBAKE_PARTNER_ID` 같은 자리표시자
+ * participantId 를 쓰고 화면이 고른 상대로 바꿔 끼운다.
+ */
+export interface InfernoRebake {
+  /** 확인 쪽지 문구. 예: "다시 굽기를 진행하시겠어요?" */
+  confirmMessage: string;
+  /** 확인 쪽지 버튼 문구. 예: "다시 굽기 상대 고르기" */
+  confirmActionLabel: string;
+  /** 투표지 문구. 예: "당신과 다시 구워지고 싶어요" */
+  voteMessage: string;
+  /** 고를 수 있는 반죽들의 participant id. 이미 매칭된 상대는 빠져 있다. */
+  candidateIds: string[];
+  /** 새 상대와의 대화. 상대 쪽 줄의 participantId 는 자리표시자다(위 설명 참고). */
+  chatMessages: InfernoChatMessage[];
+}
+
+/**
  * 에피소드 한 편의 대화 전체.
  *
  * API 가 붙으면 이 타입이 응답 본문이 된다. 그래서 JSON 으로 그대로 직렬화되는 값만 담는다.
@@ -100,4 +128,13 @@ export interface InfernoConversation {
   pages: InfernoChatPage[];
   vote?: InfernoVotePrompt;
   matchReveal?: InfernoMatchReveal;
+  /**
+   * 매칭 발표 뒤에 이어지는 1:1 대화. Figma `ep4-대화`(5449:1735), `ep4-끝`(5467:5675).
+   *
+   * 전체 대화(`pages`)와 생김새가 달라서(아바타가 줄마다 안 붙고 왼쪽에 고정, 말풍선도
+   * 분홍) 같은 배열에 섞지 않고 따로 둔다. `InfernoPersonalChatScene` 이 그린다.
+   */
+  personalChatPages?: InfernoChatPage[];
+  /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
+  rebake?: InfernoRebake;
 }
