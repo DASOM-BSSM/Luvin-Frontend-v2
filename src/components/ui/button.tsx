@@ -86,6 +86,12 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
 interface ButtonProps extends Omit<PressableProps, 'children'> {
   label: string;
   variant?: ButtonVariant;
+  /**
+   * variant 가 정하는 기본 글자 크기를 덮어쓴다. variant 가 다른 두 버튼을 나란히 놓고
+   * 글자 크기만 맞춰야 할 때 쓴다(예: outline=body-xs 옆에 secondary=body-m을 두면
+   * 크기가 달라 보인다).
+   */
+  textVariant?: TextVariant;
 }
 
 const PRESS_ANIMATION_DURATION_MS = 150;
@@ -106,11 +112,12 @@ function hasPressHighlight(variant: ButtonVariant): boolean {
 interface PressHighlightButtonProps extends Omit<PressableProps, 'children'> {
   label: string;
   variant: ButtonVariant;
+  textVariant?: TextVariant;
   className?: string;
 }
 
 /** 기본 흰색 → 누르는 동안 yellow/300 으로 배경을 애니메이션하는 버튼(EpisodeHistoryRow와 동일 패턴). */
-function PressHighlightButton({ label, variant, className, ...rest }: PressHighlightButtonProps) {
+function PressHighlightButton({ label, variant, textVariant, className, ...rest }: PressHighlightButtonProps) {
   const pressProgress = useSharedValue(0);
 
   function handlePressIn() {
@@ -137,7 +144,7 @@ function PressHighlightButton({ label, variant, className, ...rest }: PressHighl
         onPressOut={handlePressOut}
         {...rest}
       >
-        <Text variant={VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
+        <Text variant={textVariant ?? VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
           {label}
         </Text>
       </Pressable>
@@ -148,12 +155,21 @@ function PressHighlightButton({ label, variant, className, ...rest }: PressHighl
 export default function Button({
   label,
   variant = 'outline',
+  textVariant,
   className,
   disabled,
   ...rest
 }: ButtonProps) {
   if (hasPressHighlight(variant)) {
-    return <PressHighlightButton label={label} variant={variant} className={className} {...rest} />;
+    return (
+      <PressHighlightButton
+        label={label}
+        variant={variant}
+        textVariant={textVariant}
+        className={className}
+        {...rest}
+      />
+    );
   }
 
   const containerClass = disabled ? DISABLED_CONTAINER : VARIANT_CONTAINER[variant];
@@ -166,7 +182,7 @@ export default function Button({
       className={`flex-row items-center justify-center rounded-[8px] ${containerClass} ${className ?? ''}`}
       {...rest}
     >
-      <Text variant={VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
+      <Text variant={textVariant ?? VARIANT_TEXT[variant]} className={VARIANT_LABEL[variant]}>
         {label}
       </Text>
     </Pressable>

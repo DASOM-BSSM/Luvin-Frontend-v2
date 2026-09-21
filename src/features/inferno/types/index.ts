@@ -1,4 +1,4 @@
-import type { BreadType } from '@/src/assets/images/BreadCharacter';
+import type { BreadState, BreadType } from '@/src/assets/images/BreadCharacter';
 
 /** 러빈지옥 에피소드 한 편. */
 export interface InfernoEpisode {
@@ -166,4 +166,102 @@ export interface InfernoConversation {
   feedbackTopics?: InfernoFeedbackTopic[];
   /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
   rebake?: InfernoRebake;
+}
+
+/**
+ * ep5(시즌 마무리) 데이터.
+ *
+ * [DRAFT] Figma 디자인이 아직 없는 상태에서 먼저 짠 화면이라(AGENTS.md §8 예외 — 사용자
+ * 요청으로 디자인보다 동작을 먼저 만든다) 타입도 잠정적이다. 디자인이 나오면 필드가
+ * 바뀔 수 있다.
+ *
+ * ep1~4 는 전부 대화가 있어 `InfernoConversation`(pages/participants 필수)을 썼지만,
+ * ep5 는 대화 없이 시즌 리포트만 보여주는 화면이라 그 타입에 억지로 끼워 맞추지 않고
+ * 따로 둔다. API 가 붙으면 이 타입이 응답 모양이 된다(§11).
+ */
+
+/**
+ * 최종 매칭 상대 프로필. Figma 에 없는 "애착유형" 라벨은 캐릭터 성향값이다.
+ *
+ * `state` 가 없는 이유: 이 화면은 매칭 상대와 내 반죽을 personDough(팔다리 있는 반죽)로
+ * 나란히 보여주는 "매칭 성사" 장면이라 `InfernoPersonalChatSidebar`와 같은 이유로 항상
+ * personDough 로 고정한다 — 회차 대화 데이터의 dough/baked 상태와는 무관하다.
+ */
+export interface InfernoFinalMatchProfile {
+  type: BreadType;
+  name: string;
+  /** 애착유형 같은 성향 라벨. 예: "안정형" */
+  attachmentLabel: string;
+}
+
+export interface InfernoFinalMatchResult {
+  profile: InfernoFinalMatchProfile;
+  /**
+   * "이 시즌, 당신의 분신은 안정형 성향과 이어졌어요" 같은 한 줄 요약.
+   *
+   * 조사(과/와)가 붙는 조합 규칙을 코드로 만들지 않고 문구를 데이터가 완성된 문장으로
+   * 그대로 들고 있는다 — 잘못된 조사 조합을 지어내지 않기 위함(§13과 같은 취지).
+   */
+  summaryLine: string;
+}
+
+/** 성향별 호감도/반응 지표 하나. */
+export interface InfernoBehaviorMetric {
+  label: string;
+  /** 0~100. */
+  value: number;
+}
+
+export interface InfernoRebakeUsage {
+  used: boolean;
+  /** used 와 무관하게 항상 있는 완성된 요약 문장(위 summaryLine 과 같은 이유). */
+  summaryLine: string;
+}
+
+/** 공감 표시·AI 피드백 등 참여 지표. */
+export interface InfernoEngagementStats {
+  empathyCount: number;
+  aiFeedbackCount: number;
+}
+
+/**
+ * 하이라이트 상세에 보여줄 대화 한 줄.
+ *
+ * 문구를 따로 뽑아내지 않고 원본 `message`/`participant`를 그대로 들고 있는다 —
+ * `InfernoChatRow`(ep1~4 가 쓰는 그 컴포넌트)에 그대로 넘겨서 같은 채팅 UI로 그리기 위함.
+ */
+export interface InfernoHighlightLine {
+  message: InfernoChatMessage;
+  participant: InfernoParticipant;
+}
+
+/**
+ * 지난 회차 하이라이트 한 장.
+ *
+ * 실제 하이라이트(영상) 생성 기능이 없어, 그 회차 대화에서 결정적인 줄(showHeart)을
+ * 그대로 뽑아 "10초 하이라이트"처럼 보여주는 것으로 대신한다(§ pickHighlightLines).
+ * 대표 이미지는 지어내지 않고 그 회차에서 실제로 매칭된 상대 반죽을 쓴다.
+ */
+export interface InfernoHighlight {
+  episodeOrder: number;
+  type: BreadType;
+  state: BreadState;
+  lines: InfernoHighlightLine[];
+  /**
+   * 이 줄들이 매칭 뒤 1:1 대화(personalChatPages)에서 나왔는지. ep2/ep4처럼 1:1 대화가
+   * 있는 회차만 true — 말풍선을 분홍(pink)으로 그려야 한다는 뜻이다(§ InfernoChatBubble
+   * palette, ep1/ep3의 전체대화는 노랑을 그대로 쓴다).
+   */
+  isPersonalChat: boolean;
+}
+
+export interface InfernoSeasonSummary {
+  episodeOrder: number;
+  finalMatch: InfernoFinalMatchResult;
+  behaviorMetrics: InfernoBehaviorMetric[];
+  rebakeUsage: InfernoRebakeUsage;
+  engagement: InfernoEngagementStats;
+  /** "당신은 이런 상황에서 이렇게 반응하는 사람이에요" 식 한 줄 인사이트. */
+  insightLine: string;
+  highlights: InfernoHighlight[];
 }
