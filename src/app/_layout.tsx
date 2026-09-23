@@ -11,6 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import theme from '@/src/constants/theme';
 import useLandscapeRoutes from '@/src/hooks/use-landscape-routes';
+import QueryProvider from '@/src/providers/query-provider';
 
 // 컴포넌트 밖(모듈 스코프)에서 호출해야 한다. 훅 안에서 부르면 이미 늦은 경우가 있다.
 SplashScreen.preventAutoHideAsync();
@@ -56,16 +57,18 @@ export default function RootLayout() {
     // 이 안에 있어야 한다(러빈지옥 미니게임에서 처음 씀 — 이전엔 gesture-handler가
     // 설치만 되어 있고 실제로 쓰이지 않아 필요 없었다).
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* 밝은 배경 위 어두운 글씨. */}
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          // 화면 헤더는 각 시안이 직접 그리므로 네비게이터 헤더는 쓰지 않는다.
-          headerShown: false,
-          // 전환 중 흰색이 비치지 않도록 기본 배경을 토큰 색으로 맞춘다.
-          contentStyle: { backgroundColor: theme.colors.default.bg },
-        }}
-      />
+      <QueryProvider>
+        {/* 밝은 배경 위 어두운 글씨. */}
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            // 화면 헤더는 각 시안이 직접 그리므로 네비게이터 헤더는 쓰지 않는다.
+            headerShown: false,
+            // 전환 중 흰색이 비치지 않도록 기본 배경을 토큰 색으로 맞춘다.
+            contentStyle: { backgroundColor: theme.colors.default.bg },
+          }}
+        />
+      </QueryProvider>
     </GestureHandlerRootView>
   );
 }

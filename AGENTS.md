@@ -203,10 +203,10 @@ Unit tests live next to the code under test in a `__tests__/` folder. Do not aim
 Three fonts are used in Luvin:
 
 | Font           | Registered family   | Usage                                                                             |
-| -------------- | -------------------- | --------------------------------------------------------------------------------- |
-| `Yde street B` | `YdestreetB`         | Headlines, brand elements, display text                                           |
-| `Yde street L` | `YdestreetL`         | Body text, descriptions, subtext                                                  |
-| `Ok Mallang B` | `OkMallangBRegular`  | 러빈지옥 titles and emphasis copy (episode titles, mission banners, key callouts) |
+| -------------- | ------------------- | --------------------------------------------------------------------------------- |
+| `Yde street B` | `YdestreetB`        | Headlines, brand elements, display text                                           |
+| `Yde street L` | `YdestreetL`        | Body text, descriptions, subtext                                                  |
+| `Ok Mallang B` | `OkMallangBRegular` | 러빈지옥 titles and emphasis copy (episode titles, mission banners, key callouts) |
 
 Do NOT use any other font. All font usage details are defined in Figma.
 
@@ -524,3 +524,41 @@ See `CONTRIBUTING.md` for the full table. Summary:
 - **API token**: expires every 90 days — verify before use, never commit to repository
 - **Figma File Key**: ask the user before querying — never hardcode in any file
 - When querying Figma: specify `fileKey` and `node-id` separately for reliability
+
+---
+
+# 19. API Integration (OpenAPI Spec + Axios)
+
+> Draft, pending review against the actual backend `openapi.json` structure.
+
+## HTTP Client
+
+- **`axios` is the confirmed choice.** This supersedes the "HTTP client: axios or fetch — undecided" entry in §2
+- Create exactly one axios instance in `src/lib/api-client.ts` — never call `axios.create()` from a component or feature file
+- `baseURL` comes from the `EXPO_PUBLIC_API_URL` environment variable (add the key to `.env.example` per §4)
+- The auth header is attached automatically in a request interceptor, but the token value itself must only be read through `src/features/auth/lib/token-storage.ts` — no exception for interceptor code (§12)
+- On a 401, follow the single-flight refresh rule already defined in §12; implement it inside the interceptor
+
+## OpenAPI Spec → Generated Types
+
+- Save the OpenAPI 3.1 spec (JSON) received from the backend at **`docs/api/openapi.json`** — this file is the source of truth for the API surface; do not browse the backend repo to infer endpoints
+- Generate TypeScript types from this spec with `openapi-typescript` into **`src/types/api-generated.ts`**
+  - Mark the file as auto-generated in a header comment; never hand-edit it
+  - Add a `pnpm generate:api-types` script to `package.json`
+  - Installing `openapi-typescript` requires user approval first, per §3
+- **Whenever a new spec arrives**, follow this sequence:
+  1. Replace `docs/api/openapi.json`
+  2. Re-run `pnpm generate:api-types`
+  3. Run `pnpm tsc --noEmit` to surface any type errors in existing API functions/components
+  4. Fix any errors and report a summary of what changed
+
+## API Functions & Query Integration
+
+- Write request functions per feature in `src/features/<feature>/api/`, using the types from `api-generated.ts` directly — no `any` on request or response types (§16)
+- Query keys stay in `src/features/<feature>/api/query-keys.ts`, per the existing convention
+- Components never call axios or an API function directly — always go through `useQuery`/`useMutation` (§11)
+
+## Workflow
+
+- On receiving a new `openapi.json`, summarize which endpoints were added or changed before starting work
+- Never guess at an endpoint that isn't in the spec — ask the user if something expected is missing
