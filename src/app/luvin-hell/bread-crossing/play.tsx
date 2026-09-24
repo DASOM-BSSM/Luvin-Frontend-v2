@@ -13,6 +13,7 @@ import { useMissionRun } from '@/src/features/luvin-hell/engine/hooks/useMission
 import BreadCrossingScene from '@/src/features/luvin-hell/games/bread-crossing/components/BreadCrossingScene';
 import { MISSION_RANGE } from '@/src/features/luvin-hell/games/bread-crossing/engine/constants';
 import { useBreadCrossingRunStore } from '@/src/features/luvin-hell/games/bread-crossing/store';
+import useReportMinigameResult from '@/src/features/minigames/hooks/use-report-minigame-result';
 
 /**
  * 빵건너친구들 화면. Ready/Playing(5726:2608)/Result를 하나의 화면에서 phase에 따라
@@ -20,6 +21,7 @@ import { useBreadCrossingRunStore } from '@/src/features/luvin-hell/games/bread-
  */
 export default function BreadCrossingPlayScreen() {
   const run = useMissionRun(useBreadCrossingRunStore);
+  useReportMinigameResult('빵건너친구들', run.phase);
 
   useEffect(() => {
     run.begin(MISSION_RANGE);

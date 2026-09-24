@@ -13,6 +13,7 @@ import { useMissionRun } from '@/src/features/luvin-hell/engine/hooks/useMission
 import DinoRunnerScene from '@/src/features/luvin-hell/games/dino-runner/components/DinoRunnerScene';
 import { MISSION_RANGE } from '@/src/features/luvin-hell/games/dino-runner/engine/constants';
 import { useDinoRunStore } from '@/src/features/luvin-hell/games/dino-runner/store';
+import useReportMinigameResult from '@/src/features/minigames/hooks/use-report-minigame-result';
 
 /**
  * 공룡빵게임 화면. Ready(6285:7061)/Playing(5913:5154)/Result(6263:6311, 6307:8123)를
@@ -21,6 +22,7 @@ import { useDinoRunStore } from '@/src/features/luvin-hell/games/dino-runner/sto
  */
 export default function DinoRunnerPlayScreen() {
   const run = useMissionRun(useDinoRunStore);
+  useReportMinigameResult('공룡빵게임', run.phase);
 
   useEffect(() => {
     run.begin(MISSION_RANGE);
