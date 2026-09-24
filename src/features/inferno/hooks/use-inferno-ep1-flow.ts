@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { submitInfernoVote } from '@/src/features/inferno/api/conversation';
+import { submitEpisode1Selection } from '@/src/features/inferno/api/ai-season';
 import { VOTE_MODAL_DELAY_MS } from '@/src/features/inferno/constants/animation';
 import type { InfernoConversation } from '@/src/features/inferno/types';
 
@@ -102,7 +102,7 @@ export default function useInfernoEp1Flow(
       return;
     }
 
-    submitInfernoVote(conversation.episodeOrder, selectedId);
+    submitEpisode1Selection(selectedId);
     setOpenModal('done');
   }
 

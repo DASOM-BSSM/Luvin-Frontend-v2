@@ -1,5 +1,7 @@
 import { router } from 'expo-router';
+import { View } from 'react-native';
 
+import Text from '@/src/components/ui/text';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
@@ -39,18 +41,8 @@ export default function InfernoEp1Screen() {
   const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  const { conversation } = useInfernoConversation(EPISODE_ORDER);
+  const { conversation, isLoading, isError } = useInfernoConversation(EPISODE_ORDER);
   const flow = useInfernoEp1Flow(conversation, initialStep);
-
-  // 전부 상수 목록에서 찾는 것이라 실제로는 비어 있을 수 없다. 타입을 좁히기 위한 처리.
-  // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11). vote 는 회차마다 있을 수도 없을 수도
-  // 있는 필드라(types/index.ts 주석 참고) ep1 데이터에는 항상 있지만 타입상 좁혀 둬야 한다.
-  if (!episode || !conversation || !conversation.vote) {
-    return null;
-  }
-
-  const page = conversation.pages[flow.pageIndex];
-  const voteOptions = conversation.participants.filter(({ isMine }) => !isMine);
 
   function finishEpisode() {
     completeEpisode(EPISODE_ORDER);
@@ -62,6 +54,24 @@ export default function InfernoEp1Screen() {
     saveCheckpoint(EPISODE_ORDER, flow.step);
     router.dismissTo('/');
   }
+
+  // vote 는 회차마다 있을 수도 없을 수도 있는 필드라(types/index.ts 주석 참고) ep1
+  // 데이터에는 항상 있지만 타입상 좁혀 둬야 한다. AI가 아직 대화를 안 만들었거나
+  // 실패했으면 빈 화면 대신 안내를 보여준다(§11).
+  if (!episode || !conversation || !conversation.vote) {
+    return (
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+        <View className="flex-1 items-center justify-center px-[30px]">
+          <Text variant="body-m" className="text-center text-default-black">
+            {isError ? '대화를 불러오지 못했어요' : isLoading ? 'AI가 대화를 만들고 있어요...' : '대화가 아직 없어요'}
+          </Text>
+        </View>
+      </InfernoEpisodeFrame>
+    );
+  }
+
+  const page = conversation.pages[flow.pageIndex];
+  const voteOptions = conversation.participants.filter(({ isMine }) => !isMine);
 
   return (
     <InfernoEpisodeFrame

@@ -11,8 +11,9 @@ import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
-import { MOCK_USER } from '@/src/features/my-page/constants/mock-user';
+import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
+import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 
 /**
  * 마이페이지. Figma "마이페이지-미수"(6263:5785).
@@ -24,6 +25,8 @@ export default function MyPageScreen() {
   const profile = useBreadStore((state) => state.profile);
   const balance = useTokenStore((state) => state.balance);
   const gender = useProfileSettingsStore((state) => state.gender);
+  const myProfileQuery = useMyProfile();
+  useTokenBalance();
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -73,12 +76,30 @@ export default function MyPageScreen() {
               <ProfileAvatarPhoto gender={gender} />
               <View className="flex-1 flex-col items-start justify-center gap-[8px]">
                 <View className="flex-row items-center gap-[12px]">
-                  <Text variant="heading-h4" className="text-text-primary">
-                    {MOCK_USER.name}
-                  </Text>
-                  <Text variant="body-s" className="text-text-primary">
-                    {MOCK_USER.title}
-                  </Text>
+                  {myProfileQuery.isPending ? (
+                    <Text variant="heading-h4" className="text-text-primary">
+                      불러오는 중...
+                    </Text>
+                  ) : myProfileQuery.isError ? (
+                    <Pressable accessibilityRole="button" onPress={() => myProfileQuery.refetch()}>
+                      <Text variant="body-s" className="text-state-error">
+                        프로필을 불러오지 못했어요. 다시 시도
+                      </Text>
+                    </Pressable>
+                  ) : (
+                    <>
+                      <Text variant="heading-h4" className="text-text-primary">
+                        {myProfileQuery.data.nickname}
+                      </Text>
+                      {/* personalityType 이 "쫀쫀한 제빵사" 같은 뱃지 문구인지는 아직 Figma/기획으로
+                          확인되지 않았다 — 실제 값이 와야 정확한 문구/토큰화를 확정할 수 있다. */}
+                      {myProfileQuery.data.personalityType ? (
+                        <Text variant="body-s" className="text-text-primary">
+                          {myProfileQuery.data.personalityType}
+                        </Text>
+                      ) : null}
+                    </>
+                  )}
                 </View>
                 <Button
                   label="내 정보 자세히 보기"

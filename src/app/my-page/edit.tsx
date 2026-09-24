@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
@@ -7,22 +8,38 @@ import BottomNav from '@/src/components/bottom-nav';
 import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
+import useLogout from '@/src/features/auth/hooks/use-logout';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
-import { MOCK_USER } from '@/src/features/my-page/constants/mock-user';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
+import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
+import useMyProfile from '@/src/features/user/hooks/use-my-profile';
+import useUpdateProfile from '@/src/features/user/hooks/use-update-profile';
 
 /**
  * 내 정보 자세히 보기/수정. Figma "내 정보 수정-미수"(6300:8004).
  *
- * 마이페이지의 "내 정보 자세히 보기" 버튼 목적지. 로그아웃/탈퇴는 백엔드 연동 전이라 실제 인증
- * 처리는 없고, 확인 후 온보딩으로 돌려보내는 것까지만 한다.
+ * 마이페이지의 "내 정보 자세히 보기" 버튼 목적지.
  */
 export default function MyPageEditScreen() {
   const balance = useTokenStore((state) => state.balance);
   const gender = useProfileSettingsStore((state) => state.gender);
   const setGender = useProfileSettingsStore((state) => state.setGender);
+  const nickname = useProfileSettingsStore((state) => state.nickname);
+  const setNickname = useProfileSettingsStore((state) => state.setNickname);
+  const logoutMutation = useLogout();
+  const myProfileQuery = useMyProfile();
+  const updateProfileMutation = useUpdateProfile();
+  useTokenBalance();
+
+  // 로컬 닉네임 초안이 아직 없으면(한 번도 이 화면에서 수정 안 했으면) 서버 값으로 채운다 —
+  // 그래야 필드가 빈 채로 뜨지 않는다.
+  useEffect(() => {
+    if (myProfileQuery.data && !nickname) {
+      setNickname(myProfileQuery.data.nickname);
+    }
+  }, [myProfileQuery.data, nickname, setNickname]);
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -41,13 +58,23 @@ export default function MyPageEditScreen() {
   }
 
   function handleSaveInfoPress() {
-    handleBackPress();
+    // 성별은 UserProfileUpdateRequest 에 필드가 없어 서버로 보내지 않는다 — 로컬(MMKV)에만
+    // 남는다(§12 표, gender-select-button 참고). 닉네임만 실제로 저장된다.
+    updateProfileMutation.mutate({ nickname }, { onSuccess: handleBackPress });
+  }
+
+  function handleLogoutSettled() {
+    router.replace('/onboarding');
+  }
+
+  function handleLogoutConfirm() {
+    logoutMutation.mutate(undefined, { onSettled: handleLogoutSettled });
   }
 
   function handleLogoutPress() {
     Alert.alert('로그아웃', '정말 로그아웃 하시겠어요?', [
       { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: () => router.replace('/onboarding') },
+      { text: '로그아웃', style: 'destructive', onPress: handleLogoutConfirm },
     ]);
   }
 
@@ -87,12 +114,21 @@ export default function MyPageEditScreen() {
               <ProfileAvatarPhoto gender={gender} />
               <View className="flex-1 flex-col items-start justify-center gap-[4px]">
                 <View className="flex-row items-center gap-[12px]">
-                  <Text variant="heading-h4" className="text-text-primary">
-                    {MOCK_USER.name}
-                  </Text>
-                  <Text variant="body-s" className="text-text-primary">
-                    {MOCK_USER.title}
-                  </Text>
+                  {myProfileQuery.isPending ? (
+                    <Text variant="heading-h4" className="text-text-primary">
+                      불러오는 중...
+                    </Text>
+                  ) : myProfileQuery.isError ? (
+                    <Pressable accessibilityRole="button" onPress={() => myProfileQuery.refetch()}>
+                      <Text variant="body-s" className="text-state-error">
+                        불러오지 못했어요. 다시 시도
+                      </Text>
+                    </Pressable>
+                  ) : (
+                    <Text variant="heading-h4" className="text-text-primary">
+                      {myProfileQuery.data.nickname}
+                    </Text>
+                  )}
                 </View>
                 <Text variant="body-xs" className="text-default-black">
                   현재 보유 토큰: 🥐x{balance}
@@ -137,6 +173,7 @@ export default function MyPageEditScreen() {
             <Button
               label="내 정보 저장하기"
               variant="infoSave"
+              disabled={updateProfileMutation.isPending}
               onPress={handleSaveInfoPress}
             />
           </View>

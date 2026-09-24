@@ -1,5 +1,5 @@
 import { router, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
@@ -15,6 +15,7 @@ import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
 import {
@@ -30,10 +31,20 @@ import type { DiaryPreview } from '@/src/features/home/types';
 const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isHydrating = useAuthStore((state) => state.isHydrating);
   const profile = useBreadStore((state) => state.profile);
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const completedOrders = useInfernoStore((state) => state.completedOrders);
+
+  // 로그인 안 된 채로 홈에 들어오면(딥링크 등) 온보딩으로 돌려보낸다. hydrate 가 끝나기
+  // 전에는 아직 모르는 상태이므로 판단하지 않는다.
+  useEffect(() => {
+    if (!isHydrating && !isAuthenticated) {
+      router.replace('/onboarding');
+    }
+  }, [isHydrating, isAuthenticated]);
 
   // ep0 을 끝내기 전에는 보여줄 회차가 없다. 끝내면 다음 회차가 이번주 에피소드가 된다.
   const hasStartedInferno = completedOrders.length > 0;

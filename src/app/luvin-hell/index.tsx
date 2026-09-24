@@ -7,10 +7,12 @@ import OkMallangBText from '@/src/components/ui/ok-mallang-b-text';
 import Text from '@/src/components/ui/text';
 import { pink } from '@/src/constants/colors';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
+import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 
 /** 러빈지옥 미니게임 모드 선택. Figma "Choose Your Mode" (5916:5300). */
 export default function LuvinHellModeSelectScreen() {
   const balance = useTokenStore((state) => state.balance);
+  useTokenBalance();
 
   function handleExitPress() {
     if (router.canGoBack()) {
