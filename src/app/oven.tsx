@@ -18,6 +18,7 @@ import type { WeeklyEpisode } from "@/src/features/home/types";
 import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
 import { LANE_ROTATION_DEG } from "@/src/features/luvin-hell/games/bread-crossing/engine/constants";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
+import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
 import EpisodeHistoryRow from "@/src/features/oven/components/episode-history-row";
 
 // API 연동 전. 시안(6263:5920)의 값을 그대로 넣어 뒀다.
@@ -294,6 +295,7 @@ function BreadCrossingPreviewCard({
 /** 러빈지옥 에피소드 홈. Figma "에피소드 홈" (6263:5920), 하단탭 2번째(오븐) 아이콘 목적지. */
 export default function OvenScreen() {
   const balance = useTokenStore((state) => state.balance);
+  useTokenBalance();
   const [dinoPreviewLabelShown, setDinoPreviewLabelShown] = useState(false);
   const [breadPreviewLabelShown, setBreadPreviewLabelShown] = useState(false);
 
