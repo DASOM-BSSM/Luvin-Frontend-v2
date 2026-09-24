@@ -7,11 +7,11 @@
     "scheme": "luvinfrontendv2",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.anonymous.luvinfrontendv2"
+      "bundleIdentifier": "com.dasom.luvinapp"
     },
     "android": {
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.luvinfrontendv2"
+      "package": "com.dasom.luvinapp"
     },
     "web": {
       "output": "static"
@@ -33,7 +33,9 @@
             "enableSceneSupport": true
           }
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
