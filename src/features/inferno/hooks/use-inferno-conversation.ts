@@ -6,11 +6,11 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
 import { mapAiEpisodeToConversation } from '@/src/features/inferno/utils/map-ai-episode';
 
 /**
- * ep1·ep2 를 실제 AI 시즌 API로 연결했다 — ep3~4 는 아직 매퍼가 없어서(ep3 는 미니게임
- * 결과 제출, ep4 는 "다시 굽기"가 더 필요) 그대로 로컬 대본(conversation.ts)을 쓴다.
- * 패턴이 검증되면 이 목록에 episode 를 늘리고 매퍼도 그만큼 넓힐 것.
+ * ep1~3 를 실제 AI 시즌 API로 연결했다 — ep4 는 아직 매퍼가 없어서("다시 굽기"가 더
+ * 필요) 그대로 로컬 대본(conversation.ts)을 쓴다. ep3 는 ep1 처럼 매칭 없이 투표만
+ * 하는 구조라 별도 매핑 분기가 필요 없다(map-ai-episode.ts 의 일반 분기를 그대로 탄다).
  */
-const AI_CONNECTED_EPISODES = new Set([1, 2]);
+const AI_CONNECTED_EPISODES = new Set([1, 2, 3]);
 
 /**
  * 회차의 대화를 읽는다. 화면은 데이터가 어디서 오는지 몰라도 된다.

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { submitInfernoVote } from '@/src/features/inferno/api/conversation';
+import { submitEpisode3Result } from '@/src/features/inferno/api/ai-season';
 import { GAME_MODAL_DELAY_MS } from '@/src/features/inferno/constants/animation';
 import type { InfernoConversation } from '@/src/features/inferno/types';
 
@@ -27,6 +27,8 @@ interface InfernoEp3Flow {
   handlePromptClose: () => void;
   handleGameStart: () => void;
   handleGameSuccess: () => void;
+  /** 미니게임 실패 쪽지의 "에피소드 끝내기". 화면이 finishEpisode 전에 부른다. */
+  handleGameFailure: () => void;
   handleModalClose: () => void;
   handleSelect: (participantId: string) => void;
   handleSubmit: () => void;
@@ -81,6 +83,12 @@ export default function useInfernoEp3Flow(
     setIsBallotOpen(true);
   }
 
+  // 미니게임 실패 쪽지의 "에피소드 끝내기". 투표 없이 바로 나가지만, 실패도 서버에
+  // 남겨야 랜덤 매칭(성공 쪽지 문구 "랜덤으로 상대가 정해져요")이 이뤄진다.
+  function handleGameFailure() {
+    submitEpisode3Result(false);
+  }
+
   function handleSelect(participantId: string) {
     setSelectedId(participantId);
   }
@@ -90,7 +98,7 @@ export default function useInfernoEp3Flow(
   function handleSubmit() {
     if (!conversation || !selectedId) return;
 
-    submitInfernoVote(conversation.episodeOrder, selectedId);
+    submitEpisode3Result(true, selectedId);
     setOpenModal('done');
   }
 
@@ -142,6 +150,7 @@ export default function useInfernoEp3Flow(
     handlePromptClose,
     handleGameStart,
     handleGameSuccess,
+    handleGameFailure,
     handleModalClose,
     handleSelect,
     handleSubmit,
