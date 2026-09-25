@@ -6,11 +6,12 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
 import { mapAiEpisodeToConversation } from '@/src/features/inferno/utils/map-ai-episode';
 
 /**
- * ep1~3 를 실제 AI 시즌 API로 연결했다 — ep4 는 아직 매퍼가 없어서("다시 굽기"가 더
- * 필요) 그대로 로컬 대본(conversation.ts)을 쓴다. ep3 는 ep1 처럼 매칭 없이 투표만
- * 하는 구조라 별도 매핑 분기가 필요 없다(map-ai-episode.ts 의 일반 분기를 그대로 탄다).
+ * ep1~4 모두 실제 AI 시즌 API로 연결했다. ep4 의 "다시 굽기"(rebake)만 예외로, 새
+ * 1:1 대화가 API 로 어떻게 내려오는지 알 방법이 없어서 `conversation.rebake` 가 항상
+ * undefined 다 — 화면(ep4.tsx)이 "다시 굽기" 버튼 자체를 숨겨서 그 경로로 못 들어가게
+ * 막아 둔다. 실제 동작은 API 응답을 보고 나서 채울 것(map-ai-episode.ts 주석 참고).
  */
-const AI_CONNECTED_EPISODES = new Set([1, 2, 3]);
+const AI_CONNECTED_EPISODES = new Set([1, 2, 3, 4]);
 
 /**
  * 회차의 대화를 읽는다. 화면은 데이터가 어디서 오는지 몰라도 된다.
