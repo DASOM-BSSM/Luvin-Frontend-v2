@@ -90,10 +90,3 @@ export interface AiSelectionView {
   partnerId: string;
   revision: number;
 }
-
-export interface AiReportView {
-  finalPartnerId?: string;
-  narrative: string;
-  highlights: Record<string, string>[];
-  renderMode: string;
-}

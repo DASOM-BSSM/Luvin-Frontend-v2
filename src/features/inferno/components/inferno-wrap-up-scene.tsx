@@ -17,15 +17,15 @@ interface InfernoWrapUpSceneProps {
 export default function InfernoWrapUpScene({ onEndSeasonPress, onNextSeasonPress }: InfernoWrapUpSceneProps) {
   return (
     <View className="flex-1 flex-col items-center justify-center gap-[28px] px-[46px]">
-      <Text variant="heading-h1" className="text-text-primary">
+      <Text variant="heading-h3" className="text-text-primary">
         시즌을 마무리할까요?
       </Text>
       <View className="w-full flex-row items-center justify-center gap-[12px]">
         <Button
           label="시즌 끝내기"
           variant="outline"
-          textVariant="body-m"
-          className="h-[42px]"
+          textVariant="body-s"
+          className="h-[34px] px-[14px] py-[4px]"
           onPress={onEndSeasonPress}
         />
         {/* secondary variant 는 w-full 이 박혀 있어 className="w-auto" 로 덮으려 했지만
@@ -33,6 +33,8 @@ export default function InfernoWrapUpScene({ onEndSeasonPress, onNextSeasonPress
         <Button
           label="다음 시즌 시작하기"
           variant="secondary"
+          textVariant="body-s"
+          className="h-[34px] px-[14px]"
           style={{ width: 'auto' }}
           onPress={onNextSeasonPress}
         />

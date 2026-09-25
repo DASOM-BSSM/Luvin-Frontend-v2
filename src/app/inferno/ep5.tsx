@@ -1,5 +1,7 @@
 import { router } from 'expo-router';
+import { View } from 'react-native';
 
+import Text from '@/src/components/ui/text';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
@@ -26,23 +28,31 @@ const EPISODE_ORDER = 5;
 export default function InfernoEp5Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  const { summary } = useInfernoSeasonSummary(EPISODE_ORDER);
   // 설문 API 가 아직 없어 반죽이 없는 상태로도 이 화면을 봐야 할 수 있다(딥링크로 바로
   // 들어오는 경우 등) — bread-store.ts 의 SAMPLE_BREAD_PROFILE("API 연동 전까지 쓰는 값")로
   // 대신한다. 실제 서비스에서는 홈 화면의 openInferno 가드가 반죽 없이는 못 들어오게 막으므로
   // 이 대체값은 거의 쓰이지 않는다.
   const myProfile = useBreadStore((state) => state.profile) ?? SAMPLE_BREAD_PROFILE;
+  const { summary, isLoading, isError } = useInfernoSeasonSummary(EPISODE_ORDER, myProfile);
   const flow = useInfernoEp5Flow();
-
-  // 상수 목록에서 찾는 것이라 실제로는 비어 있을 수 없다. 타입을 좁히기 위한 처리.
-  // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11).
-  if (!episode || !summary) {
-    return null;
-  }
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
   function handleExitPress() {
     router.dismissTo('/');
+  }
+
+  // AI가 아직 리포트를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1~4 와
+  // 같은 이유).
+  if (!episode || !summary) {
+    return (
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="note" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+        <View className="flex-1 items-center justify-center px-[30px]">
+          <Text variant="body-m" className="text-center text-default-black">
+            {isError ? '리포트를 불러오지 못했어요' : isLoading ? 'AI가 리포트를 만들고 있어요...' : '리포트가 아직 없어요'}
+          </Text>
+        </View>
+      </InfernoEpisodeFrame>
+    );
   }
 
   // "다음 시즌 시작하기": 새 시즌의 첫 회차로 이어지는 동작이라 가이드(ep0)로 보낸다.
@@ -65,14 +75,7 @@ export default function InfernoEp5Screen() {
       case 0:
         return <InfernoFinalMatchScene result={summary.finalMatch} myProfile={myProfile} />;
       case 1:
-        return (
-          <InfernoAnalysisScene
-            metrics={summary.behaviorMetrics}
-            rebakeUsage={summary.rebakeUsage}
-            engagement={summary.engagement}
-            insightLine={summary.insightLine}
-          />
-        );
+        return <InfernoAnalysisScene report={summary.report} />;
       case 2:
         return <InfernoHighlightScene highlights={summary.highlights} />;
       default:

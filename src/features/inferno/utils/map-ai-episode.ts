@@ -131,6 +131,22 @@ function buildFeedbackTopics(personalMessages: AiMessageView[]): InfernoFeedback
     .map((message) => ({ messageId: message.messageId, message: message.text }));
 }
 
+/**
+ * 이미 매핑된 대화에서 1:1 대화 상대를 찾는다. `buildMatchReveal`과 같은 전제(1:1 대화엔
+ * 상대가 하나뿐)를 쓰지만, 매핑 전 원본(AiMessageView)이 아니라 매핑된 `InfernoConversation`
+ * 위에서 동작한다 — ep5 최종 매칭(map-ai-season-report.ts)처럼 이미 매핑된 ep4 대화만
+ * 들고 있는 자리에서 재사용하려고 따로 둔다.
+ */
+export function findMatchedPartner(conversation: InfernoConversation): InfernoParticipant | undefined {
+  const personalMessages = (conversation.personalChatPages ?? []).flatMap((page) => page.messages);
+  const partnerId = personalMessages.find((message) => {
+    const participant = conversation.participants.find((candidate) => candidate.id === message.participantId);
+    return participant && !participant.isMine;
+  })?.participantId;
+
+  return conversation.participants.find((participant) => participant.id === partnerId);
+}
+
 export function mapAiEpisodeToConversation(
   season: AiSeasonStatusView,
   episode: AiEpisodeMessagesView,
