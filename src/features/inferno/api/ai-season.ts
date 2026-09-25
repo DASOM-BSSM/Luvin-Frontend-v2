@@ -5,7 +5,6 @@ import type {
   AiCharacterProfileRequest,
   AiEpisodeMessagesView,
   AiEpisodeProgressView,
-  AiReportView,
   AiRerollView,
   AiSeasonStatusView,
   AiSelectionView,
@@ -73,11 +72,5 @@ export async function submitEpisode3Result(success: boolean, partnerId?: string)
     success,
     partnerId,
   });
-  return data.data;
-}
-
-/** `GET /api/ai/seasons/report`. */
-export async function getSeasonReport(): Promise<AiReportView> {
-  const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report');
   return data.data;
 }

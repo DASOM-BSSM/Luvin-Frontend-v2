@@ -1,4 +1,4 @@
-import type { BreadState, BreadType } from '@/src/assets/images/BreadCharacter';
+import type { BreadType } from '@/src/assets/images/BreadCharacter';
 
 /** 러빈지옥 에피소드 한 편. */
 export interface InfernoEpisode {
@@ -205,63 +205,42 @@ export interface InfernoFinalMatchResult {
   summaryLine: string;
 }
 
-/** 성향별 호감도/반응 지표 하나. */
-export interface InfernoBehaviorMetric {
-  label: string;
-  /** 0~100. */
-  value: number;
-}
-
-export interface InfernoRebakeUsage {
-  used: boolean;
-  /** used 와 무관하게 항상 있는 완성된 요약 문장(위 summaryLine 과 같은 이유). */
-  summaryLine: string;
-}
-
-/** 공감 표시·AI 피드백 등 참여 지표. */
-export interface InfernoEngagementStats {
-  empathyCount: number;
-  aiFeedbackCount: number;
-}
-
 /**
- * 하이라이트 상세에 보여줄 대화 한 줄.
- *
- * 문구를 따로 뽑아내지 않고 원본 `message`/`participant`를 그대로 들고 있는다 —
- * `InfernoChatRow`(ep1~4 가 쓰는 그 컴포넌트)에 그대로 넘겨서 같은 채팅 UI로 그리기 위함.
+ * `GET /api/simulation/report` 응답 그대로의 모양 — 성향별 수치나 다시굽기 사용 여부가
+ * 아니라 강점/약점/조언 텍스트로 온다(예전에 있던 `InfernoBehaviorMetric`/
+ * `InfernoRebakeUsage`/`InfernoEngagementStats`는 실제 응답에 없어서 걷어냈다).
  */
-export interface InfernoHighlightLine {
-  message: InfernoChatMessage;
-  participant: InfernoParticipant;
+export interface InfernoSeasonReport {
+  summary: string;
+  strength: string[];
+  weakness: string[];
+  advice: string;
 }
 
 /**
- * 지난 회차 하이라이트 한 장.
+ * 지난 회차 하이라이트 한 장. `GET /api/simulation/highlights` 응답 그대로의 모양이다.
  *
- * 실제 하이라이트(영상) 생성 기능이 없어, 그 회차 대화에서 결정적인 줄(showHeart)을
- * 그대로 뽑아 "10초 하이라이트"처럼 보여주는 것으로 대신한다(§ pickHighlightLines).
- * 대표 이미지는 지어내지 않고 그 회차에서 실제로 매칭된 상대 반죽을 쓴다.
+ * `episodeId`는 우리 쪽 회차 순서(1~4)와 같은 값이라는 보장이 없다(예시 응답에 5도 나온
+ * 적 있음 — 우리 시즌엔 회차가 4개뿐이라 다른 채번 체계로 보인다). 그래서 화면에서
+ * episodeId로 회차 번호 배지를 만들지 않고, `title`/`summary`를 그대로 보여준다.
  */
 export interface InfernoHighlight {
-  episodeOrder: number;
-  type: BreadType;
-  state: BreadState;
-  lines: InfernoHighlightLine[];
-  /**
-   * 이 줄들이 매칭 뒤 1:1 대화(personalChatPages)에서 나왔는지. ep2/ep4처럼 1:1 대화가
-   * 있는 회차만 true — 말풍선을 분홍(pink)으로 그려야 한다는 뜻이다(§ InfernoChatBubble
-   * palette, ep1/ep3의 전체대화는 노랑을 그대로 쓴다).
-   */
-  isPersonalChat: boolean;
+  episodeId: number;
+  title: string;
+  summary: string;
+  /** 정렬용 중요도 점수. 화면에 숫자로 노출하지 않고 정렬 기준으로만 쓴다. */
+  importance: number;
 }
 
 export interface InfernoSeasonSummary {
   episodeOrder: number;
+  /**
+   * 최종 매칭 상대 정보. `GET /api/simulation/report`엔 이 정보가 없어서, 시즌의 마지막
+   * 매칭 회차인 ep4 데이터에서 뽑는다(map-ai-season-report.ts 의 `mapFinalMatchFromEp4`).
+   * "다시 굽기"가 아직 연동 전이라, 유저가 ep4에서 다시 굽기를 썼으면 그 이후 상대가 아니라
+   * 다시 굽기 전 매칭 상대가 나오는 한계가 있다.
+   */
   finalMatch: InfernoFinalMatchResult;
-  behaviorMetrics: InfernoBehaviorMetric[];
-  rebakeUsage: InfernoRebakeUsage;
-  engagement: InfernoEngagementStats;
-  /** "당신은 이런 상황에서 이렇게 반응하는 사람이에요" 식 한 줄 인사이트. */
-  insightLine: string;
+  report: InfernoSeasonReport;
   highlights: InfernoHighlight[];
 }
