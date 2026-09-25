@@ -5,8 +5,15 @@ import type {
   AiSeasonStatusView,
 } from '@/src/features/inferno/api/ai-season-types';
 import { EPISODE_VOTE_PROMPTS } from '@/src/features/inferno/constants/episode-copy';
-import type { InfernoChatMessage, InfernoChatPage, InfernoConversation, InfernoParticipant } from '@/src/features/inferno/types';
-import { deriveCharacterPersona } from '@/src/features/inferno/utils/character-persona';
+import type {
+  InfernoChatMessage,
+  InfernoChatPage,
+  InfernoConversation,
+  InfernoFeedbackTopic,
+  InfernoMatchReveal,
+  InfernoParticipant,
+} from '@/src/features/inferno/types';
+import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno/utils/character-persona';
 
 /**
  * AI 시즌 상태(participants) + 회차 메시지를 화면이 이미 알고 있는 `InfernoConversation`
@@ -20,6 +27,21 @@ const REPRESENTATIVE_ROLE = 'representative';
 
 /** 한 쪽(page)에 몇 마디씩 담을지. 서버가 쪽 경계를 안 줘서 임의로 정한 값 — 실제 대화 길이 보고 조정할 것. */
 const MESSAGES_PER_PAGE = 3;
+
+/**
+ * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
+ * 지금은 ep2 만 API 로 연결한다 — ep4 는 "다시 굽기" 매퍼가 아직 없다(use-inferno-conversation
+ * 주석 참고).
+ */
+const MATCH_REVEAL_EPISODES = new Set([2]);
+
+/**
+ * `AiMessageView.sceneKind` 값. 매칭 회차의 전체대화/1:1대화를 가르는 데 쓴다. openapi 에
+ * enum 이 문서화돼 있지 않아 지어낸 문자열이다 — 실제 응답 확인 후 다르면 이 두 줄만 고치면
+ * 된다.
+ */
+const GROUP_SCENE_KIND = 'group';
+const PERSONAL_SCENE_KIND = 'personal';
 
 function buildParticipants(season: AiSeasonStatusView, myProfile: BreadProfile | null): InfernoParticipant[] {
   return season.characters.map((character) => {
@@ -64,15 +86,75 @@ function chunkIntoPages(messages: AiMessageView[], question: string | undefined)
   return pages;
 }
 
+/**
+ * 매칭 회차의 전체대화를 한 쪽에 몰아 담는다. `MESSAGES_PER_PAGE` 로 쪼개지 않는 이유:
+ * ep2 화면(use-inferno-ep2-flow)은 group 단계에서 `pages[0]` 하나만 그리고 쪽을 넘기는
+ * 기능이 없다 — 시안이 전체대화를 한 화면으로 보여주기 때문(ep1 처럼 두 쪽으로 끊지 않음).
+ * 여기서 쪼개면 두 번째 쪽부터는 화면에 영영 나타나지 않는다.
+ */
+function buildSinglePage(messages: AiMessageView[]): InfernoChatPage[] {
+  if (messages.length === 0) {
+    return [];
+  }
+
+  return [{ id: 'page-group', messages: messages.map(toChatMessage) }];
+}
+
+/**
+ * 1:1 대화(personal scene) 메시지 중 대표(나)가 아닌 쪽의 speakerId 를 매칭 상대로 본다 —
+ * 1:1 대화는 정의상 상대가 하나뿐이라 성립한다. 상대를 아직 못 찾으면(메시지가 비어 매칭 전)
+ * undefined.
+ */
+function buildMatchReveal(
+  personalMessages: AiMessageView[],
+  participants: InfernoParticipant[],
+): InfernoMatchReveal | undefined {
+  const me = participants.find((participant) => participant.isMine);
+  const partnerId = personalMessages.find((message) => !message.fromRepresentative)?.speakerId;
+  const partner = participants.find((participant) => participant.id === partnerId);
+
+  if (!me || !partner) {
+    return undefined;
+  }
+
+  return {
+    noticeMessage: `${me.name} → ${partner.name}`,
+    actionLabel: `${getBreadTypeNoun(partner.type)}과 오븐 가기`,
+  };
+}
+
+/** 1:1 대화에서 내 분신이 한 말만 피드백 대상으로 삼는다(types.ts 주석 참고). */
+function buildFeedbackTopics(personalMessages: AiMessageView[]): InfernoFeedbackTopic[] {
+  return personalMessages
+    .filter((message) => message.fromRepresentative)
+    .map((message) => ({ messageId: message.messageId, message: message.text }));
+}
+
 export function mapAiEpisodeToConversation(
   season: AiSeasonStatusView,
   episode: AiEpisodeMessagesView,
   myProfile: BreadProfile | null,
 ): InfernoConversation {
+  const participants = buildParticipants(season, myProfile);
+
+  if (!MATCH_REVEAL_EPISODES.has(episode.episodeNumber)) {
+    return {
+      episodeOrder: episode.episodeNumber,
+      participants,
+      pages: chunkIntoPages(episode.messages, episode.topic?.title),
+      vote: EPISODE_VOTE_PROMPTS[episode.episodeNumber],
+    };
+  }
+
+  const groupMessages = episode.messages.filter((message) => message.sceneKind === GROUP_SCENE_KIND);
+  const personalMessages = episode.messages.filter((message) => message.sceneKind === PERSONAL_SCENE_KIND);
+
   return {
     episodeOrder: episode.episodeNumber,
-    participants: buildParticipants(season, myProfile),
-    pages: chunkIntoPages(episode.messages, episode.topic?.title),
-    vote: EPISODE_VOTE_PROMPTS[episode.episodeNumber],
+    participants,
+    pages: buildSinglePage(groupMessages),
+    matchReveal: buildMatchReveal(personalMessages, participants),
+    personalChatPages: chunkIntoPages(personalMessages, undefined),
+    feedbackTopics: buildFeedbackTopics(personalMessages),
   };
 }

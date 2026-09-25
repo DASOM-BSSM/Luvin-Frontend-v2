@@ -67,3 +67,12 @@ export function deriveCharacterPersona(characterId: string): CharacterPersona {
 
   return { type, name: `${adjective} ${BREAD_TYPE_NOUN[type]}` };
 }
+
+/**
+ * 형용사 없는 "{반죽 종류} 반죽" 만 돌려준다. 매칭 결과 쪽지의 버튼 문구(예: "도넛 반죽과
+ * 오븐 가기")처럼 조사가 이름 뒤에 바로 붙어야 하는 자리에 쓴다 — 모든 값이 "반죽"으로
+ * 끝나 받침이 있으므로 "과" 조사를 그대로 붙여도 항상 맞다.
+ */
+export function getBreadTypeNoun(type: BreadType): string {
+  return BREAD_TYPE_NOUN[type];
+}
