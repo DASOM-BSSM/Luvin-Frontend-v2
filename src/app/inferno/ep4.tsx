@@ -1,5 +1,7 @@
 import { router } from 'expo-router';
+import { View } from 'react-native';
 
+import Text from '@/src/components/ui/text';
 import { EP4_REBAKE_PARTNER_ID } from '@/src/features/inferno/api/conversation';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp4Modals from '@/src/features/inferno/components/inferno-ep4-modals';
@@ -19,11 +21,16 @@ const EPISODE_ORDER = 4;
  * `ep4-대화`(5449:1735) → `ep4-끝`(5467:5675), 그리고 1:1 대화에서 갈라져 나가는
  * `다시굽기`(5467:5418 확인 → 5467:5840 투표지 → 5467:5876 새 대화).
  *
- * ep2(feat/LUV-27, 미머지)와 뼈대가 같다 — 투표 없이 전체대화 한 쪽 뒤에 매칭 결과 쪽지가
- * 뜨고, 그걸 닫으면 매칭 상대(도넛)와의 1:1 대화로 넘어간다. 그 대화에서 "다시 굽기" 를
- * 누르면 남은 반죽(카스테라·프레첼) 중 하나로 투표해 새 1:1 대화로 넘어갈 수 있다 — 둘 중
- * 어느 쪽이든 대화 문구는 같다(EP4_REBAKE_PARTNER_ID 주석 참고). "나의 빵에게" 피드백으로
- * 빠지는 시안은 아직 없어서 그 버튼은 눌러도 아무 일도 하지 않는다.
+ * ep2와 뼈대가 같다 — 투표 없이 전체대화 한 쪽 뒤에 매칭 결과 쪽지가 뜨고, 그걸 닫으면
+ * 매칭 상대와의 1:1 대화로 넘어간다. 그 대화에서 "다시 굽기" 를 누르면 남은 반죽 중 하나로
+ * 투표해 새 1:1 대화로 넘어갈 수 있다 — 둘 중 어느 쪽이든 대화 문구는 같다
+ * (EP4_REBAKE_PARTNER_ID 주석 참고). "나의 빵에게" 피드백으로 빠지는 시안은 아직 없어서
+ * 그 버튼은 눌러도 아무 일도 하지 않는다.
+ *
+ * "다시 굽기"는 API 연동 범위 밖이다 — 새 1:1 대화가 어떤 응답으로 내려오는지 알 방법이
+ * 없어서(use-inferno-conversation 주석 참고) `conversation.rebake` 가 항상 undefined 고,
+ * 그래서 아래에서 onRebakePress 를 안 넘긴다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
+ * 흐려진 채 있다(InfernoPersonalChatSidebar 주석 참고, 이미 있던 처리라 새로 만들 것 없다).
  *
  * 진행 순서는 흐름 훅(use-inferno-ep4-flow)이 정한다.
  */
@@ -31,34 +38,8 @@ export default function InfernoEp4Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  const { conversation } = useInfernoConversation(EPISODE_ORDER);
+  const { conversation, isLoading, isError } = useInfernoConversation(EPISODE_ORDER);
   const flow = useInfernoEp4Flow();
-
-  // 전부 상수 목록에서 찾는 것이라 실제로는 비어 있을 수 없다. 타입을 좁히기 위한 처리.
-  // API 가 붙으면 여기가 로딩·에러 자리가 된다(§11).
-  if (
-    !episode ||
-    !conversation ||
-    !conversation.matchReveal ||
-    !conversation.personalChatPages ||
-    !conversation.rebake
-  ) {
-    return null;
-  }
-
-  const personalPage = conversation.personalChatPages[0];
-  const rebakeOptions = conversation.participants.filter(({ id }) =>
-    conversation.rebake!.candidateIds.includes(id),
-  );
-  const rebakeSelected = conversation.participants.find(({ id }) => id === flow.rebakeSelectedId);
-
-  // rebakeChat 은 상대가 투표로 정해지므로, 고른 참가자를 자리표시자 id 로 감싸 끼운다.
-  const rebakeChatParticipants = rebakeSelected
-    ? [
-        ...conversation.participants.filter(({ isMine }) => isMine),
-        { ...rebakeSelected, id: EP4_REBAKE_PARTNER_ID },
-      ]
-    : conversation.participants;
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
   function handleExitPress() {
@@ -76,6 +57,35 @@ export default function InfernoEp4Screen() {
     completeEpisode(EPISODE_ORDER);
     router.push('/oven');
   }
+
+  // rebake 는 일부러 뺀다(위 주석 참고) — matchReveal/personalChatPages 만 갖추면 되고,
+  // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1~3 과
+  // 같은 이유).
+  if (!episode || !conversation || !conversation.matchReveal || !conversation.personalChatPages) {
+    return (
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+        <View className="flex-1 items-center justify-center px-[30px]">
+          <Text variant="body-m" className="text-center text-default-black">
+            {isError ? '대화를 불러오지 못했어요' : isLoading ? 'AI가 대화를 만들고 있어요...' : '대화가 아직 없어요'}
+          </Text>
+        </View>
+      </InfernoEpisodeFrame>
+    );
+  }
+
+  const personalPage = conversation.personalChatPages[0];
+  const rebakeOptions = conversation.rebake
+    ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
+    : [];
+  const rebakeSelected = conversation.participants.find(({ id }) => id === flow.rebakeSelectedId);
+
+  // rebakeChat 은 상대가 투표로 정해지므로, 고른 참가자를 자리표시자 id 로 감싸 끼운다.
+  const rebakeChatParticipants = rebakeSelected
+    ? [
+        ...conversation.participants.filter(({ isMine }) => isMine),
+        { ...rebakeSelected, id: EP4_REBAKE_PARTNER_ID },
+      ]
+    : conversation.participants;
 
   return (
     <InfernoEpisodeFrame
@@ -100,14 +110,16 @@ export default function InfernoEp4Screen() {
           page={personalPage}
           participants={conversation.participants}
           onPageDone={flow.handleLineDone}
-          onRebakePress={flow.handleRebakeOpen}
+          // rebake 가 없으면 넘기지 않는다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
+          // 흐려진 채 있다(위 화면 주석, InfernoPersonalChatSidebar 참고).
+          onRebakePress={conversation.rebake ? flow.handleRebakeOpen : undefined}
         />
       ) : null}
 
       {flow.phase === 'rebakeVote' ? (
         <InfernoVoteScene
           title="REBAKE"
-          message={conversation.rebake.voteMessage}
+          message={conversation.rebake?.voteMessage ?? ''}
           options={rebakeOptions}
           selectedId={flow.rebakeSelectedId}
           onSelect={flow.handleRebakeSelect}
@@ -117,7 +129,7 @@ export default function InfernoEp4Screen() {
 
       {flow.phase === 'rebakeChat' ? (
         <InfernoPersonalChatScene
-          page={{ id: 'ep4-rebake', messages: conversation.rebake.chatMessages }}
+          page={{ id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] }}
           participants={rebakeChatParticipants}
           onPageDone={flow.handleLineDone}
         />
@@ -126,8 +138,8 @@ export default function InfernoEp4Screen() {
       <InfernoEp4Modals
         openModal={flow.openModal}
         matchReveal={conversation.matchReveal}
-        rebakeConfirmMessage={conversation.rebake.confirmMessage}
-        rebakeConfirmActionLabel={conversation.rebake.confirmActionLabel}
+        rebakeConfirmMessage={conversation.rebake?.confirmMessage ?? ''}
+        rebakeConfirmActionLabel={conversation.rebake?.confirmActionLabel ?? ''}
         onClose={flow.handleModalClose}
         onRevealAction={flow.handleRevealAction}
         onRebakeStart={flow.handleRebakeStart}

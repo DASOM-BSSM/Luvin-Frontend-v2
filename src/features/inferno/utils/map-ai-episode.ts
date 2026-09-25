@@ -30,10 +30,11 @@ const MESSAGES_PER_PAGE = 3;
 
 /**
  * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
- * 지금은 ep2 만 API 로 연결한다 — ep4 는 "다시 굽기" 매퍼가 아직 없다(use-inferno-conversation
- * 주석 참고).
+ * 둘 다 그룹대화 → 매칭 → 1:1대화 뼈대는 같아서 같은 분기를 탄다. ep4 의 "다시 굽기"는
+ * 여기서 안 만든다 — 새 1:1 대화가 API 로 어떻게 내려오는지 알 방법이 없어서
+ * `rebake` 필드를 그냥 비워 둔다(use-inferno-conversation 주석 참고).
  */
-const MATCH_REVEAL_EPISODES = new Set([2]);
+const MATCH_REVEAL_EPISODES = new Set([2, 4]);
 
 /**
  * `AiMessageView.sceneKind` 값. 매칭 회차의 전체대화/1:1대화를 가르는 데 쓴다. openapi 에
