@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
@@ -12,6 +12,7 @@ import useLogout from '@/src/features/auth/hooks/use-logout';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
+import type { Gender } from '@/src/features/my-page/types';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
@@ -41,6 +42,23 @@ export default function MyPageEditScreen() {
     }
   }, [myProfileQuery.data, nickname, setNickname]);
 
+  // gender 는 nickname 과 달리 로컬 기본값(male)이 항상 있어서 "비어있으면 채운다" 방식을
+  //못 쓴다 — 그래서 "이번에 화면 연 뒤 서버 값으로 한 번 채웠는지"를 ref 로 따로 추적한다.
+  // 서버 값이 로컬 Gender('female'|'male')와 다른 포맷(예: 'MALE')이면 조용히 건너뛴다 —
+  // 로컬 기본값이 남는 게 UI 를 못 그리는 것보다 낫다(§ UpdateUserProfileInput 주석 참고).
+  const hasSyncedGenderRef = useRef(false);
+  useEffect(() => {
+    const serverGender = myProfileQuery.data?.gender;
+    if (hasSyncedGenderRef.current || !serverGender) {
+      return;
+    }
+
+    hasSyncedGenderRef.current = true;
+    if (serverGender === 'female' || serverGender === 'male') {
+      setGender(serverGender satisfies Gender);
+    }
+  }, [myProfileQuery.data, setGender]);
+
   function handleBackPress() {
     if (router.canGoBack()) {
       router.back();
@@ -58,9 +76,7 @@ export default function MyPageEditScreen() {
   }
 
   function handleSaveInfoPress() {
-    // 성별은 UserProfileUpdateRequest 에 필드가 없어 서버로 보내지 않는다 — 로컬(MMKV)에만
-    // 남는다(§12 표, gender-select-button 참고). 닉네임만 실제로 저장된다.
-    updateProfileMutation.mutate({ nickname }, { onSuccess: handleBackPress });
+    updateProfileMutation.mutate({ nickname, gender }, { onSuccess: handleBackPress });
   }
 
   function handleLogoutSettled() {

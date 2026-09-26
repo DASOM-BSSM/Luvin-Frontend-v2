@@ -10,10 +10,27 @@ import type {
   AiSelectionView,
 } from '@/src/features/inferno/api/ai-season-types';
 
-/** `POST /api/ai/seasons`. 설문 완료 뒤 이 시즌을 한 번 만든다. */
+/**
+ * `POST /api/ai/seasons`. 앱이 traits를 직접 조립해서 보내는 옛 경로 — 서버 결과를
+ * 우회하는 통로라 새 코드에서는 쓰지 않는다(SHARED_API_CONTRACT.md §7). 전환 기간 동안
+ * 참조용으로만 남겨둔다.
+ */
 export async function createSeason(representative: AiCharacterProfileRequest): Promise<AiSeasonStatusView> {
   const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons', {
     representative,
+  });
+  return data.data;
+}
+
+/**
+ * `POST /api/ai/seasons/from-survey`. 서버가 이미 저장한 설문 결과(resultId)로 시즌을
+ * 만든다 — 앱은 참조만 보내고, 성별/13개 점수는 서버가 그 결과에서 직접 읽는다
+ * (SHARED_API_CONTRACT.md §7). 설문 제출과 같은 트랜잭션이 아니므로 실패해도 설문을
+ * 다시 요구하지 않는다.
+ */
+export async function createSeasonFromSurvey(surveyResultId: string): Promise<AiSeasonStatusView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/from-survey', {
+    surveyResultId,
   });
   return data.data;
 }

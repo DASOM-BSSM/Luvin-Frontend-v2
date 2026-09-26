@@ -4,6 +4,8 @@ import { useMutation } from '@tanstack/react-query';
 import { logout } from '@/src/features/auth/api/auth';
 import { clearAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
 /**
@@ -26,6 +28,10 @@ export default function useLogout() {
     },
     onSettled: () => {
       clearSession();
+      // 다음 계정이 이전 계정의 설문 답안/반죽 결과를 이어받지 않도록 정리한다
+      // (FRONTEND_CHANGES.md §8).
+      useBreadStore.getState().clear();
+      useSurveyStore.getState().resetSurvey();
       queryClient.clear();
     },
   });

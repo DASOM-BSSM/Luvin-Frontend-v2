@@ -16,15 +16,17 @@ import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card'
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
-import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
 import {
   INFERNO_EPISODE_HREFS,
   infernoIntroHref,
 } from '@/src/features/inferno/constants/routes';
+import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
 import type { DiaryPreview } from '@/src/features/home/types';
+import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
 
 // API 연동 전. 이 상수를 값으로 채우면 감정일기가 쌓인 상태가 된다.
 // 내 반죽은 useBreadStore, 이번주 에피소드는 useInfernoStore 에서 나온다.
@@ -33,10 +35,12 @@ const DIARY_PREVIEW: DiaryPreview | null = null;
 export default function HomeScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isHydrating = useAuthStore((state) => state.isHydrating);
-  const profile = useBreadStore((state) => state.profile);
+  const { profile } = useBreadProfile();
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const completedOrders = useInfernoStore((state) => state.completedOrders);
+  const surveyResultQuery = useMySurveyResult();
+  const createSeasonMutation = useCreateSeason();
 
   // 로그인 안 된 채로 홈에 들어오면(딥링크 등) 온보딩으로 돌려보낸다. hydrate 가 끝나기
   // 전에는 아직 모르는 상태이므로 판단하지 않는다.
@@ -67,7 +71,16 @@ export default function HomeScreen() {
       return;
     }
 
-    router.push(href);
+    // 시즌이 이미 있으면 서버가 그대로 돌려주므로(SHARED_API_CONTRACT.md §7) 매번 불러도
+    // 안전하다 — 처음 들어가는 사람만 실제로 새로 만들어진다.
+    const surveyResultId = surveyResultQuery.data?.resultId;
+    if (!surveyResultId) {
+      return;
+    }
+
+    createSeasonMutation.mutate(surveyResultId, {
+      onSuccess: () => router.push(href),
+    });
   }
 
   function handleInfernoStartPress() {

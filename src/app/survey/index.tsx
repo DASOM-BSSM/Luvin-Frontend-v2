@@ -6,6 +6,7 @@ import BottomNav from '@/src/components/bottom-nav';
 import BreadCluster from '@/src/components/bread-cluster';
 import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
+import useSurveyDefinition from '@/src/features/survey/hooks/use-survey-definition';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 
 /**
@@ -15,7 +16,8 @@ import { useSurveyStore } from '@/src/features/survey/store/survey-store';
  * 상단 70 과 하단 44 는 고정, 남는 공간은 본문 위/아래로 Figma 비율(127.2 : 178)로 나눈다.
  */
 export default function SurveyIntroScreen() {
-  const resetSurvey = useSurveyStore((state) => state.resetSurvey);
+  const startSurvey = useSurveyStore((state) => state.startSurvey);
+  const definitionQuery = useSurveyDefinition();
 
   function handleExitPress() {
     // 온보딩에서 들어온 경우가 정상 경로고, 딥링크로 바로 열렸으면 돌아갈 곳이 없다.
@@ -27,8 +29,12 @@ export default function SurveyIntroScreen() {
   }
 
   function handleStartButtonPress() {
-    // 시작할 때마다 처음부터. 이어하기는 답안을 MMKV 에 저장한 뒤에 붙인다(§12).
-    resetSurvey();
+    if (!definitionQuery.data) {
+      return;
+    }
+    // 시작 시점의 정의를 snapshot으로 고정한다 — 진행 중 refetch로 문항/답변 ID가
+    // 바뀌면 안 된다(SHARED_API_CONTRACT.md §3).
+    startSurvey(definitionQuery.data);
     router.push('/survey/questions');
   }
 
@@ -69,10 +75,21 @@ export default function SurveyIntroScreen() {
           <BreadCluster state="dough" className="h-[150.8px] w-[210.35px]" />
 
           <View className="w-full gap-[12px]">
-            <Button label="시작하기" variant="secondary" onPress={handleStartButtonPress} />
-            <Text variant="body-s" className="text-center text-text-muted">
-              예상 시간 10분
-            </Text>
+            <Button
+              label={definitionQuery.isError ? '다시 시도' : '시작하기'}
+              variant="secondary"
+              disabled={definitionQuery.isLoading}
+              onPress={definitionQuery.isError ? () => definitionQuery.refetch() : handleStartButtonPress}
+            />
+            {definitionQuery.isError ? (
+              <Text variant="body-s" className="text-center text-state-error">
+                설문을 불러오지 못했어요
+              </Text>
+            ) : (
+              <Text variant="body-s" className="text-center text-text-muted">
+                {definitionQuery.isLoading ? '불러오는 중...' : '예상 시간 10분'}
+              </Text>
+            )}
           </View>
         </View>
       </View>
