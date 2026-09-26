@@ -4,6 +4,9 @@ import { useMutation } from '@tanstack/react-query';
 import { googleLogin } from '@/src/features/auth/api/auth';
 import { setAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import { useSurveyStore } from '@/src/features/survey/store/survey-store';
+import queryClient from '@/src/lib/query-client';
 
 /**
  * 온보딩의 "로그인 하기" 버튼이 쓰는 훅. 네이티브 구글 로그인 → 서버 로그인(§12)까지
@@ -33,6 +36,14 @@ export default function useGoogleSignIn() {
       if (!result) {
         return;
       }
+
+      // 로그아웃을 안 거치고 바로 다른 계정으로 로그인하는 경로(구글 계정 선택 화면에서
+      // 다른 계정 선택 등)도 있어서, 로그아웃 때와 마찬가지로 이전 계정의 캐시를 여기서도
+      // 지운다 — 안 그러면 새 계정인데 이전 계정의 시즌/반죽/설문 결과가 그대로 보인다
+      // (사용자가 실기기에서 직접 재현한 버그).
+      queryClient.clear();
+      useBreadStore.getState().clear();
+      useSurveyStore.getState().resetSurvey();
 
       await setAccessToken(result.accessToken);
       setSession(result.user);
