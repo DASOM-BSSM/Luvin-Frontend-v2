@@ -6,10 +6,17 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
 import { mapAiEpisodeToConversation } from '@/src/features/inferno/utils/map-ai-episode';
 
 /**
- * ep1~4 모두 실제 AI 시즌 API로 연결했다. ep4 의 "다시 굽기"(rebake)만 예외로, 새
- * 1:1 대화가 API 로 어떻게 내려오는지 알 방법이 없어서 `conversation.rebake` 가 항상
- * undefined 다 — 화면(ep4.tsx)이 "다시 굽기" 버튼 자체를 숨겨서 그 경로로 못 들어가게
- * 막아 둔다. 실제 동작은 API 응답을 보고 나서 채울 것(map-ai-episode.ts 주석 참고).
+ * ep1~4 모두 실제 AI 시즌 API(`ai-season-controller`, `/api/ai/seasons/*`)로 연결했다.
+ *
+ * 한때 `/api/episodes/*`(episode-controller)로 ep1 만 옮겨봤는데, 백엔드 확인 결과 그건
+ * `com.luvin.simulation` 패키지의 완전히 별개 기능(구식 시뮬레이션, AI 시즌과 코드상
+ * 무관)이었다 — 잘못 짚은 방향이라 되돌렸다. 회차 대화는 여전히 이 파일(ai-season.ts)
+ * 하나로만 연결한다.
+ *
+ * ep4 의 "다시 굽기"(rebake)만 예외로, 새 1:1 대화가 API 로 어떻게 내려오는지 알 방법이
+ * 없어서 `conversation.rebake` 가 항상 undefined 다 — 화면(ep4.tsx)이 "다시 굽기" 버튼
+ * 자체를 숨겨서 그 경로로 못 들어가게 막아 둔다. 실제 동작은 API 응답을 보고 나서 채울
+ * 것(map-ai-episode.ts 주석 참고).
  */
 const AI_CONNECTED_EPISODES = new Set([1, 2, 3, 4]);
 

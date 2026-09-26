@@ -87,6 +87,8 @@ export default function InfernoEp1Screen() {
           message={conversation.vote.ballotMessage}
           options={voteOptions}
           selectedId={flow.selectedId}
+          isSubmitting={flow.isSubmitting}
+          errorMessage={flow.submitError}
           onSelect={flow.handleSelect}
           onSubmit={flow.handleSubmit}
         />

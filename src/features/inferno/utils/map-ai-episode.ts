@@ -20,10 +20,11 @@ import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno
  * 모양으로 바꾼다. 순수 함수라 훅 밖에서도 테스트할 수 있다(§6) — "나"의 반죽 정보는
  * `useBreadStore`를 여기서 직접 읽지 않고 인자로 받는다.
  *
- * `AiCharacterView.role`이 정확히 어떤 문자열로 "나"를 가리키는지 openapi에 문서화가
- * 안 돼 있어 `'representative'`로 가정했다 — 실제 응답 확인 후 다르면 이 한 줄만 고치면 된다.
+ * `AiCharacterView.role`은 실제 응답으로 확인함 — 대표(나)는 `'REPRESENTATIVE'`, 나머지
+ * 후보는 `'CANDIDATE'`(대문자, 재확인 완료). 상대 후보 구분에 `role`을 더 쓰지 않는 이유:
+ * "대표가 아니면 후보"로 충분해서 값을 하나만 비교한다.
  */
-const REPRESENTATIVE_ROLE = 'representative';
+const REPRESENTATIVE_ROLE = 'REPRESENTATIVE';
 
 /** 한 쪽(page)에 몇 마디씩 담을지. 서버가 쪽 경계를 안 줘서 임의로 정한 값 — 실제 대화 길이 보고 조정할 것. */
 const MESSAGES_PER_PAGE = 3;
@@ -60,16 +61,30 @@ function buildParticipants(season: AiSeasonStatusView, myProfile: BreadProfile |
   });
 }
 
-function toChatMessage(message: AiMessageView): InfernoChatMessage {
+/**
+ * 이 줄이 "내"(대표) 말인지. `AiMessageView.fromRepresentative` 필드를 믿지 않고
+ * `speakerId`가 대표 캐릭터 id와 같은지로 직접 판정한다 — 참가자의 `isMine`(role 기반)과
+ * 어긋날 수 있는 별도 신호를 메시지마다 따로 두지 않기 위해서다(사용자 지적: 대화 좌우가
+ * 어긋나 보임). 이러면 "내 말 = 무조건 오른쪽"이 참가자 판정과 항상 같은 기준으로 맞는다.
+ */
+function isFromMe(message: AiMessageView, representativeId: string | undefined): boolean {
+  return message.speakerId === representativeId;
+}
+
+function toChatMessage(message: AiMessageView, representativeId: string | undefined): InfernoChatMessage {
   return {
     id: message.messageId,
     participantId: message.speakerId,
-    side: message.fromRepresentative ? 'right' : 'left',
+    side: isFromMe(message, representativeId) ? 'right' : 'left',
     text: message.text,
   };
 }
 
-function chunkIntoPages(messages: AiMessageView[], question: string | undefined): InfernoChatPage[] {
+function chunkIntoPages(
+  messages: AiMessageView[],
+  question: string | undefined,
+  representativeId: string | undefined,
+): InfernoChatPage[] {
   if (messages.length === 0) {
     return [];
   }
@@ -80,7 +95,7 @@ function chunkIntoPages(messages: AiMessageView[], question: string | undefined)
     pages.push({
       id: `page-${start}`,
       question: start === 0 ? question : undefined,
-      messages: chunk.map(toChatMessage),
+      messages: chunk.map((message) => toChatMessage(message, representativeId)),
     });
   }
 
@@ -93,12 +108,12 @@ function chunkIntoPages(messages: AiMessageView[], question: string | undefined)
  * 기능이 없다 — 시안이 전체대화를 한 화면으로 보여주기 때문(ep1 처럼 두 쪽으로 끊지 않음).
  * 여기서 쪼개면 두 번째 쪽부터는 화면에 영영 나타나지 않는다.
  */
-function buildSinglePage(messages: AiMessageView[]): InfernoChatPage[] {
+function buildSinglePage(messages: AiMessageView[], representativeId: string | undefined): InfernoChatPage[] {
   if (messages.length === 0) {
     return [];
   }
 
-  return [{ id: 'page-group', messages: messages.map(toChatMessage) }];
+  return [{ id: 'page-group', messages: messages.map((message) => toChatMessage(message, representativeId)) }];
 }
 
 /**
@@ -109,9 +124,10 @@ function buildSinglePage(messages: AiMessageView[]): InfernoChatPage[] {
 function buildMatchReveal(
   personalMessages: AiMessageView[],
   participants: InfernoParticipant[],
+  representativeId: string | undefined,
 ): InfernoMatchReveal | undefined {
   const me = participants.find((participant) => participant.isMine);
-  const partnerId = personalMessages.find((message) => !message.fromRepresentative)?.speakerId;
+  const partnerId = personalMessages.find((message) => !isFromMe(message, representativeId))?.speakerId;
   const partner = participants.find((participant) => participant.id === partnerId);
 
   if (!me || !partner) {
@@ -125,9 +141,12 @@ function buildMatchReveal(
 }
 
 /** 1:1 대화에서 내 분신이 한 말만 피드백 대상으로 삼는다(types.ts 주석 참고). */
-function buildFeedbackTopics(personalMessages: AiMessageView[]): InfernoFeedbackTopic[] {
+function buildFeedbackTopics(
+  personalMessages: AiMessageView[],
+  representativeId: string | undefined,
+): InfernoFeedbackTopic[] {
   return personalMessages
-    .filter((message) => message.fromRepresentative)
+    .filter((message) => isFromMe(message, representativeId))
     .map((message) => ({ messageId: message.messageId, message: message.text }));
 }
 
@@ -153,12 +172,14 @@ export function mapAiEpisodeToConversation(
   myProfile: BreadProfile | null,
 ): InfernoConversation {
   const participants = buildParticipants(season, myProfile);
+  const representativeId = season.characters.find((character) => character.role === REPRESENTATIVE_ROLE)
+    ?.characterId;
 
   if (!MATCH_REVEAL_EPISODES.has(episode.episodeNumber)) {
     return {
       episodeOrder: episode.episodeNumber,
       participants,
-      pages: chunkIntoPages(episode.messages, episode.topic?.title),
+      pages: chunkIntoPages(episode.messages, episode.topic?.title, representativeId),
       vote: EPISODE_VOTE_PROMPTS[episode.episodeNumber],
     };
   }
@@ -169,9 +190,9 @@ export function mapAiEpisodeToConversation(
   return {
     episodeOrder: episode.episodeNumber,
     participants,
-    pages: buildSinglePage(groupMessages),
-    matchReveal: buildMatchReveal(personalMessages, participants),
-    personalChatPages: chunkIntoPages(personalMessages, undefined),
-    feedbackTopics: buildFeedbackTopics(personalMessages),
+    pages: buildSinglePage(groupMessages, representativeId),
+    matchReveal: buildMatchReveal(personalMessages, participants, representativeId),
+    personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId),
+    feedbackTopics: buildFeedbackTopics(personalMessages, representativeId),
   };
 }
