@@ -9,3 +9,8 @@ export const simulationKeys = {
   report: ['simulation', 'report'] as const,
   highlights: ['simulation', 'highlights'] as const,
 };
+
+/** 메시지 좋아요(하트). `match-controller`/`episode-controller` 소속이라 따로 둔다. */
+export const likeKeys = {
+  likedMessages: ['likes', 'messages'] as const,
+};

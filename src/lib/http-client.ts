@@ -14,8 +14,12 @@ import queryClient from '@/src/lib/query-client';
  * accessToken 주입과 401 처리만 한다 — 백엔드 응답에 refreshToken 이 없어서(§12) 조용히
  * 갱신하는 흐름은 만들 수 없다. 401 이면 그냥 로그아웃 처리하고 온보딩으로 돌려보낸다.
  */
+// EXPO_PUBLIC_API_URL 끝에 슬래시가 있어도(예: "https://host/") 각 API 함수가 앞에
+// "/api/..."를 그대로 붙이므로 "//api/..."처럼 겹치지 않게 여기서 한 번 정리한다.
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '');
+
 const httpClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+  baseURL: API_BASE_URL,
 });
 
 httpClient.interceptors.request.use(async (config) => {

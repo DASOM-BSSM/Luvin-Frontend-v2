@@ -32,18 +32,23 @@ const MESSAGES_PER_PAGE = 3;
 /**
  * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
  * 둘 다 그룹대화 → 매칭 → 1:1대화 뼈대는 같아서 같은 분기를 탄다. ep4 의 "다시 굽기"는
- * 여기서 안 만든다 — 새 1:1 대화가 API 로 어떻게 내려오는지 알 방법이 없어서
- * `rebake` 필드를 그냥 비워 둔다(use-inferno-conversation 주석 참고).
+ * 여기서 안 만든다 — reroll 완료 여부를 확인할 조회 엔드포인트가 아직 없어서(백엔드가
+ * 추가 예정) `rebake` 필드를 그냥 비워 둔다(use-inferno-conversation 주석 참고).
  */
 const MATCH_REVEAL_EPISODES = new Set([2, 4]);
 
 /**
- * `AiMessageView.sceneKind` 값. 매칭 회차의 전체대화/1:1대화를 가르는 데 쓴다. openapi 에
- * enum 이 문서화돼 있지 않아 지어낸 문자열이다 — 실제 응답 확인 후 다르면 이 두 줄만 고치면
- * 된다.
+ * `AiMessageView.sceneKind` 값. 매칭 회차의 전체대화/1:1대화를 가르는 데 쓴다. 백엔드
+ * 확인 완료 — 실제 값은 `'group'` / `'candidates_only'`(매칭 단계, 후보들끼리만 나오는
+ * 구간) / `'one_to_one'` 세 가지다(`AiSeasonOrchestrationServiceImpl.VALID_SCENE_KINDS`).
+ *
+ * `'candidates_only'`는 지금 화면에서 아예 안 쓴다 — Figma 시안이 전체대화 → 매칭 결과
+ * 쪽지 → 1:1대화 두 단계만 보여주고, 매칭 단계 전용 채팅 화면이 없기 때문이다. 이 구간
+ * 메시지가 실제로 존재하는데 안 보여도 되는 게 맞는지는 화면에서 대화가 비어 보이면
+ * 다시 확인할 것.
  */
 const GROUP_SCENE_KIND = 'group';
-const PERSONAL_SCENE_KIND = 'personal';
+const PERSONAL_SCENE_KIND = 'one_to_one';
 
 function buildParticipants(season: AiSeasonStatusView, myProfile: BreadProfile | null): InfernoParticipant[] {
   return season.characters.map((character) => {
@@ -164,6 +169,24 @@ export function findMatchedPartner(conversation: InfernoConversation): InfernoPa
   })?.participantId;
 
   return conversation.participants.find((participant) => participant.id === partnerId);
+}
+
+/**
+ * 이 회차가 "다 만들어졌다"고 볼 조건. 매칭 회차(ep2/ep4)는 `group` 메시지만 먼저 와도
+ * `one_to_one`이 아직 없으면 미완성으로 본다 — 그렇지 않으면 `useAiEpisodeMessages`의
+ * 폴링이 `group`만 도착한 시점에 멈춰버려서 1:1 대화가 영원히 안 내려온다(사용자 확인된
+ * 버그: matchReveal이 계속 undefined인데 로딩도 에러도 아닌 채로 멈춘 화면).
+ */
+export function isEpisodeFullyGenerated(episodeNumber: number, messages: AiMessageView[]): boolean {
+  if (messages.length === 0) {
+    return false;
+  }
+
+  if (!MATCH_REVEAL_EPISODES.has(episodeNumber)) {
+    return true;
+  }
+
+  return messages.some((message) => message.sceneKind === PERSONAL_SCENE_KIND);
 }
 
 export function mapAiEpisodeToConversation(

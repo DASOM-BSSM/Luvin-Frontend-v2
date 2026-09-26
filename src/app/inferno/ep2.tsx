@@ -1,10 +1,9 @@
 import { router } from 'expo-router';
-import { View } from 'react-native';
 
-import Text from '@/src/components/ui/text';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp2Modals from '@/src/features/inferno/components/inferno-ep2-modals';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
+import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoFeedbackScene from '@/src/features/inferno/components/inferno-feedback-scene';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
@@ -39,7 +38,8 @@ export default function InfernoEp2Screen() {
   const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  const { conversation, isLoading, isError } = useInfernoConversation(EPISODE_ORDER);
+  const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
+    useInfernoConversation(EPISODE_ORDER);
   const flow = useInfernoEp2Flow(conversation, initialStep);
 
   function finishEpisode() {
@@ -65,11 +65,12 @@ export default function InfernoEp2Screen() {
   ) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
-        <View className="flex-1 items-center justify-center px-[30px]">
-          <Text variant="body-m" className="text-center text-default-black">
-            {isError ? '대화를 불러오지 못했어요' : isLoading ? 'AI가 대화를 만들고 있어요...' : '대화가 아직 없어요'}
-          </Text>
-        </View>
+        <InfernoEpisodeStatus
+          isError={isError}
+          isLoading={isLoading}
+          hasGenerationFailed={hasGenerationFailed}
+          onRetry={retryGeneration}
+        />
       </InfernoEpisodeFrame>
     );
   }

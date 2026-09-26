@@ -1,5 +1,6 @@
 import httpClient from '@/src/lib/http-client';
 import type { ApiEnvelope } from '@/src/lib/api-envelope';
+import { useAuthStore } from '@/src/features/auth/store/auth-store';
 
 import type {
   AiCharacterProfileRequest,
@@ -55,10 +56,19 @@ export async function getEpisodeMessages(
 
 /** `POST /api/ai/seasons/episodes/{number}/generations`. AI 에게 이 회차 대화를 만들라고 시킨다. */
 export async function requestEpisodeGeneration(episodeNumber: number): Promise<AiEpisodeProgressView> {
-  const { data } = await httpClient.post<ApiEnvelope<AiEpisodeProgressView>>(
-    `/api/ai/seasons/episodes/${episodeNumber}/generations`,
-  );
-  return data.data;
+  const path = `/api/ai/seasons/episodes/${episodeNumber}/generations`;
+  const response = await httpClient.post<ApiEnvelope<AiEpisodeProgressView>>(path);
+
+  if (__DEV__) {
+    // 백엔드가 "요청 자체가 안 왔다"고 할 때 대조할 증거 — 실제로 나간 절대 URL/상태코드/시각/유저.
+    const user = useAuthStore.getState().user;
+    console.log(
+      `[requestEpisodeGeneration] POST ${response.config.baseURL ?? ''}${path} -> HTTP ${response.status} ` +
+        `at ${new Date().toISOString()} user=${user?.userId}(${user?.nickname})`,
+    );
+  }
+
+  return response.data.data;
 }
 
 /** `POST /api/ai/seasons/episodes/{number}/seen`. */

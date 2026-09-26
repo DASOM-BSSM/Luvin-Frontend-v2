@@ -1,11 +1,10 @@
 import { router } from 'expo-router';
-import { View } from 'react-native';
 
-import Text from '@/src/components/ui/text';
 import { EP4_REBAKE_PARTNER_ID } from '@/src/features/inferno/api/conversation';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp4Modals from '@/src/features/inferno/components/inferno-ep4-modals';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
+import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
@@ -38,7 +37,8 @@ export default function InfernoEp4Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  const { conversation, isLoading, isError } = useInfernoConversation(EPISODE_ORDER);
+  const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
+    useInfernoConversation(EPISODE_ORDER);
   const flow = useInfernoEp4Flow();
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
@@ -64,11 +64,12 @@ export default function InfernoEp4Screen() {
   if (!episode || !conversation || !conversation.matchReveal || !conversation.personalChatPages) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
-        <View className="flex-1 items-center justify-center px-[30px]">
-          <Text variant="body-m" className="text-center text-default-black">
-            {isError ? '대화를 불러오지 못했어요' : isLoading ? 'AI가 대화를 만들고 있어요...' : '대화가 아직 없어요'}
-          </Text>
-        </View>
+        <InfernoEpisodeStatus
+          isError={isError}
+          isLoading={isLoading}
+          hasGenerationFailed={hasGenerationFailed}
+          onRetry={retryGeneration}
+        />
       </InfernoEpisodeFrame>
     );
   }
