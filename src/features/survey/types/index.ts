@@ -1,58 +1,66 @@
 /**
- * 설문 도메인 타입.
- *
- * 화면 디자인은 Figma "Luvin-Design" / `설문-우린` (5726:2582) 이지만,
- * 문항과 배점표는 Figma 가 아니라 기획에서 받은 표가 출처다.
+ * 설문 v2 도메인 타입. 문항/보기/채점/분류는 전부 서버가 확정한다 — 앱은 표시와
+ * 제출만 한다(SHARED_API_CONTRACT.md §3, FRONTEND_CHANGES.md §7). 20/13/8 같은
+ * 숫자를 앱이 다시 계산하지 않는다.
  */
 
-/** 20문항이 합산해서 만드는 성향 지표 13종. */
-export type SurveyTrait =
-  | 'relationshipInitiative'
-  | 'relationshipPace'
-  | 'affectionExpression'
-  | 'emotionSuppression'
-  | 'attentionFrequency'
-  | 'relationshipAnxiety'
-  | 'reassuranceNeed'
-  | 'relationshipAvoidance'
-  | 'energyDependence'
-  | 'emotionalSynchrony'
-  | 'realityPriority'
-  | 'conflictConfrontation'
-  | 'jealousyReactivity';
+export interface SurveyAnswerDefinition {
+  answerId: string;
+  order: number;
+  text: string;
+}
 
-/** 보기 식별자. 기획표의 A / B / C 와 같은 순서다. */
-export type SurveyOptionId = 'a' | 'b' | 'c';
+export interface SurveyQuestionDefinition {
+  questionId: string;
+  order: number;
+  text: string;
+  answers: SurveyAnswerDefinition[];
+}
+
+/** `GET /api/surveys/v2/definition` 응답. */
+export interface SurveyDefinition {
+  definitionId: string;
+  surveyVersion: string;
+  scoringVersion: string;
+  classificationVersion: string;
+  title: string;
+  questionCount: number;
+  questions: SurveyQuestionDefinition[];
+}
+
+/** questionId → 고른 answerId. 아직 안 답한 문항은 키 자체가 없다. */
+export type SurveyAnswers = Record<string, string>;
 
 /**
- * 보기 하나가 성향 점수에 주는 증감.
- * 빠진 지표는 "변화 없음" 이라 0 을 따로 적지 않는다.
+ * 서버 canonical 빵 유형 코드. FRONTEND_CHANGES.md §6 매핑표 그대로 —
+ * `src/assets/images/BreadCharacter`의 `BreadType`과 이름이 다르다(예: `salt_bread` vs `salt`).
  */
-export type TraitDeltas = Partial<Record<SurveyTrait, number>>;
+export type BreadCanonicalType =
+  | 'cream_bread'
+  | 'red_bean_bread'
+  | 'salt_bread'
+  | 'pretzel'
+  | 'donut'
+  | 'baguette'
+  | 'madeleine'
+  | 'castella';
 
-export interface SurveyOption {
-  id: SurveyOptionId;
-  /** 카드에 보이는 문구. */
-  label: string;
-  /**
-   * 기획표에 보기마다 딸려 있는 한 줄 속마음.
-   * Figma 카드에는 이걸 놓을 자리가 아직 없어서 화면에는 쓰지 않는다.
-   */
-  hint: string;
-  deltas: TraitDeltas;
+/** `POST .../submissions`, `GET .../results/me`, `GET .../submissions/{id}` 공통 결과 DTO. */
+export interface SurveyResult {
+  resultId: string;
+  clientSubmissionId: string;
+  definitionId: string;
+  surveyVersion: string;
+  scoringVersion: string;
+  classificationVersion: string;
+  primaryType: BreadCanonicalType;
+  primaryLabel: string;
+  secondaryType: BreadCanonicalType | null;
+  mixed: boolean;
+  poorFit: boolean;
+  tie: boolean;
+  displayName: string;
+  summary: string;
+  reasonTexts: string[];
+  completedAt: string;
 }
-
-export interface SurveyQuestion {
-  /** 1부터 시작하는 문항 번호. "01 / 20", "반죽 만들기 01." 에 그대로 쓴다. */
-  number: number;
-  /** 이 문항이 주로 재는 지표. 배점은 options 쪽 deltas 가 가진다. */
-  trait: SurveyTrait;
-  title: string;
-  options: SurveyOption[];
-}
-
-/** 문항 번호 → 고른 보기. 아직 답하지 않은 문항은 키 자체가 없다. */
-export type SurveyAnswers = Record<number, SurveyOptionId>;
-
-/** 지표 13종 전체 점수. 채점 결과는 항상 모든 지표를 채워서 돌려준다. */
-export type TraitScores = Record<SurveyTrait, number>;

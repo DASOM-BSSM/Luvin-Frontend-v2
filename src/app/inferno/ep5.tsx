@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
+import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
@@ -12,7 +13,7 @@ import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-se
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import type { InfernoSeasonSummary } from '@/src/features/inferno/types';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
-import { SAMPLE_BREAD_PROFILE, useBreadStore } from '@/src/features/bread/store/bread-store';
+import type { BreadProfile } from '@/src/features/home/types';
 
 const EPISODE_ORDER = 5;
 
@@ -24,16 +25,21 @@ const EPISODE_ORDER = 5;
  *
  * ep3/ep4 와 같은 이유로 잠시 나가기 체크포인트를 두지 않는다 — 되돌릴 대화 상태가 없는
  * 단순 리포트라 다시 들어오면 1페이지부터 봐도 무방하다.
+ *
+ * FRONTEND_CHANGES.md §4: `SAMPLE_BREAD_PROFILE` 폴백을 걷어냈다 — 서버 결과 없이 가짜
+ * 반죽으로 화면을 보여주지 않는다. 내 반죽은 `useBreadProfile`(서버 설문 결과가 원천)로
+ * 받고, 아직 없거나(`isSurveyMissing`)/로딩/에러 상태면 리포트 로딩·에러와 같은 안내
+ * 화면으로 합쳐서 처리한다(§11 — 빈 화면 금지).
  */
 export default function InfernoEp5Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
   const episode = findInfernoEpisode(EPISODE_ORDER);
-  // 설문 API 가 아직 없어 반죽이 없는 상태로도 이 화면을 봐야 할 수 있다(딥링크로 바로
-  // 들어오는 경우 등) — bread-store.ts 의 SAMPLE_BREAD_PROFILE("API 연동 전까지 쓰는 값")로
-  // 대신한다. 실제 서비스에서는 홈 화면의 openInferno 가드가 반죽 없이는 못 들어오게 막으므로
-  // 이 대체값은 거의 쓰이지 않는다.
-  const myProfile = useBreadStore((state) => state.profile) ?? SAMPLE_BREAD_PROFILE;
-  const { summary, isLoading, isError } = useInfernoSeasonSummary(EPISODE_ORDER, myProfile);
+  const breadProfile = useBreadProfile();
+  const {
+    summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+  } = useInfernoSeasonSummary(EPISODE_ORDER, breadProfile.profile);
   const flow = useInfernoEp5Flow();
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
@@ -41,14 +47,24 @@ export default function InfernoEp5Screen() {
     router.dismissTo('/');
   }
 
-  // AI가 아직 리포트를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1~4 와
-  // 같은 이유).
-  if (!episode || !summary) {
+  const isLoading = isSummaryLoading || breadProfile.isLoading;
+  const isError = isSummaryError || breadProfile.isError;
+  const myProfile = breadProfile.profile;
+
+  // AI가 아직 리포트를 안 만들었거나 실패했거나, 내 반죽(서버 설문 결과)이 아직 없으면
+  // 빈 화면 대신 안내를 보여준다(§11, ep1~4 와 같은 이유).
+  if (!episode || !summary || !myProfile) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="note" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
         <View className="flex-1 items-center justify-center px-[30px]">
           <Text variant="body-m" className="text-center text-default-black">
-            {isError ? '리포트를 불러오지 못했어요' : isLoading ? 'AI가 리포트를 만들고 있어요...' : '리포트가 아직 없어요'}
+            {isError
+              ? '정보를 불러오지 못했어요'
+              : breadProfile.isSurveyMissing
+                ? '설문을 먼저 완료해주세요'
+                : isLoading
+                  ? 'AI가 리포트를 만들고 있어요...'
+                  : '리포트가 아직 없어요'}
           </Text>
         </View>
       </InfernoEpisodeFrame>
@@ -67,10 +83,9 @@ export default function InfernoEp5Screen() {
     router.push('/oven');
   }
 
-  // summary 를 매개변수로 받는 이유: 위 가드로 좁혀진 타입이 중첩 함수 클로저 안에서는
-  // 유지되지 않는다(TS18048) — 인자로 넘기면 호출부의 좁혀진 타입이 그대로 전달된다.
-  // myProfile 은 처음부터 null 이 아니라(위 fallback) 이 문제가 없어 그냥 클로저로 쓴다.
-  function renderPage(summary: InfernoSeasonSummary) {
+  // summary/myProfile 을 매개변수로 받는 이유: 위 가드로 좁혀진 타입이 중첩 함수 클로저
+  // 안에서는 유지되지 않는다(TS18048) — 인자로 넘기면 호출부의 좁혀진 타입이 그대로 전달된다.
+  function renderPage(summary: InfernoSeasonSummary, myProfile: BreadProfile) {
     switch (flow.pageIndex) {
       case 0:
         return <InfernoFinalMatchScene result={summary.finalMatch} myProfile={myProfile} />;
@@ -97,7 +112,7 @@ export default function InfernoEp5Screen() {
       onNextPress={flow.goNext}
       onSkipPress={handleExitPress}
     >
-      {renderPage(summary)}
+      {renderPage(summary, myProfile)}
     </InfernoEpisodeFrame>
   );
 }

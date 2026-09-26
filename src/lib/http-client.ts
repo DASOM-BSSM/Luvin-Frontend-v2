@@ -3,6 +3,8 @@ import { router } from 'expo-router';
 
 import { clearAccessToken, getAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
 /**
@@ -30,6 +32,8 @@ httpClient.interceptors.response.use(
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       await clearAccessToken();
       useAuthStore.getState().clearSession();
+      useBreadStore.getState().clear();
+      useSurveyStore.getState().resetSurvey();
       queryClient.clear();
       router.replace('/onboarding');
     }

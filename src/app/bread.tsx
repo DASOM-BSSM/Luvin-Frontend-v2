@@ -6,17 +6,12 @@ import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import BreadTraitList from '@/src/features/bread/components/bread-trait-list';
-import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import RecommendedVideoCard from '@/src/features/bread/components/recommended-video-card';
 import type { RecommendedVideo } from '@/src/features/bread/types';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
-
-const BREAD_TRAITS: string[] = [
-  '담백하고 표현이 과하지 않음',
-  '처음엔 차가워 보이나 가까워질 수록 따뜻해짐',
-  '질투가 많음',
-];
+import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
 
 // 썸네일은 ID 로 주소를 만들어 원격에서 불러온다. 저장소에 이미지를 두지 않는다.
 const RECOMMENDED_VIDEO: RecommendedVideo | null = {
@@ -29,9 +24,15 @@ const RECOMMENDED_VIDEO: RecommendedVideo | null = {
  *
  * 상단 26 은 상태바(44) 아래 여백이라 SafeArea 와 합치면 시안의 top 70 이 된다.
  * 홈 화면과 같은 방식이다.
+ *
+ * 특성 문구는 더 이상 고정 상수가 아니다 — 서버가 이 결과에 실제로 부합한 근거만 최대
+ * 3개 골라 내려주는 `reasonTexts`를 그대로 보여준다(FRONTEND_CHANGES.md §6). 유형이
+ * 바뀌어도 다른 유형 문구가 남아있는 문제가 없다.
  */
 export default function BreadScreen() {
-  const profile = useBreadStore((state) => state.profile);
+  const { profile, isLoading, isError } = useBreadProfile();
+  const resultQuery = useMySurveyResult();
+  const reasonTexts = resultQuery.data?.reasonTexts ?? [];
 
   function handleBackPress() {
     // 탭으로 들어온 경우가 정상 경로고, 딥링크로 바로 열렸으면 돌아갈 곳이 없다.
@@ -68,8 +69,24 @@ export default function BreadScreen() {
             <Text variant="heading-h2" className="text-center text-default-black">
               나의 반죽 알아보기
             </Text>
-            {profile ? <MyProfileCard profile={profile} /> : <BreadSurveyPromptCard />}
-            {profile ? <BreadTraitList traits={BREAD_TRAITS} /> : null}
+            {isLoading ? (
+              <Text variant="body-m" className="text-text-muted">
+                불러오는 중...
+              </Text>
+            ) : isError ? (
+              <Pressable accessibilityRole="button" onPress={() => resultQuery.refetch()}>
+                <Text variant="body-s" className="text-state-error">
+                  결과를 불러오지 못했어요. 다시 시도
+                </Text>
+              </Pressable>
+            ) : profile ? (
+              <>
+                <MyProfileCard profile={profile} />
+                {reasonTexts.length > 0 ? <BreadTraitList traits={reasonTexts} /> : null}
+              </>
+            ) : (
+              <BreadSurveyPromptCard />
+            )}
           </View>
 
           {RECOMMENDED_VIDEO ? (

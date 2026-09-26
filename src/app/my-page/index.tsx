@@ -7,7 +7,7 @@ import BottomNav from '@/src/components/bottom-nav';
 import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
-import { useBreadStore } from '@/src/features/bread/store/bread-store';
+import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
@@ -22,7 +22,7 @@ import useMyProfile from '@/src/features/user/hooks/use-my-profile';
  * BottomNav 는 어떤 탭도 선택 표시하지 않는다.
  */
 export default function MyPageScreen() {
-  const profile = useBreadStore((state) => state.profile);
+  const { profile } = useBreadProfile();
   const balance = useTokenStore((state) => state.balance);
   const gender = useProfileSettingsStore((state) => state.gender);
   const myProfileQuery = useMyProfile();
@@ -91,11 +91,11 @@ export default function MyPageScreen() {
                       <Text variant="heading-h4" className="text-text-primary">
                         {myProfileQuery.data.nickname}
                       </Text>
-                      {/* personalityType 이 "쫀쫀한 제빵사" 같은 뱃지 문구인지는 아직 Figma/기획으로
-                          확인되지 않았다 — 실제 값이 와야 정확한 문구/토큰화를 확정할 수 있다. */}
-                      {myProfileQuery.data.personalityType ? (
+                      {/* canonical personalityType(예: "red_bean_bread")은 그대로 노출하지
+                          않는다(FRONTEND_CHANGES.md §6) — 설문 결과의 한국어 표시명을 쓴다. */}
+                      {profile ? (
                         <Text variant="body-s" className="text-text-primary">
-                          {myProfileQuery.data.personalityType}
+                          {profile.name}
                         </Text>
                       ) : null}
                     </>
