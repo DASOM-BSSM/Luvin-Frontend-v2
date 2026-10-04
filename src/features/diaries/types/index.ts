@@ -39,6 +39,13 @@ export interface DiaryFeedItem extends Diary {
   commentCount: number;
   /** 내가 반응했는지. */
   liked: boolean;
+  /** 작성자 닉네임(닉네임이 없으면 이름). 탈퇴한 사용자면 null. */
+  authorNickname: string | null;
+  /**
+   * 작성자 빵 타입 id(설문 canonical, 예: "salt_bread"). 설문을 안 했거나 탈퇴한 사용자면 null.
+   * 화면에서는 `toBreadType` 으로 바꿔 쓴다.
+   */
+  authorBreadType: string | null;
   /**
    * 내 반응 이모지. 없으면 null. 서버가 U+FE0F 를 빼고 저장해서 "❤" 처럼 올 수 있으니
    * 그릴 때는 `toDisplayEmoji` 를 거칠 것.
@@ -141,19 +148,16 @@ export interface DailyQuestionAnswerRequest {
 
 /** 그룹 일기 카드에 그릴 작성자. */
 export interface GroupDiaryAuthor {
-  type: BreadType;
+  /** 설문을 안 했거나 탈퇴한 사용자면 null — 기본 빵 이미지 에셋이 오기 전까지는 그림을 비운다. */
+  type: BreadType | null;
   state: BreadState;
-  /** 예: "쫀쫀한 소금빵" */
+  /** 작성자 닉네임. 예: "쫀쫀한 소금빵" */
   name: string;
 }
 
 /** 감정일기 홈 "쫀쫀한 조합들"의 그룹 일기 카드 한 장. */
 export interface GroupDiaryPreview {
-  /**
-   * 피드 응답에는 작성자 id(`authorId`)만 있고 이름·빵 종류가 없어서, 아직은 비어 있다.
-   * 백엔드가 작성자 정보를 내려주면 채운다.
-   */
-  author?: GroupDiaryAuthor;
+  author: GroupDiaryAuthor;
   /** 표시용 시각. 예: "15:00" */
   time: string;
   /** 줄바꿈(\n)으로 문단을 나눈다. */

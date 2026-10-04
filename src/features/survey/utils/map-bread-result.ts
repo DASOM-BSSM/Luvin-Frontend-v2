@@ -16,6 +16,15 @@ const CANONICAL_TO_BREAD_TYPE: Record<BreadCanonicalType, BreadType> = {
 };
 
 /**
+ * 서버 빵 타입 id(canonical, 예: "salt_bread")를 화면 `BreadType`(예: "salt")으로 바꾼다.
+ * 모르는 id 나 null 이면 null. 감정일기 피드의 `authorBreadType`도 같은 id 를 쓴다.
+ */
+export function toBreadType(canonical: string | null): BreadType | null {
+  if (canonical === null) return null;
+  return CANONICAL_TO_BREAD_TYPE[canonical as BreadCanonicalType] ?? null;
+}
+
+/**
  * 서버 결과를 화면이 쓰는 `BreadProfile`로 바꾼다. 순수 함수(§6).
  *
  * 모르는 canonical 코드는 salt 로 fallback하지 않고 `null` — 화면이 "결과를 불러올 수
@@ -31,7 +40,7 @@ const CANONICAL_TO_BREAD_TYPE: Record<BreadCanonicalType, BreadType> = {
  * 안 붙인다(사용자 확인) — "당신은 쫀쫀한 소금빵 성향이 나타났어요!"처럼 빵 종류까지만 쓴다.
  */
 export function mapSurveyResultToBreadProfile(result: SurveyResult): BreadProfile | null {
-  const type = CANONICAL_TO_BREAD_TYPE[result.primaryType];
+  const type = toBreadType(result.primaryType);
   if (!type) {
     return null;
   }

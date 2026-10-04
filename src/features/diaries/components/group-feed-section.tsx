@@ -9,11 +9,23 @@ import useCommunityDiaries from '@/src/features/diaries/hooks/use-community-diar
 import type { DiaryFeedItem, GroupDiaryPreview } from '@/src/features/diaries/types';
 import { formatDiaryTime } from '@/src/features/diaries/utils/feed';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
+import { toBreadType } from '@/src/features/survey/utils/map-bread-result';
 
 const SECTION_TITLE = '쫀쫀한 조합들';
 
+/** 탈퇴한 사용자의 일기는 닉네임이 null 로 온다. 문구는 임시 — 정해지면 바꾼다. */
+const UNKNOWN_AUTHOR_NAME = '탈퇴한 사용자';
+
 function toGroupDiaryPreview(item: DiaryFeedItem): GroupDiaryPreview {
-  return { time: formatDiaryTime(item.createdAt), message: item.content };
+  return {
+    author: {
+      type: toBreadType(item.authorBreadType),
+      state: 'dough',
+      name: item.authorNickname ?? UNKNOWN_AUTHOR_NAME,
+    },
+    time: formatDiaryTime(item.createdAt),
+    message: item.content,
+  };
 }
 
 interface SectionShellProps {
