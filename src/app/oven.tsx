@@ -8,11 +8,9 @@ import CloudMediumIcon from "@/src/assets/icons/CloudMediumIcon";
 import BreadCharacter from "@/src/assets/images/BreadCharacter";
 import PlayerAvatar from "@/src/assets/images/PlayerAvatar";
 import BottomNav from "@/src/components/bottom-nav";
-import OkMallangBText from "@/src/components/ui/ok-mallang-b-text";
 import Screen from "@/src/components/ui/screen";
 import SectionHeader from "@/src/components/ui/section-header";
 import Text from "@/src/components/ui/text";
-import { pink } from "@/src/constants/colors";
 import useBreadProfile from "@/src/features/bread/hooks/use-bread-profile";
 import EpisodeThumbnailCard from "@/src/features/home/components/episode-thumbnail-card";
 import type { BreadProfile, WeeklyEpisode } from "@/src/features/home/types";
@@ -364,16 +362,8 @@ export default function OvenScreen() {
       >
         <View className="w-full flex-row items-center justify-between">
           {/* Figma "Luvin's Inferno"(6263:5926): 24px, pink-500 위 pink-200 테두리 ~1px —
-              이 화면에만 쓰이는 1회성 크기/테두리라 typography.ts에 토큰화하지 않았다(§8 예외). */}
-          <OkMallangBText
-            fontSize={24}
-            lineHeight={24 * 1.1}
-            fill={pink[500]}
-            stroke={pink[200]}
-            strokeWidth={1}
-          >
-            Luvin’s Inferno
-          </OkMallangBText>
+              감정일기 홈 "Luvin EmoDi"와 같은 값이라 `display.logo` 토큰으로 올렸다(§8). */}
+          <Text variant="display-logo">Luvin’s Inferno</Text>
           {/* Figma 에서 이 줄만 변수 바인딩 없이 #000000 이라 default/black 토큰으로 맞췄다(bread.tsx와 동일 패턴). */}
           <Text variant="body-xs" className="text-default-black">
             나의 토큰: 🥐x{balance}
