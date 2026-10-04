@@ -230,6 +230,8 @@ Authorization: Bearer {accessToken}
   "diaryId": 2,
   "roomId": 1,
   "authorId": 3,
+  "authorNickname": "쫀쫀한 소금빵",
+  "authorBreadType": "salt_bread",
   "title": "방 일기",
   "content": "내용",
   "isMine": false,
@@ -244,6 +246,8 @@ Authorization: Bearer {accessToken}
 | 필드 | 설명 |
 |---|---|
 | authorId | 작성자 id |
+| authorNickname | 작성자 닉네임(없으면 이름). 탈퇴한 사용자면 `null` |
+| authorBreadType | 빵 타입 id(설문 `bread_survey` 기준, 예: `salt_bread`). 설문 안 했거나 탈퇴했으면 `null` |
 | likeCount / commentCount | 반응 수 / 댓글 수 |
 | liked | 내가 반응했는지 |
 | emoji | 내 반응 이모지, 없으면 `null` |
@@ -261,7 +265,7 @@ Authorization: Bearer {accessToken}
 ---
 
 ## 알려진 이슈 / 변경 예정
-- 피드 항목에 작성자 닉네임 · 빵 타입 추가 예정 (설문 안 한 유저는 빵 타입 `null` → 기본 이미지 필요)
+- 빵 타입이 `null`인 작성자용 기본 빵 이미지 필요 (디자인 에셋 대기)
 - 공유방 목록 정렬 추가 예정
 - 멤버 목록의 `email`은 개인정보 이슈로 **빠질 수 있음**
 - 강퇴에서 `userId`를 빼먹거나 숫자가 아니면 현재 `500` → `400`으로 수정 예정

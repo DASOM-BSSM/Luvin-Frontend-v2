@@ -24,22 +24,20 @@ export default function GroupDiaryCard({
   return (
     <View className="h-[162px] w-full flex-col items-center justify-between overflow-hidden rounded-[8px] bg-pink-100 p-[12px]">
       <View className="w-full flex-row items-center justify-between">
-        {/* 작성자 정보가 아직 피드 응답에 없다(types 의 GroupDiaryPreview.author 참고). 오면 그린다. */}
-        {diary.author ? (
-          <View className="flex-row items-center gap-[4px]">
+        <View className="flex-row items-center gap-[4px]">
+          {/* 빵 타입이 없으면(설문 안 함 · 탈퇴) 기본 빵 이미지가 들어갈 자리 — 에셋이 오기 전까지 비운다. */}
+          {diary.author.type ? (
             <BreadCharacter
               type={diary.author.type}
               state={diary.author.state}
               className="h-[17px] w-[25px]"
               accessibilityLabel={diary.author.name}
             />
-            <Text variant="body-xs" className="text-center text-default-black">
-              {diary.author.name}
-            </Text>
-          </View>
-        ) : (
-          <View />
-        )}
+          ) : null}
+          <Text variant="body-xs" className="text-center text-default-black">
+            {diary.author.name}
+          </Text>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="더보기"
