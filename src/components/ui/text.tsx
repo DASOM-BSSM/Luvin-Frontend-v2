@@ -17,9 +17,22 @@ export type TextVariant =
   | 'body-xs'
   | 'body-xxs'
   | 'display-title'
-  | 'display-score';
+  | 'display-score'
+  | 'display-logo';
 
-const VARIANT_CLASS: Record<Exclude<TextVariant, 'display-title' | 'display-score'>, string> = {
+type DisplayVariant = 'display-title' | 'display-score' | 'display-logo';
+
+const DISPLAY_TOKEN = {
+  'display-title': display.title,
+  'display-score': display.score,
+  'display-logo': display.logo,
+} as const;
+
+function isDisplayVariant(variant: TextVariant): variant is DisplayVariant {
+  return variant in DISPLAY_TOKEN;
+}
+
+const VARIANT_CLASS: Record<Exclude<TextVariant, DisplayVariant>, string> = {
   'heading-h1': 'font-yde-street-b text-heading-h1',
   'heading-h2': 'font-yde-street-b text-heading-h2',
   'heading-h3': 'font-yde-street-b text-heading-h3',
@@ -38,13 +51,13 @@ interface TextProps extends RNTextProps {
 }
 
 /**
- * `display-title`/`display-score`는 Figma에 테두리(stroke)가 박혀 있어(디자인 QA 재확인)
+ * `display-title`/`display-score`/`display-logo`는 Figma에 테두리(stroke)가 박혀 있어(디자인 QA 재확인)
  * 일반 RNText로 표현할 수 없다 — `OkMallangBText`에 위임하고, `display.*` 토큰의 fill/stroke를
- * 그대로 쓴다(호출부는 색을 지정하지 않는다 — 두 variant 모두 색이 고정이라 §8 예외 범위).
+ * 그대로 쓴다(호출부는 색을 지정하지 않는다 — 세 variant 모두 색이 고정이라 §8 예외 범위).
  */
 export default function Text({ variant = 'body-m', className, style, children, ...rest }: TextProps) {
-  if (variant === 'display-title' || variant === 'display-score') {
-    const token = variant === 'display-title' ? display.title : display.score;
+  if (isDisplayVariant(variant)) {
+    const token = DISPLAY_TOKEN[variant];
     return (
       <OkMallangBText
         className={className}

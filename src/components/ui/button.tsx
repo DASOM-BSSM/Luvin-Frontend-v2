@@ -20,6 +20,9 @@ import { defaultColor, yellow } from '@/src/constants/colors';
  * - `noticeSoft`      : `notice` 의 한 단계 연한 짝 (5482:1895) — yellow/200 바탕에 yellow/300
  *   테두리. Figma `button2` 의 `status=activate, hover=off` 에 해당하고, `notice` 가 그
  *   `hover=on` 이다. "나의 빵에게" 피드백 화면처럼 두 버튼이 한 화면에 같이 놓일 때 쓴다.
+ * - `filledSelected`  : `filled` 의 고른 상태. 감정일기 홈 "오늘의 밸런스 게임" 보기 버튼
+ *   (5746:4119, `hover=on` 2013:78) — yellow/300 바탕에 yellow/400 테두리. `notice` 와 색은 같지만
+ *   `notice` 는 가로 꽉 + px16 이라 나란히 놓는 보기 버튼에는 못 쓴다.
  * - `infoSave`        : 마이페이지 "내 정보 저장하기" 버튼 (6300:8070) — yellow/300, 테두리 없음,
  *   px10/py8, 라벨 14px, 가로 꽉. `secondary`(16px, 높이 42, px20)와 달라 분리했다.
  *
@@ -38,6 +41,7 @@ export type ButtonVariant =
   | 'gameInfo'
   | 'notice'
   | 'noticeSoft'
+  | 'filledSelected'
   | 'infoSave';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
@@ -50,6 +54,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   gameInfo: 'border border-default-gray bg-default-bg px-[20px] py-[6px]',
   notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
   noticeSoft: 'w-full border border-yellow-300 bg-yellow-200 px-[16px] py-[6px]',
+  filledSelected: 'border border-yellow-400 bg-yellow-300 px-[20px] py-[6px]',
   infoSave: 'w-full bg-yellow-300 px-[10px] py-[8px]',
 };
 
@@ -67,6 +72,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   gameInfo: 'text-text-primary',
   notice: 'text-text-primary',
   noticeSoft: 'text-text-primary',
+  filledSelected: 'text-default-black',
   infoSave: 'text-text-primary',
 };
 
@@ -80,6 +86,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   gameInfo: 'body-s',
   notice: 'body-m',
   noticeSoft: 'body-m',
+  filledSelected: 'body-xs',
   infoSave: 'body-s',
 };
 

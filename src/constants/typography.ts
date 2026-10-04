@@ -171,6 +171,17 @@ export const display = {
     fill: defaultColor.white,
     stroke: { color: defaultColor.black, width: 3 },
   },
+  /**
+   * 화면 제목 로고 글자. "Luvin's Inferno"(오븐) · "Luvin EmoDi"(감정일기 홈 5950:6590) 24px,
+   * pink-500 위 pink-200 아주 얇은 stroke ~1px. 두 곳에서 같은 값이라 토큰으로 올렸다.
+   */
+  logo: {
+    fontFamily: fontFamily.okMallangB,
+    fontSize: 24,
+    lineHeight: 24 * DISPLAY_LINE_HEIGHT_RATIO,
+    fill: pink[500],
+    stroke: { color: pink[200], width: 1 },
+  },
 };
 
 export const typography = { fontFamily, heading, body, display };
