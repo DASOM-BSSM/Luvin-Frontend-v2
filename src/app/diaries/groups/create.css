@@ -1,0 +1,31 @@
+/* 눈누 Yde street 폰트 로드 */
+@font-face {
+  font-family: 'Yde street';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/YdestreetB.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Yde street';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2110@1.0/YdestreetL.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Yde street 폰트 클래스 */
+.font-yde {
+  font-family: 'Yde street', -apple-system, sans-serif;
+}
+
+/* 숫자 입력창 화살표 버튼 제거 */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  appearance: textfield;
+  -webkit-appearance: none;
+}
