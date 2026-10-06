@@ -12,15 +12,19 @@ export default function CreateGroupPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex flex-col bg-white font-sans antialiased">
-            {/* 전체 화면 컨테이너 */}
-            <div className="flex-1 flex flex-col w-full px-[30px] pt-6 min-h-screen">
+        /* 최외각 컨테이너: 고정 width/height 및 배경색 적용, 화면 중앙 정렬 */
+        <div
+            className="w-[402px] h-[874px] mx-auto flex flex-col font-sans antialiased overflow-hidden box-border"
+            style={{ background: 'var(--default-color-bg, #FFFEFA)' }}
+        >
+            {/* 내부 콘텐츠 패딩 (양옆 30px) */}
+            <div className="flex-1 flex flex-col w-full px-[30px]">
 
                 {/* 상단 폼 영역 */}
                 <div className="flex-1 flex flex-col">
 
-                    {/* 헤더 */}
-                    <div className="flex flex-row items-center gap-1 mb-[60px] cursor-pointer">
+                    {/* 헤더 (상단 간격 60px) */}
+                    <div className="flex flex-row items-center gap-1 mt-[60px] mb-[60px] cursor-pointer">
                         <div className="w-6 h-6 aspect-square inline-flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <path
@@ -52,7 +56,6 @@ export default function CreateGroupPage() {
                             <span className="font-yde font-bold text-[14px] text-[#1D1D1D] leading-[160%]">
                                 그룹 인원수
                             </span>
-                            {/* 👇 스타일이 적용된 2~6명 텍스트 */}
                             <span className="font-yde font-light text-[14px] text-[var(--text-color-secondary,#334655)] leading-[160%]">
                                 2~6명
                             </span>
