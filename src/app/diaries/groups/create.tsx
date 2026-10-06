@@ -12,18 +12,13 @@ export default function CreateGroupPage() {
     };
 
     return (
-        /* 최외각 컨테이너: 고정 width/height 및 배경색 적용, 화면 중앙 정렬 */
         <div
             className="w-[402px] h-[874px] mx-auto flex flex-col font-sans antialiased overflow-hidden box-border"
             style={{ background: 'var(--default-color-bg, #FFFEFA)' }}
         >
-            {/* 내부 콘텐츠 패딩 (양옆 30px) */}
             <div className="flex-1 flex flex-col w-full px-[30px]">
-
-                {/* 상단 폼 영역 */}
                 <div className="flex-1 flex flex-col">
 
-                    {/* 헤더 (상단 간격 60px) */}
                     <div className="flex flex-row items-center gap-1 mt-[60px] mb-[60px] cursor-pointer">
                         <div className="w-6 h-6 aspect-square inline-flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -38,7 +33,6 @@ export default function CreateGroupPage() {
                         </h1>
                     </div>
 
-                    {/* 1. 그룹 이름 */}
                     <div className="mb-6">
                         <label className="block font-yde font-bold text-[14px] text-[#1D1D1D] leading-[160%] mb-2">
                             그룹 이름
@@ -50,7 +44,6 @@ export default function CreateGroupPage() {
                         />
                     </div>
 
-                    {/* 2. 그룹 인원수 */}
                     <div className="mb-6">
                         <div className="flex flex-row items-center gap-2 mb-2">
                             <span className="font-yde font-bold text-[14px] text-[#1D1D1D] leading-[160%]">
@@ -71,7 +64,6 @@ export default function CreateGroupPage() {
                         />
                     </div>
 
-                    {/* 3. 그룹장 닉네임 */}
                     <div className="mb-[40px]">
                         <label className="block font-yde font-bold text-[14px] text-[#1D1D1D] leading-[160%] mb-2">
                             그룹장 닉네임
@@ -83,7 +75,6 @@ export default function CreateGroupPage() {
                         />
                     </div>
 
-                    {/* 제출 버튼 */}
                     <div>
                         <button className="flex py-[8px] px-[10px] justify-center items-center gap-[10px] w-full rounded-[8px] bg-[#FFED9E] font-yde font-normal text-[16px] text-[#1D1D1D] border-none cursor-pointer active:opacity-85">
                             그룹 만들기
@@ -91,7 +82,6 @@ export default function CreateGroupPage() {
                     </div>
                 </div>
 
-                {/* 하단 내비게이션 바 */}
                 <div className="flex py-[16px] px-[30px] justify-between items-center rounded-[24px] bg-[#FFFCF0] mt-auto mb-[44px] mx-[7px]">
                     <div className="w-6 h-6 aspect-square flex items-center justify-center cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
