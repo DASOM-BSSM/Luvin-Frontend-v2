@@ -1,15 +1,15 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import type { Gender } from '@/src/features/my-page/types';
-import { getStorageString, setStorageString } from '@/src/lib/storage';
+import type { Gender } from "@/src/features/my-page/types";
+import { getStorageString, setStorageString } from "@/src/lib/storage";
 
 /** 비민감 값이라 MMKV 에 둔다(AGENTS.md §12 표). */
-const NICKNAME_KEY = 'my-page.nickname';
-const GENDER_KEY = 'my-page.gender';
-const DEFAULT_GENDER: Gender = 'male';
+const NICKNAME_KEY = "my-page.nickname";
+const GENDER_KEY = "my-page.gender";
+const DEFAULT_GENDER: Gender = "female";
 
 function isGender(value: string | undefined): value is Gender {
-  return value === 'female' || value === 'male';
+  return value === "female" || value === "male";
 }
 
 interface ProfileSettingsStore {
@@ -24,7 +24,7 @@ export const useProfileSettingsStore = create<ProfileSettingsStore>((set) => {
   const storedGender = getStorageString(GENDER_KEY);
 
   return {
-    nickname: getStorageString(NICKNAME_KEY) ?? '',
+    nickname: getStorageString(NICKNAME_KEY) ?? "",
     gender: isGender(storedGender) ? storedGender : DEFAULT_GENDER,
 
     setNickname: (nickname) => {
