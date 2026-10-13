@@ -77,6 +77,63 @@ export const infernoMiniGameLayout = {
   spacing: { 'inferno-cup-gap': '70px' },
 };
 
+/**
+ * AI 답장 대기 "빵 줄넘기" 장면의 기준 좌표. Figma `ep0` 줄넘기 시안(7219:3595)의 쪽지
+ * (781x300) 안 좌표를 그대로 옮겼다. 실제 쪽지 크기에 맞춰 비율로 스케일한다.
+ *
+ * 시안은 한 순간(줄이 머리 위에 있을 때)만 그린 정지 화면이라, 줄이 바닥까지 내려오는 깊이와
+ * 반죽이 오가는 동선(줄 서기 → 넘기 → 빠져나가기)은 시안의 위치를 기준으로 정했다.
+ */
+export const jumpRopeLayout = {
+  width: 781,
+  height: 300,
+  /** 아바타·반죽 발끝이 닿는 선. 시안의 반죽 아래 끝(194 + 43). */
+  groundY: 237,
+  /** "대화가 생성되는 동안…" 문구 윗변. Figma 7219:3695. */
+  messageTop: 62,
+  holder: {
+    /** 여자 아바타 옆모습. Figma `image 52` (7219:3702). */
+    girl: { x: 189, y: 112, width: 55, height: 123 },
+    /** 남자 아바타 옆모습. Figma `image 51` (7219:3704). */
+    boy: { x: 535, y: 112, width: 57, height: 123 },
+  },
+  rope: {
+    /** 줄 양 끝(손잡이와 이어지는 점). Figma `Group 13` (7219:3710)의 Vector 1 끝점. */
+    startX: 228,
+    endX: 553,
+    endY: 204,
+    /** 줄 가운데가 끝점보다 올라가는 높이(시안의 꼭대기 122)와 내려가는 깊이(바닥 직전). */
+    upHeight: 82,
+    downHeight: 29,
+    /** 손이 줄을 돌리며 그리는 작은 원의 반지름. */
+    handRadius: 3,
+    strokeWidth: 2,
+    /** 분홍 손잡이. 시안 19x5 둥근 사각형. */
+    handleLength: 19,
+    handleWidth: 5,
+    /**
+     * 줄 SVG 캔버스 범위. 줄과 손잡이가 움직이는 영역에 여유만 더했다.
+     * Android 는 SVG 를 매 프레임 비트맵으로 다시 그려 올리므로 쪽지 전체 크기로 두면 무겁다.
+     */
+    canvas: { x: 195, y: 108, width: 391, height: 136 },
+  },
+  jumper: {
+    /** 시안 반죽 50x43. */
+    width: 50,
+    height: 43,
+    /** 줄 선 자리(가운데 x). 시안 왼쪽 두 반죽 7219:3735 / 7219:3733. */
+    queueBackX: 99.5,
+    queueFrontX: 153.5,
+    /** 줄 밑으로 들어가는 곳 ~ 빠져나오는 곳. 가운데(390.5)가 시안 7219:3737 자리다. */
+    jumpStartX: 300,
+    jumpEndX: 481,
+    /** 남자 아바타 뒤로 빠져나가며 사라지는 곳. */
+    exitX: 690,
+    hopHeight: 5,
+    jumpHeight: 50,
+  },
+} as const;
+
 /** Figma: `Heading/H1` ~ `Heading/H5` */
 export const heading = {
   h1: {
