@@ -101,7 +101,7 @@ export default function InfernoCardFlipScene({
 
       <InfernoNoteModal
         visible={isResultVisible}
-        widthClass={isSuccess ? 'w-[366px]' : 'w-[344px]'}
+        minWidthClass={isSuccess ? 'min-w-[366px]' : 'min-w-[344px]'}
         title={isSuccess ? 'SUCCESS!' : 'FAIL!'}
         message={
           isSuccess ? '더 알아가고 싶은 반죽을 골라주세요' : '랜덤으로 상대가 정해져요ㅠㅠ'

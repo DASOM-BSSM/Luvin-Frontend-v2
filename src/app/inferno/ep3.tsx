@@ -20,7 +20,7 @@ const EPISODE_ORDER = 3;
 const DONE_MODAL_TITLE = 'NOTICE';
 const DONE_MODAL_MESSAGE = '미니게임 투표가 완료되었어요!';
 const DONE_MODAL_ACTION = '에피소드 끝내기';
-const DONE_MODAL_WIDTH = 'w-[344px]';
+const DONE_MODAL_WIDTH = 'min-w-[344px]';
 
 export default function InfernoEp3Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
@@ -116,7 +116,7 @@ export default function InfernoEp3Screen() {
 
       <InfernoNoteModal
         visible={flow.isGamePromptOpen}
-        widthClass="w-[404px]"
+        minWidthClass="min-w-[404px]"
         title="MINI GAME"
         message={conversation.vote.modalMessage}
         actionLabel="게임하기"
@@ -125,7 +125,7 @@ export default function InfernoEp3Screen() {
       />
       <InfernoNoteModal
         visible={flow.openModal === 'done'}
-        widthClass={DONE_MODAL_WIDTH}
+        minWidthClass={DONE_MODAL_WIDTH}
         title={DONE_MODAL_TITLE}
         message={DONE_MODAL_MESSAGE}
         actionLabel={DONE_MODAL_ACTION}

@@ -17,13 +17,13 @@ const EPISODE_ORDER = 1;
 /** 대화 끝 투표 모달. Figma `ep1-투표` (5466:4550, 5466:4555, 5466:4557). */
 const VOTE_MODAL_TITLE = 'VOTE';
 const VOTE_MODAL_ACTION = '투표하기';
-const VOTE_MODAL_WIDTH = 'w-[366px]';
+const VOTE_MODAL_WIDTH = 'min-w-[366px]';
 
 /** 투표 완료 모달. Figma `ep1-끝` (5467:5645, 5467:5650~5467:5652). */
 const DONE_MODAL_TITLE = 'NOTICE';
 const DONE_MODAL_MESSAGE = '첫인상 투표가 완료되었어요!';
 const DONE_MODAL_ACTION = '에피소드 끝내기';
-const DONE_MODAL_WIDTH = 'w-[344px]';
+const DONE_MODAL_WIDTH = 'min-w-[344px]';
 
 /**
  * 러빈지옥 ep1. Figma `ep1-전체대화`(5425:886), `ep1-전체대화 끝`(6137:2782),
@@ -113,7 +113,7 @@ export default function InfernoEp1Screen() {
 
       <InfernoNoteModal
         visible={flow.openModal === 'vote'}
-        widthClass={VOTE_MODAL_WIDTH}
+        minWidthClass={VOTE_MODAL_WIDTH}
         title={VOTE_MODAL_TITLE}
         message={conversation.vote.modalMessage}
         actionLabel={VOTE_MODAL_ACTION}
@@ -122,7 +122,7 @@ export default function InfernoEp1Screen() {
       />
       <InfernoNoteModal
         visible={flow.openModal === 'done'}
-        widthClass={DONE_MODAL_WIDTH}
+        minWidthClass={DONE_MODAL_WIDTH}
         title={DONE_MODAL_TITLE}
         message={DONE_MODAL_MESSAGE}
         actionLabel={DONE_MODAL_ACTION}

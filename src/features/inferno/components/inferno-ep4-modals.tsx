@@ -4,17 +4,17 @@ import type { InfernoMatchReveal } from '@/src/features/inferno/types';
 
 /** 매칭 결과 쪽지. Figma `ep4-매칭` (5467:5196), 폭은 쪽지 실측(390)값. */
 const REVEAL_TITLE = 'NOTICE';
-const REVEAL_WIDTH = 'w-[390px]';
+const REVEAL_WIDTH = 'min-w-[390px]';
 
 /** 다시 굽기 확인 쪽지. Figma `다시굽기` 확인 모달 (5467:5829~5467:5837), 폭 344. */
 const REBAKE_CONFIRM_TITLE = 'REBAKE';
-const REBAKE_CONFIRM_WIDTH = 'w-[344px]';
+const REBAKE_CONFIRM_WIDTH = 'min-w-[344px]';
 
 /** 에피소드 완료 쪽지. Figma `ep4-끝` (5467:5818~5467:5826), 폭은 ep1 의 끝 쪽지와 같은 344. */
 const DONE_TITLE = 'NOTICE';
 const DONE_MESSAGE = '에피소드가 모두 끝났어요!';
 const DONE_ACTION = '에피소드 끝내기';
-const DONE_WIDTH = 'w-[344px]';
+const DONE_WIDTH = 'min-w-[344px]';
 
 interface InfernoEp4ModalsProps {
   openModal?: InfernoEp4Modal;
@@ -48,7 +48,7 @@ export default function InfernoEp4Modals({
     <>
       <InfernoNoteModal
         visible={openModal === 'reveal'}
-        widthClass={REVEAL_WIDTH}
+        minWidthClass={REVEAL_WIDTH}
         title={REVEAL_TITLE}
         message={matchReveal.noticeMessage}
         actionLabel={matchReveal.actionLabel}
@@ -57,7 +57,7 @@ export default function InfernoEp4Modals({
       />
       <InfernoNoteModal
         visible={openModal === 'rebakeConfirm'}
-        widthClass={REBAKE_CONFIRM_WIDTH}
+        minWidthClass={REBAKE_CONFIRM_WIDTH}
         title={REBAKE_CONFIRM_TITLE}
         message={rebakeConfirmMessage}
         actionLabel={rebakeConfirmActionLabel}
@@ -66,7 +66,7 @@ export default function InfernoEp4Modals({
       />
       <InfernoNoteModal
         visible={openModal === 'done'}
-        widthClass={DONE_WIDTH}
+        minWidthClass={DONE_WIDTH}
         title={DONE_TITLE}
         message={DONE_MESSAGE}
         actionLabel={DONE_ACTION}
