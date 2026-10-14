@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { VOTE_MODAL_DELAY_MS } from '@/src/features/inferno/constants/animation';
+import type { InfernoConversation } from '@/src/features/inferno/types';
 
 /** 지금 떠 있는 모달. 없으면 undefined. */
 export type InfernoEp4Modal = 'reveal' | 'rebakeConfirm' | 'done';
@@ -10,6 +11,10 @@ export type InfernoEp4Phase = 'group' | 'personal' | 'rebakeVote' | 'rebakeChat'
 
 interface InfernoEp4Flow {
   phase: InfernoEp4Phase;
+  /** group 단계에서 지금 몇 쪽인지. */
+  groupPageIndex: number;
+  /** personal 단계에서 지금 몇 쪽인지. */
+  personalPageIndex: number;
   openModal?: InfernoEp4Modal;
   /** 다시 굽기 투표지에서 고른 상대. 아직 안 골랐으면 undefined. */
   rebakeSelectedId?: string;
@@ -44,19 +49,31 @@ interface InfernoEp4Flow {
  * 투표하면 rebakeChat 으로만 가고 personal 로 못 돌아간다(다시 굽기는 한 회차에 한 번만
  * 쓸 수 있다 — InfernoPersonalChatSidebar 주석 참고). rebakeVote 자체는 ep1 투표지처럼
  * "이전화면" 으로 personal 로 되돌아갈 수 있다(아직 투표를 안 한 상태니까).
+ *
+ * group·personal 은 ep2 처럼 여러 쪽이다. 예전에는 두 단계 모두 첫 쪽만 보여주고 바로 다음
+ * 쪽지가 떠서, 나머지 대화가 통째로 안 보였다(사용자 지적). 쪽 안에서는 상단 바로 앞뒤 쪽을
+ * 오가고, 각 단계의 마지막 쪽까지 다 쳐져야 다음 쪽지가 뜬다. rebakeChat 은 한 쪽뿐이다.
  */
-export default function useInfernoEp4Flow(): InfernoEp4Flow {
+export default function useInfernoEp4Flow(conversation: InfernoConversation | undefined): InfernoEp4Flow {
   const [phase, setPhase] = useState<InfernoEp4Phase>('group');
+  const [groupPageIndex, setGroupPageIndex] = useState(0);
+  const [personalPageIndex, setPersonalPageIndex] = useState(0);
   const [isLastLineTyped, setIsLastLineTyped] = useState(false);
   const [openModal, setOpenModal] = useState<InfernoEp4Modal | undefined>(undefined);
   const [rebakeSelectedId, setRebakeSelectedId] = useState<string | undefined>(undefined);
+
+  const isLastGroupPage = groupPageIndex >= (conversation?.pages.length ?? 1) - 1;
+  const isLastPersonalPage = personalPageIndex >= (conversation?.personalChatPages?.length ?? 1) - 1;
+  /** 지금 단계의 마지막 쪽인지. 마지막 쪽이어야 다음 쪽지로 넘어간다. */
+  const isLastPageOfPhase =
+    phase === 'group' ? isLastGroupPage : phase === 'personal' ? isLastPersonalPage : true;
 
   useEffect(() => {
     // rebakeVote 는 줄이 쳐지는 화면이 아니다. personal 단계에서 다 쳐진 뒤(대기 중인
     // 타이머가 있는 상태) "다시 굽기" 로 넘어와도, phase 가 바뀌었으니 이 효과가 다시 돌면서
     // 여기서 걸러진다 — handleRebakeStart 가 isLastLineTyped 를 되돌려도 이 가드가 이중으로
-    // 막아 준다.
-    if (!isLastLineTyped || phase === 'rebakeVote') {
+    // 막아 준다. 마지막 쪽이 아니면 쪽지 대신 상단 바로 다음 쪽을 넘긴다.
+    if (!isLastLineTyped || phase === 'rebakeVote' || !isLastPageOfPhase) {
       return;
     }
 
@@ -65,7 +82,7 @@ export default function useInfernoEp4Flow(): InfernoEp4Flow {
     const timer = setTimeout(() => setOpenModal(nextModal), VOTE_MODAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isLastLineTyped, phase]);
+  }, [isLastLineTyped, phase, isLastPageOfPhase]);
 
   function handleLineDone() {
     setIsLastLineTyped(true);
@@ -78,6 +95,7 @@ export default function useInfernoEp4Flow(): InfernoEp4Flow {
   function handleRevealAction() {
     setOpenModal(undefined);
     setPhase('personal');
+    setPersonalPageIndex(0);
     setIsLastLineTyped(false);
   }
 
@@ -115,6 +133,21 @@ export default function useInfernoEp4Flow(): InfernoEp4Flow {
     setPhase('personal');
   }
 
+  // 쪽이 바뀌면 새 쪽을 처음부터 다시 친다. 이전 쪽에서 걸린 쪽지 타이머가 남지 않게 되돌린다.
+  function moveGroupPage(offset: number) {
+    return () => {
+      setIsLastLineTyped(false);
+      setGroupPageIndex((index) => index + offset);
+    };
+  }
+
+  function movePersonalPage(offset: number) {
+    return () => {
+      setIsLastLineTyped(false);
+      setPersonalPageIndex((index) => index + offset);
+    };
+  }
+
   function openModalNow(modal: InfernoEp4Modal) {
     return () => setOpenModal(modal);
   }
@@ -122,6 +155,15 @@ export default function useInfernoEp4Flow(): InfernoEp4Flow {
   function resolveGoPrevious() {
     if (openModal) {
       return undefined;
+    }
+
+    if (phase === 'group') {
+      return groupPageIndex > 0 ? moveGroupPage(-1) : undefined;
+    }
+
+    // 1:1 대화 첫 쪽에서는 전체대화로 되돌아가지 못한다(매칭 결과를 이미 봤다).
+    if (phase === 'personal') {
+      return personalPageIndex > 0 ? movePersonalPage(-1) : undefined;
     }
 
     // 아직 투표하지 않았으니 personal 로 돌아갈 수 있다.
@@ -133,11 +175,22 @@ export default function useInfernoEp4Flow(): InfernoEp4Flow {
       return undefined;
     }
 
-    return openModalNow(phase === 'group' ? 'reveal' : 'done');
+    // 대화를 다 보지 않아도 다음 쪽/다음 쪽지로 곧장 넘어갈 수 있다(ep2 와 같은 지름길).
+    if (phase === 'group') {
+      return isLastGroupPage ? openModalNow('reveal') : moveGroupPage(1);
+    }
+
+    if (phase === 'personal') {
+      return isLastPersonalPage ? openModalNow('done') : movePersonalPage(1);
+    }
+
+    return openModalNow('done');
   }
 
   return {
     phase,
+    groupPageIndex,
+    personalPageIndex,
     openModal,
     rebakeSelectedId,
     goPrevious: resolveGoPrevious(),

@@ -43,7 +43,7 @@ export default function InfernoEp4Screen() {
     useInfernoConversation(EPISODE_ORDER);
   // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
   const generationLoader = useGenerationLoader(isLoading);
-  const flow = useInfernoEp4Flow();
+  const flow = useInfernoEp4Flow(conversation);
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
   function handleExitPress() {
@@ -89,7 +89,13 @@ export default function InfernoEp4Screen() {
     );
   }
 
-  const personalPage = conversation.personalChatPages[0];
+  // 쪽 번호가 쪽 수를 넘는 일은 없지만(흐름이 마지막 쪽에서 멈춘다), 혹시 넘어도 화면이
+  // 죽지 않게 마지막 쪽으로 잘라 읽는다.
+  const groupPage = conversation.pages[Math.min(flow.groupPageIndex, conversation.pages.length - 1)];
+  const personalPage =
+    conversation.personalChatPages[
+      Math.min(flow.personalPageIndex, conversation.personalChatPages.length - 1)
+    ];
   const rebakePage = { id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] };
   const rebakeOptions = conversation.rebake
     ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
@@ -115,8 +121,10 @@ export default function InfernoEp4Screen() {
       onSkipPress={handleExitPress}
     >
       {flow.phase === 'group' ? (
+        /* 쪽이 바뀌면 타자를 처음부터 다시 치도록 key 로 갈아 끼운다. */
         <InfernoChatScene
-          page={conversation.pages[0]}
+          key={groupPage.id}
+          page={groupPage}
           participants={conversation.participants}
           onPageDone={flow.handleLineDone}
         />
@@ -124,6 +132,7 @@ export default function InfernoEp4Screen() {
 
       {flow.phase === 'personal' ? (
         <InfernoPersonalChatScene
+          key={personalPage.id}
           page={personalPage}
           participants={conversation.participants}
           partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
