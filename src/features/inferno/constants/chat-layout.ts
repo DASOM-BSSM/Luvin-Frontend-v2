@@ -47,8 +47,8 @@ export const GROUP_CHAT_LAYOUT = {
 
 /** 1:1 대화(InfernoPersonalChatScene) 치수. */
 export const PERSONAL_CHAT_LAYOUT = {
-  /** 왼쪽 사이드바 + 오른쪽 여백. inferno-personal-chat-sidebar `w-[384px]`, scene `pr-[40px]`. */
-  reservedWidth: 384 + 40,
+  /** 왼쪽 사이드바 + 오른쪽 여백. inferno-personal-chat-sidebar `w-[300px]`, scene `pr-[40px]`. */
+  reservedWidth: 300 + 40,
   /** 대화 위 칸. inferno-personal-chat-scene 의 `h-[25px]`. */
   topHeight: 25,
   /** 줄 사이. inferno-personal-chat-scene 의 `gap-[20px]`. */

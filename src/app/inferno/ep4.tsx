@@ -12,6 +12,7 @@ import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-con
 import useInfernoEp4Flow from '@/src/features/inferno/hooks/use-inferno-ep4-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
 
 /** 이 화면이 보여주는 회차. */
 const EPISODE_ORDER = 4;
@@ -89,6 +90,7 @@ export default function InfernoEp4Screen() {
   }
 
   const personalPage = conversation.personalChatPages[0];
+  const rebakePage = { id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] };
   const rebakeOptions = conversation.rebake
     ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
     : [];
@@ -124,6 +126,7 @@ export default function InfernoEp4Screen() {
         <InfernoPersonalChatScene
           page={personalPage}
           participants={conversation.participants}
+          partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
           // rebake 가 없으면 넘기지 않는다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
           // 흐려진 채 있다(위 화면 주석, InfernoPersonalChatSidebar 참고).
@@ -144,8 +147,9 @@ export default function InfernoEp4Screen() {
 
       {flow.phase === 'rebakeChat' ? (
         <InfernoPersonalChatScene
-          page={{ id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] }}
+          page={rebakePage}
           participants={rebakeChatParticipants}
+          partner={findPersonalChatPartner([rebakePage], rebakeChatParticipants)}
           onPageDone={flow.handleLineDone}
         />
       ) : null}

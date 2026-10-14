@@ -11,6 +11,7 @@ import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-con
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
 
 /** 이 화면이 보여주는 회차. */
 const EPISODE_ORDER = 2;
@@ -117,6 +118,7 @@ export default function InfernoEp2Screen() {
           key={personalPage.id}
           page={personalPage}
           participants={conversation.participants}
+          partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
           onFeedbackPress={flow.handleFeedbackOpen}
         />
