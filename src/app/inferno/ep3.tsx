@@ -8,6 +8,7 @@ import InfernoMiniGameScene from '@/src/features/inferno/components/inferno-mini
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp3Flow from '@/src/features/inferno/hooks/use-inferno-ep3-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -27,6 +28,8 @@ export default function InfernoEp3Screen() {
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
   const flow = useInfernoEp3Flow(conversation);
 
   function finishEpisode() {
@@ -48,7 +51,7 @@ export default function InfernoEp3Screen() {
 
   // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1/ep2 와
   // 같은 이유).
-  if (!episode || !conversation || !conversation.vote) {
+  if (!episode || !conversation || !conversation.vote || generationLoader.isShowing) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
         <InfernoEpisodeStatus
@@ -56,6 +59,8 @@ export default function InfernoEp3Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );

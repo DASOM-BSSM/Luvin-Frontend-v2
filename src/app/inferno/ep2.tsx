@@ -6,6 +6,7 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoFeedbackScene from '@/src/features/inferno/components/inferno-feedback-scene';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -40,6 +41,8 @@ export default function InfernoEp2Screen() {
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
   const flow = useInfernoEp2Flow(conversation, initialStep);
 
   function finishEpisode() {
@@ -68,7 +71,8 @@ export default function InfernoEp2Screen() {
     !conversation.matchReveal ||
     !conversation.personalChatPages ||
     !conversation.feedbackTopics ||
-    conversation.pages.length === 0
+    conversation.pages.length === 0 ||
+    generationLoader.isShowing
   ) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
@@ -77,6 +81,8 @@ export default function InfernoEp2Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );

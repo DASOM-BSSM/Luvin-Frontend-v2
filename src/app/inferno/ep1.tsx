@@ -5,6 +5,7 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp1Flow from '@/src/features/inferno/hooks/use-inferno-ep1-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -42,6 +43,8 @@ export default function InfernoEp1Screen() {
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
   const flow = useInfernoEp1Flow(conversation, initialStep);
 
   function finishEpisode() {
@@ -58,7 +61,7 @@ export default function InfernoEp1Screen() {
   // vote 는 회차마다 있을 수도 없을 수도 있는 필드라(types/index.ts 주석 참고) ep1
   // 데이터에는 항상 있지만 타입상 좁혀 둬야 한다. AI가 아직 대화를 안 만들었거나
   // 실패했으면 빈 화면 대신 안내를 보여준다(§11).
-  if (!episode || !conversation || !conversation.vote) {
+  if (!episode || !conversation || !conversation.vote || generationLoader.isShowing) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
         <InfernoEpisodeStatus
@@ -66,6 +69,8 @@ export default function InfernoEp1Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );
