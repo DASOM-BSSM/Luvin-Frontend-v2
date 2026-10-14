@@ -32,7 +32,10 @@ export default function InfernoEp3Screen() {
   const generationLoader = useGenerationLoader(isLoading);
   const flow = useInfernoEp3Flow(conversation);
 
+  // 완료 쪽지를 먼저 닫는다 — RN `Modal` 은 화면과 따로 맨 위에 뜨는 창이라, 닫지 않고 나가면
+  // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
   function finishEpisode() {
+    flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
     router.dismissTo('/');
   }
