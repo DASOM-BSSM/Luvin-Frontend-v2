@@ -43,54 +43,61 @@ export default function InfernoCardFlipScene({
     onExitPress();
   }
 
+  // 제목 줄과 카드를 한 묶음(카드 폭에 맞춰 줄어드는 상자)에 넣는다 — 제목 줄이 그 폭을
+  // 꽉 채우므로(stretch) 하트 4개의 오른쪽 끝이 마지막 카드의 오른쪽 끝선과 맞는다(사용자 요청).
+  // 예전에는 제목 줄이 화면 전체 폭이라 하트가 카드보다 훨씬 오른쪽에 붙어 있었다.
   return (
     <View className="flex-1">
-      <View className="flex-1 justify-end">
-        <View className="w-full flex-row items-start justify-between">
-          <View className="w-inferno-hud-side" />
-          <View className="flex-1 items-center">
-            <RNText
-              accessibilityRole="header"
-              className="text-center text-pink-500"
-              style={okMallangBTitleStyle}
-            >
-              MINI GAME
-            </RNText>
-            <Text variant="body-m" className="text-center text-inferno-instruction">
-              같은 짝끼리 카드를 뒤집어주세요!
-            </Text>
+      <View className="flex-1 items-center justify-end">
+        <View className="flex-col">
+          <View className="flex-row items-start justify-between">
+            <View className="w-inferno-hud-side" />
+            <View className="flex-1 items-center">
+              <RNText
+                accessibilityRole="header"
+                className="text-center text-pink-500"
+                style={okMallangBTitleStyle}
+              >
+                MINI GAME
+              </RNText>
+              <Text variant="body-m" className="text-center text-inferno-instruction">
+                같은 짝끼리 카드를 뒤집어주세요!
+              </Text>
+            </View>
+            <View className="w-inferno-hud-side flex-row items-center justify-end gap-[8px]">
+              {Array.from({ length: CARDFLIP_LIVES }, (_, index) => (
+                <HeartIcon key={index} color={index < game.lives ? heart.filled : heart.empty} />
+              ))}
+            </View>
           </View>
-          <View className="w-inferno-hud-side flex-row items-center justify-end gap-[8px]">
-            {Array.from({ length: CARDFLIP_LIVES }, (_, index) => (
-              <HeartIcon key={index} color={index < game.lives ? heart.filled : heart.empty} />
-            ))}
-          </View>
-        </View>
-        <View className="h-inferno-game-gap shrink-0" />
-        <View className="items-center gap-[16px]">
-          <View className="flex-row gap-[14px]">
-            {firstRow.map((card) => (
-              <InfernoFlipCard
-                key={card.id}
-                card={card}
-                disabled={isCardDisabled}
-                onPress={game.handleCardPress}
-              />
-            ))}
-          </View>
-          <View className="flex-row gap-[14px]">
-            {secondRow.map((card) => (
-              <InfernoFlipCard
-                key={card.id}
-                card={card}
-                disabled={isCardDisabled}
-                onPress={game.handleCardPress}
-              />
-            ))}
+          <View className="h-inferno-game-gap shrink-0" />
+          <View className="items-center gap-[16px]">
+            <View className="flex-row gap-[14px]">
+              {firstRow.map((card) => (
+                <InfernoFlipCard
+                  key={card.id}
+                  card={card}
+                  disabled={isCardDisabled}
+                  onPress={game.handleCardPress}
+                />
+              ))}
+            </View>
+            <View className="flex-row gap-[14px]">
+              {secondRow.map((card) => (
+                <InfernoFlipCard
+                  key={card.id}
+                  card={card}
+                  disabled={isCardDisabled}
+                  onPress={game.handleCardPress}
+                />
+              ))}
+            </View>
           </View>
         </View>
       </View>
-      <View className="h-inferno-table shrink-0 border-t border-text-primary bg-default-white" />
+      {/* 카드 뒤집기는 야바위와 달리 책상 선이 없다(사용자 요청). 카드 높이 자리는 야바위와
+          같게 두려고 칸은 남기고 선만 뺀다. */}
+      <View className="h-inferno-table shrink-0 bg-default-white" />
 
       <InfernoNoteModal
         visible={isResultVisible}
