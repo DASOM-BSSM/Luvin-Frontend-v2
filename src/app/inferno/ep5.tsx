@@ -33,6 +33,7 @@ const EPISODE_ORDER = 5;
  */
 export default function InfernoEp5Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const breadProfile = useBreadProfile();
   const {
@@ -82,10 +83,13 @@ export default function InfernoEp5Screen() {
     );
   }
 
-  // "다음 시즌 시작하기": 새 시즌의 첫 회차로 이어지는 동작이라 가이드(ep0)로 보낸다.
+  // "다음 시즌 시작하기": 첫 시즌만 무료라 다음 시즌은 토큰이 필요하다(constants/season). 바로
+  // 새 시즌으로 들어가지 않고 홈으로 돌아가 토큰 안내(NOTICE 모달)를 띄운다(사용자 결정).
+  // 새 시즌을 실제로 만드는 API 는 백엔드에 요청해 둔 상태라, 생기면 그 안내 다음에 붙인다.
   function handleNextSeasonPress() {
     completeEpisode(EPISODE_ORDER);
-    router.push('/inferno/ep0');
+    requestNextSeasonNotice();
+    router.dismissTo('/');
   }
 
   // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.

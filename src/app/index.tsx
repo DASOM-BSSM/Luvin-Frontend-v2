@@ -24,6 +24,7 @@ import {
   INFERNO_EPISODE_HREFS,
   infernoIntroHref,
 } from '@/src/features/inferno/constants/routes';
+import { COMPLETED_SEASON_STATUS, NEXT_SEASON_NOTICE } from '@/src/features/inferno/constants/season';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
@@ -43,6 +44,9 @@ export default function HomeScreen() {
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
   const completedOrders = useInfernoStore((state) => state.completedOrders);
+  const isNextSeasonNoticePending = useInfernoStore((state) => state.isNextSeasonNoticePending);
+  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
+  const clearNextSeasonNotice = useInfernoStore((state) => state.clearNextSeasonNotice);
   const surveyResultQuery = useMySurveyResult();
   const createSeasonMutation = useCreateSeason();
 
@@ -93,9 +97,27 @@ export default function HomeScreen() {
     }
 
     createSeasonMutation.mutate(surveyResultId, {
-      onSuccess: () => router.push(href),
+      onSuccess: (season) => handleSeasonReady(season.status, href),
       onError: handleCreateSeasonError,
     });
+  }
+
+  // 시즌을 이미 끝냈으면 서버가 그 끝난 시즌을 그대로 돌려준다(from-survey 는 있는 시즌을
+  // 돌려주는 API — 새 시즌을 만드는 API 는 백엔드에 요청해 둔 상태). 끝난 시즌으로 다시
+  // 들어가지 않고, 다음 시즌은 토큰이 필요하다고 안내한다.
+  function handleSeasonReady(status: string, href: Href) {
+    if (status === COMPLETED_SEASON_STATUS) {
+      requestNextSeasonNotice();
+      return;
+    }
+
+    router.push(href);
+  }
+
+  // 다음 시즌 안내의 "미니게임으로 토큰 모으기". 토큰을 버는 미니게임 모음으로 보낸다.
+  function handleNextSeasonMiniGamePress() {
+    clearNextSeasonNotice();
+    router.push('/luvin-hell');
   }
 
   // 성별이 없으면 서버가 시즌 생성을 막는다(409 PROFILE_REQUIRED). 로그로만 남기지 않고
@@ -211,7 +233,14 @@ export default function HomeScreen() {
       <InfernoNoticeModal
         visible={isNoticeVisible}
         onClose={handleNoticeClose}
-        onSurveyPress={handleNoticeSurveyPress}
+        onActionPress={handleNoticeSurveyPress}
+      />
+      <InfernoNoticeModal
+        visible={isNextSeasonNoticePending}
+        message={NEXT_SEASON_NOTICE.message}
+        actionLabel={NEXT_SEASON_NOTICE.actionLabel}
+        onClose={clearNextSeasonNotice}
+        onActionPress={handleNextSeasonMiniGamePress}
       />
       <ConfirmModal
         visible={isProfileRequiredVisible}
