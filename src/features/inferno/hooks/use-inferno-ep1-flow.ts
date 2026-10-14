@@ -57,6 +57,8 @@ export default function useInfernoEp1Flow(
   const [openModal, setOpenModal] = useState<InfernoEp1Modal | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [isLastPageTyped, setIsLastPageTyped] = useState(false);
+  /** 투표 모달을 이미 한 번 띄웠는지(자동이든 "다음화면" 이든). 한 번 띄웠으면 다시 자동으로 띄우지 않는다. */
+  const [hasOfferedVote, setHasOfferedVote] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
 
@@ -70,15 +72,24 @@ export default function useInfernoEp1Flow(
   const pageIndex = Math.min(safeStep, lastPageIndex);
   const isLastPage = pageIndex >= lastPageIndex;
 
+  // 마지막 줄이 다 쳐지면 잠시 뒤 투표 모달을 저절로 띄운다.
+  //
+  // 이미 투표 모달을 띄웠거나 투표지에 들어와 있으면 띄우지 않는다 — 예전에는 마지막 줄이
+  // 쳐진 뒤 "다음화면" 으로 모달을 먼저 열고 "투표하기" 로 투표지에 들어가도 이 타이머가
+  // 그대로 남아 있다가, 투표지 위에 투표 모달을 한 번 더 띄웠다(사용자 지적). 두 값이 바뀌면
+  // 이 효과가 다시 돌면서 대기 중이던 타이머도 정리된다.
   useEffect(() => {
-    if (!isLastPageTyped) {
+    if (!isLastPageTyped || hasOfferedVote || isBallotOpen) {
       return;
     }
 
-    const timer = setTimeout(() => setOpenModal('vote'), VOTE_MODAL_DELAY_MS);
+    const timer = setTimeout(() => {
+      setHasOfferedVote(true);
+      setOpenModal('vote');
+    }, VOTE_MODAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isLastPageTyped]);
+  }, [isLastPageTyped, hasOfferedVote, isBallotOpen]);
 
   function handlePageDone() {
     if (isLastPage) {
@@ -148,6 +159,7 @@ export default function useInfernoEp1Flow(
 
   // 마지막 쪽에서 다음을 누르면 타자가 끝나길 기다리지 않고 투표 모달을 띄운다.
   function openVoteModal() {
+    setHasOfferedVote(true);
     setOpenModal('vote');
   }
 
