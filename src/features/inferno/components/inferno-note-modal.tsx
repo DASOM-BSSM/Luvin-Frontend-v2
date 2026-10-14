@@ -83,7 +83,9 @@ export default function InfernoNoteModal({
                   {message}
                 </Text>
               </View>
-              <Button label={actionLabel} variant="notice" onPress={onActionPress} />
+              {/* `notice` 가 아니라 `noticeFit` — 폭이 글에 맞춰 정해지는 상자라 `w-full` 버튼을 쓰면
+                  상자가 최대 폭까지 늘어난다(Button 의 noticeFit 주석 참고). */}
+              <Button label={actionLabel} variant="noticeFit" onPress={onActionPress} />
             </View>
           </View>
         </Pressable>
