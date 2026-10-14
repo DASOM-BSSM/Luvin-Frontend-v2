@@ -63,9 +63,10 @@ export const okMallangBTitleStyle = {
 export const infernoMiniGameLayout = {
   width: {
     'inferno-cup': '100px',
-    // 카드 뒤집기 HUD 좌우 칸. 오른쪽 하트 4개 폭(6219:4039)만큼 왼쪽에도 빈 칸을 둬서
-    // "MINI GAME" 제목이 가운데 오게 한다.
-    'inferno-hud-side': '88px',
+    // 카드 뒤집기 HUD 좌우 칸. 오른쪽 하트 줄 폭만큼 왼쪽에도 빈 칸을 둬서
+    // "MINI GAME" 제목이 가운데 오게 한다. 하트 5개(사용자 요청, 시안 6219:4039 는 4개):
+    // 하트 20 × 5 + 간격 8 × 4 = 132. 목숨 수(CARDFLIP_LIVES)를 바꾸면 이 값도 같이 바꿀 것.
+    'inferno-hud-side': '132px',
   },
   height: {
     'inferno-cup': '114px',
