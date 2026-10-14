@@ -5,9 +5,11 @@ import { Pressable, ScrollView, View } from 'react-native';
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
 import LuvinLogo from '@/src/assets/images/LuvinLogo';
 import BottomNav from '@/src/components/bottom-nav';
+import ConfirmModal from '@/src/components/ui/confirm-modal';
 import Screen from '@/src/components/ui/screen';
 import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
+import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import CreateQuestionCard from '@/src/features/home/components/create-question-card';
 import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
@@ -24,6 +26,7 @@ import {
 } from '@/src/features/inferno/constants/routes';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
 import type { DiaryPreview } from '@/src/features/home/types';
 import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
@@ -38,6 +41,7 @@ export default function HomeScreen() {
   const { profile } = useBreadProfile();
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
+  const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
   const completedOrders = useInfernoStore((state) => state.completedOrders);
   const surveyResultQuery = useMySurveyResult();
   const createSeasonMutation = useCreateSeason();
@@ -90,7 +94,25 @@ export default function HomeScreen() {
 
     createSeasonMutation.mutate(surveyResultId, {
       onSuccess: () => router.push(href),
+      onError: handleCreateSeasonError,
     });
+  }
+
+  // 성별이 없으면 서버가 시즌 생성을 막는다(409 PROFILE_REQUIRED). 로그로만 남기지 않고
+  // 성별을 설정할 수 있는 화면으로 바로 갈 수 있게 묻는다.
+  function handleCreateSeasonError(error: unknown) {
+    if (isProfileRequiredError(error)) {
+      setIsProfileRequiredVisible(true);
+    }
+  }
+
+  function handleProfileRequiredCancel() {
+    setIsProfileRequiredVisible(false);
+  }
+
+  function handleProfileRequiredConfirm() {
+    setIsProfileRequiredVisible(false);
+    router.push('/my-page/edit');
   }
 
   function handleInfernoStartPress() {
@@ -190,6 +212,13 @@ export default function HomeScreen() {
         visible={isNoticeVisible}
         onClose={handleNoticeClose}
         onSurveyPress={handleNoticeSurveyPress}
+      />
+      <ConfirmModal
+        visible={isProfileRequiredVisible}
+        message={ERROR_MESSAGES.profileRequired}
+        confirmLabel="설정하기"
+        onConfirm={handleProfileRequiredConfirm}
+        onCancel={handleProfileRequiredCancel}
       />
     </Screen>
   );
