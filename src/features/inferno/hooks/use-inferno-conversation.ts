@@ -1,9 +1,12 @@
+import { useWindowDimensions } from 'react-native';
+
 import { getInfernoConversation } from '@/src/features/inferno/api/conversation';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import useAiEpisodeMessages from '@/src/features/inferno/hooks/use-ai-episode-messages';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
 import type { InfernoConversation } from '@/src/features/inferno/types';
 import { isEpisodeFullyGenerated, mapAiEpisodeToConversation } from '@/src/features/inferno/utils/map-ai-episode';
+import { buildChatPageBudgets } from '@/src/features/inferno/utils/paginate-chat';
 
 /**
  * ep1~4 모두 실제 AI 시즌 API(`ai-season-controller`, `/api/ai/seasons/*`)로 연결했다.
@@ -46,6 +49,14 @@ export default function useInfernoConversation(order: number): {
   const myProfile = useBreadStore((state) => state.profile);
   const statusQuery = useAiSeasonStatus();
   const episodeQuery = useAiEpisodeMessages(order, isAiConnected);
+  // 대화를 화면 높이에 맞춰 쪽으로 나누려고 창 크기를 읽는다(paginate-chat). 러빈지옥은 가로로
+  // 잠기는데 잠기기 직전 한 순간은 세로 값이 올 수 있어서, 긴 쪽을 폭·짧은 쪽을 높이로 본다 —
+  // 그래야 방향이 정리되는 동안 쪽 수가 바뀌어 흐름의 쪽 번호가 흔들리지 않는다.
+  const windowSize = useWindowDimensions();
+  const pageBudgets = buildChatPageBudgets(
+    Math.max(windowSize.width, windowSize.height),
+    Math.min(windowSize.width, windowSize.height),
+  );
 
   if (!isAiConnected) {
     return {
@@ -63,7 +74,7 @@ export default function useInfernoConversation(order: number): {
   const isReady = episodeQuery.data != null && isEpisodeFullyGenerated(order, episodeQuery.data.messages);
   const conversation =
     statusQuery.data && episodeQuery.data && isReady
-      ? mapAiEpisodeToConversation(statusQuery.data, episodeQuery.data, myProfile)
+      ? mapAiEpisodeToConversation(statusQuery.data, episodeQuery.data, myProfile, pageBudgets)
       : undefined;
 
   return {
