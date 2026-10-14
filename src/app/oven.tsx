@@ -23,7 +23,7 @@ import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
 import { LANE_ROTATION_DEG } from "@/src/features/luvin-hell/games/bread-crossing/engine/constants";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
-import { COMPLETED_SEASON_STATUS } from "@/src/features/inferno/constants/season";
+import { infernoIntroHref } from "@/src/features/inferno/constants/routes";
 import SeasonCard, { type SeasonEpisodeItem } from "@/src/features/oven/components/season-card";
 
 /** ep1 은 회차 대본과 무관하게 "안녕하세요 {유저 반죽}입니다!"로 고정한다(사용자 지정). */
@@ -54,7 +54,7 @@ function resolveEpisodeTitle(order: number, myProfile: BreadProfile): string | u
  */
 function toSeasonEpisode(order: number, myProfile: BreadProfile): SeasonEpisodeItem | undefined {
   const title = resolveEpisodeTitle(order, myProfile);
-  return title ? { label: formatEpisodeLabel(order), body: title } : undefined;
+  return title ? { order, label: formatEpisodeLabel(order), body: title } : undefined;
 }
 
 /** 두 미리보기 카드 공용 우상단 하트 3개. 실제 게임 상태와 무관한 장식용이라 항상 꽉 차 있다. */
@@ -330,17 +330,23 @@ export default function OvenScreen() {
   const [breadPreviewLabelShown, setBreadPreviewLabelShown] = useState(false);
 
   const currentOrder = seasonQuery.data?.currentEpisode;
-  // 시즌 하나 = Episode 01 부터 지금 회차까지. 지난 시즌 목록을 주는 API 가 아직 없어서(백엔드에
-  // 요청해 둔 상태) 지금 시즌 하나만 "Season 1" 로 묶는다. API 가 생기면 시즌마다 카드를 하나씩 띄운다.
+  // 시즌 하나 = Episode 01 부터 지금 회차까지, 최신 회차가 맨 위(시안 이미지 순서). 지난 시즌 목록을
+  // 주는 API 가 아직 없어서(백엔드에 요청해 둔 상태) 지금 시즌 하나만 "SEASON 01" 로 묶는다.
+  // API 가 생기면 시즌마다 카드를 하나씩 띄운다.
   const seasonOrders = currentOrder
-    ? Array.from({ length: currentOrder }, (_, index) => index + 1)
+    ? Array.from({ length: currentOrder }, (_, index) => currentOrder - index)
     : [];
   const seasonEpisodes = myProfile
     ? seasonOrders
         .map((order) => toSeasonEpisode(order, myProfile))
         .filter((episode): episode is SeasonEpisodeItem => episode !== undefined)
     : [];
-  const isSeasonInProgress = seasonQuery.data?.status !== COMPLETED_SEASON_STATUS;
+
+  // 지난 회차 다시 보기. 홈에서 들어갈 때처럼 회차 시작 화면부터 본다. 대화는 서버에 이미
+  // 저장돼 있어서 새로 만들지 않고 불러온다(use-ai-episode-messages — 이미 있으면 생성 요청 안 함).
+  function handleSeasonEpisodePress(order: number) {
+    router.push(infernoIntroHref(order));
+  }
 
   function handleMiniGameNavigate() {
     router.push("/luvin-hell");
@@ -388,8 +394,8 @@ export default function OvenScreen() {
           ) : (
             <SeasonCard
               seasonNumber={1}
-              isInProgress={isSeasonInProgress}
               episodes={seasonEpisodes}
+              onEpisodePress={handleSeasonEpisodePress}
             />
           )}
         </View>
