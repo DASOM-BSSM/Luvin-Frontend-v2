@@ -61,7 +61,9 @@ export default function InfernoMiniGameScene({
           ))}
         </View>
       </View>
-      <View className="h-inferno-table shrink-0 border-t border-text-primary bg-default-white" />
+      {/* 책상을 컵 바닥만큼 위로 겹쳐 올려 컵 아래쪽을 가린다(사용자 요청: 컵 바닥이 보이면 안 됨).
+          컵보다 나중에 그려지는 형제라 컵 위에 덮인다. 높이도 같이 늘려 책상 아래 끝 자리는 그대로 둔다. */}
+      <View className="-mt-inferno-cup-hidden h-inferno-shell-table shrink-0 border-t border-text-primary bg-default-white" />
 
       <InfernoNoteModal
         visible={isResultVisible}
