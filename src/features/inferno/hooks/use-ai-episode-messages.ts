@@ -6,6 +6,7 @@ import { getEpisodeMessages, requestEpisodeGeneration } from '@/src/features/inf
 import type { AiEpisodeMessagesView } from '@/src/features/inferno/api/ai-season-types';
 import { aiSeasonKeys } from '@/src/features/inferno/api/query-keys';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import useGenerationTimeout from '@/src/features/inferno/hooks/use-generation-timeout';
 import { isEpisodeFullyGenerated } from '@/src/features/inferno/utils/map-ai-episode';
 
 /** AI 생성이 아직 안 끝났을 때 다시 확인하는 간격. */
@@ -53,6 +54,9 @@ const FAILED_JOB_STATUS = 'FAILED';
  * 실패하면(실제로 ep2에서 확인됨 — `errorCode: 'GENERATION_FAILED'`) `hasGenerationFailed`를
  * 켜고 폴링을 멈춘다 — 실패한 job을 기다리며 "만들고 있어요"에 영영 갇히는 걸 막는다.
  * 화면은 이때 안내와 함께 `retryGeneration`으로 다시 시도할 수 있게 해야 한다(§11).
+ *
+ * 서버가 실패를 알려주지도 않고 3분 넘게 결과를 안 주면(작업이 QUEUED 에서 멈춤) 그것도
+ * 실패로 본다(use-generation-timeout) — 줄넘기 로더만 끝없이 도는 걸 막는다.
  */
 export default function useAiEpisodeMessages(episodeNumber: number, enabled = true) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -75,6 +79,16 @@ export default function useAiEpisodeMessages(episodeNumber: number, enabled = tr
       return isReady ? false : GENERATION_POLL_MS;
     },
   });
+
+  const isEpisodeReady = query.data != null && isEpisodeFullyGenerated(episodeNumber, query.data.messages);
+  useGenerationTimeout(query.isSuccess && !isEpisodeReady && !hasGenerationFailed, handleGenerationTimeout);
+
+  function handleGenerationTimeout() {
+    if (__DEV__) {
+      console.log(`[ep${episodeNumber}] 생성 대기 시간 초과 -> 실패로 처리`);
+    }
+    setHasGenerationFailed(true);
+  }
 
   function triggerGeneration() {
     hasRequestedGeneration.current = true;
