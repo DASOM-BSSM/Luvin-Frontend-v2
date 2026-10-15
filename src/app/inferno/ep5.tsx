@@ -103,7 +103,13 @@ export default function InfernoEp5Screen() {
   function renderPage(summary: InfernoSeasonSummary, myProfile: BreadProfile) {
     switch (flow.pageIndex) {
       case 0:
-        return <InfernoFinalMatchScene result={summary.finalMatch} myProfile={myProfile} />;
+        return (
+          <InfernoFinalMatchScene
+            mine={myProfile}
+            partner={summary.finalMatch.profile}
+            summaryLine={summary.finalMatch.summaryLine}
+          />
+        );
       case 1:
         return <InfernoAnalysisScene report={summary.report} />;
       case 2:

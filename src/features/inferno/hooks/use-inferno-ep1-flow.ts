@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { submitEpisode1Selection } from '@/src/features/inferno/api/ai-season';
 import { VOTE_MODAL_DELAY_MS } from '@/src/features/inferno/constants/animation';
+import type { EpisodeReplay } from '@/src/features/inferno/hooks/use-episode-replay';
+import { useInfernoSelectionStore } from '@/src/features/inferno/store/selection-store';
 import type { InfernoConversation } from '@/src/features/inferno/types';
 
 /** 지금 떠 있는 모달. 없으면 undefined. */
@@ -19,6 +21,11 @@ interface InfernoEp1Flow {
   pageIndex: number;
   /** 대화를 지나 투표지를 보고 있는지. */
   isBallotOpen: boolean;
+  /**
+   * 이미 본 회차를 다시 보는 중인지(use-episode-replay). 다시 보기에서는 투표 모달을 띄우지 않고,
+   * 투표지는 이미 고른 반죽이 선택된 채로만 보여주며 서버에 다시 보내지 않는다.
+   */
+  isReplay: boolean;
   openModal?: InfernoEp1Modal;
   /** 아직 고르지 않았으면 undefined. */
   selectedId?: string;
@@ -51,8 +58,11 @@ interface InfernoEp1Flow {
 export default function useInfernoEp1Flow(
   conversation: InfernoConversation | undefined,
   /** 이어볼 자리. 처음 들어오는 회차면 0. */
-  initialStep = 0,
+  initialStep: number,
+  /** 다시 보기 여부와 그때 보여줄 이미 고른 반죽(use-episode-replay). */
+  replay: EpisodeReplay,
 ): InfernoEp1Flow {
+  const recordSelection = useInfernoSelectionStore((state) => state.recordSelection);
   const [step, setStep] = useState(initialStep);
   const [openModal, setOpenModal] = useState<InfernoEp1Modal | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
@@ -79,7 +89,8 @@ export default function useInfernoEp1Flow(
   // 그대로 남아 있다가, 투표지 위에 투표 모달을 한 번 더 띄웠다(사용자 지적). 두 값이 바뀌면
   // 이 효과가 다시 돌면서 대기 중이던 타이머도 정리된다.
   useEffect(() => {
-    if (!isLastPageTyped || hasOfferedVote || isBallotOpen) {
+    // 다시 보기에서는 이미 투표했으니 투표 모달을 띄우지 않는다(상단 바로 투표지까지 바로 간다).
+    if (!isLastPageTyped || hasOfferedVote || isBallotOpen || replay.isReplay) {
       return;
     }
 
@@ -89,7 +100,7 @@ export default function useInfernoEp1Flow(
     }, VOTE_MODAL_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [isLastPageTyped, hasOfferedVote, isBallotOpen]);
+  }, [isLastPageTyped, hasOfferedVote, isBallotOpen, replay.isReplay]);
 
   function handlePageDone() {
     if (isLastPage) {
@@ -108,6 +119,11 @@ export default function useInfernoEp1Flow(
   }
 
   function handleSelect(participantId: string) {
+    // 다시 보기의 투표지는 이미 고른 반죽을 보여주기만 한다. 바꿀 수 없다.
+    if (replay.isReplay) {
+      return;
+    }
+
     setSelectedId(participantId);
     setSubmitError(undefined);
   }
@@ -124,7 +140,8 @@ export default function useInfernoEp1Flow(
    * 화면 안에서만 문구로 보여준다.
    */
   async function handleSubmit() {
-    if (!conversation || !selectedId || isSubmitting) {
+    // 다시 보기에서는 서버에 다시 보내지 않는다. 화면이 이 버튼을 "에피소드 끝내기"로 쓴다.
+    if (!conversation || !selectedId || isSubmitting || replay.isReplay) {
       return;
     }
 
@@ -133,6 +150,10 @@ export default function useInfernoEp1Flow(
 
     try {
       await submitEpisode1Selection(selectedId);
+      // 다시 볼 때 "이미 고른 반죽"으로 보여주려고 기기에 남긴다(selection-store 주석 참고).
+      if (replay.seasonId) {
+        recordSelection(replay.seasonId, 1, selectedId);
+      }
       setOpenModal('done');
     } catch {
       setSubmitError(SUBMIT_ERROR_MESSAGE);
@@ -158,6 +179,11 @@ export default function useInfernoEp1Flow(
   }
 
   // 마지막 쪽에서 다음을 누르면 타자가 끝나길 기다리지 않고 투표 모달을 띄운다.
+  // 다시 보기의 마지막 쪽에서 "다음화면": 투표 모달 없이 투표지(이미 고른 반죽)로 바로 간다.
+  function openBallot() {
+    setStep(ballotStep);
+  }
+
   function openVoteModal() {
     setHasOfferedVote(true);
     setOpenModal('vote');
@@ -177,15 +203,20 @@ export default function useInfernoEp1Flow(
       return undefined;
     }
 
-    return isLastPage ? openVoteModal : goToNextPage;
+    if (!isLastPage) {
+      return goToNextPage;
+    }
+
+    return replay.isReplay ? openBallot : openVoteModal;
   }
 
   return {
     step: safeStep,
     pageIndex,
     isBallotOpen,
+    isReplay: replay.isReplay,
     openModal,
-    selectedId,
+    selectedId: replay.isReplay ? replay.replaySelectedId : selectedId,
     isSubmitting,
     submitError,
     goPrevious: resolveGoPrevious(),
