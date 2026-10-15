@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   runOnJS,
   useAnimatedReaction,
@@ -20,7 +20,7 @@ import {
   DUCK_SPRING_CONFIG,
   FRAME_WIDTH,
   GRAVITY,
-  GROUND_OBSTACLE_HEIGHT,
+  GROUND_OBSTACLE_HITBOX_HEIGHT,
   GROUND_Y,
   JUMP_VELOCITY,
   OBSTACLE_HITBOX_SCALE,
@@ -176,12 +176,20 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
     for (let i = 0; i < POOL_SIZE; i++) {
       const kind = kindFlags[i].value;
       if (kind === INACTIVE_KIND) continue;
-      const obstacleBox = shrinkAabb(
-        kind === GROUND_KIND
-          ? { x: xs[i].value, y: GROUND_Y - GROUND_OBSTACLE_HEIGHT, width: OBSTACLE_WIDTH, height: GROUND_OBSTACLE_HEIGHT }
-          : { x: xs[i].value, y: AIR_OBSTACLE_Y, width: OBSTACLE_WIDTH, height: AIR_OBSTACLE_HEIGHT },
-        OBSTACLE_HITBOX_SCALE,
-      );
+      // 지상 장애물은 반죽이 땅에 붙어 그려지므로(contentPosition bottom) 판정 높이도 땅 기준으로 잡고,
+      // 가로만 OBSTACLE_HITBOX_SCALE 로 줄인다.
+      const groundHitboxWidth = OBSTACLE_WIDTH * OBSTACLE_HITBOX_SCALE;
+      const obstacleBox = kind === GROUND_KIND
+        ? {
+            x: xs[i].value + (OBSTACLE_WIDTH - groundHitboxWidth) / 2,
+            y: GROUND_Y - GROUND_OBSTACLE_HITBOX_HEIGHT,
+            width: groundHitboxWidth,
+            height: GROUND_OBSTACLE_HITBOX_HEIGHT,
+          }
+        : shrinkAabb(
+            { x: xs[i].value, y: AIR_OBSTACLE_Y, width: OBSTACLE_WIDTH, height: AIR_OBSTACLE_HEIGHT },
+            OBSTACLE_HITBOX_SCALE,
+          );
 
       if (isAabbOverlap(playerBox, obstacleBox)) {
         kindFlags[i].value = INACTIVE_KIND;
@@ -191,6 +199,26 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
   };
 
   useGameClock(tick, phase === 'playing');
+
+  // Ready 로 돌아올 때마다(첫 진입·다시하기) 엔진 상태를 처음으로 되돌린다. 안 그러면 run 스토어는
+  // 점수 0/하트 3으로 리셋됐는데 엔진의 생존거리·장애물 위치는 이전 판 그대로 남아서, 시작하자마자
+  // 이전 판 장애물에 연달아 부딪혀 Game Over 가 나거나 이전 거리로 바로 미션 성공이 난다.
+  // Ready 동안은 프레임 루프가 멈춰 있어 JS 스레드에서 shared value 를 써도 경합이 없다.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    playerY.value = PLAYER_STAND_Y;
+    velocityY.value = 0;
+    isGrounded.value = 1;
+    isDucking.value = 0;
+    duckSquash.value = 0;
+    distance.value = 0;
+    spawnState.value = createInitialSpawnState();
+    for (let i = 0; i < POOL_SIZE; i++) {
+      kindFlags[i].value = INACTIVE_KIND;
+      xs[i].value = 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shared value 참조는 마운트 내내 고정
+  }, [phase]);
 
   useAnimatedReaction(
     () => Math.floor(distance.value / SCORE_UNIT_PX),

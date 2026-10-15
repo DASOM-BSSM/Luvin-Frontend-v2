@@ -35,7 +35,8 @@ export default function ObstacleSlotView({ x, kindFlag, doughType }: ObstacleSlo
           groundStyle,
         ]}
       >
-        <BreadCharacter type={doughType} state="dough" className="h-full w-full" />
+        {/* 반죽 PNG가 박스보다 납작해서 가운데 정렬이면 땅에서 떠 보인다 — 바닥에 붙인다. */}
+        <BreadCharacter type={doughType} state="dough" className="h-full w-full" contentPosition="bottom" />
       </Animated.View>
       <Animated.View
         style={[
