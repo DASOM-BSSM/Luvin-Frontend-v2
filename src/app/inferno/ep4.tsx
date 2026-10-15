@@ -7,10 +7,14 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp4Flow from '@/src/features/inferno/hooks/use-inferno-ep4-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
 
 /** 이 화면이 보여주는 회차. */
 const EPISODE_ORDER = 4;
@@ -39,10 +43,17 @@ export default function InfernoEp4Screen() {
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
-  const flow = useInfernoEp4Flow();
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
+  // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
+  // 이미 본 회차를 다시 보는지. 다시 보기면 다시 굽기(투표)를 막고 결과(최종 1:1 대화)만 보여준다.
+  const replay = useEpisodeReplay(EPISODE_ORDER);
+  const flow = useInfernoEp4Flow(conversation, checkpoint.initialStep);
 
-  // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
+  // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
+    checkpoint.saveStep(flow.step);
     router.dismissTo('/');
   }
 
@@ -68,7 +79,8 @@ export default function InfernoEp4Screen() {
     !conversation ||
     !conversation.matchReveal ||
     !conversation.personalChatPages ||
-    conversation.pages.length === 0
+    conversation.pages.length === 0 ||
+    generationLoader.isShowing
   ) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
@@ -77,12 +89,21 @@ export default function InfernoEp4Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );
   }
 
-  const personalPage = conversation.personalChatPages[0];
+  // 쪽 번호가 쪽 수를 넘는 일은 없지만(흐름이 마지막 쪽에서 멈춘다), 혹시 넘어도 화면이
+  // 죽지 않게 마지막 쪽으로 잘라 읽는다.
+  const groupPage = conversation.pages[Math.min(flow.groupPageIndex, conversation.pages.length - 1)];
+  const personalPage =
+    conversation.personalChatPages[
+      Math.min(flow.personalPageIndex, conversation.personalChatPages.length - 1)
+    ];
+  const rebakePage = { id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] };
   const rebakeOptions = conversation.rebake
     ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
     : [];
@@ -107,8 +128,10 @@ export default function InfernoEp4Screen() {
       onSkipPress={handleExitPress}
     >
       {flow.phase === 'group' ? (
+        /* 쪽이 바뀌면 타자를 처음부터 다시 치도록 key 로 갈아 끼운다. */
         <InfernoChatScene
-          page={conversation.pages[0]}
+          key={groupPage.id}
+          page={groupPage}
           participants={conversation.participants}
           onPageDone={flow.handleLineDone}
         />
@@ -116,12 +139,17 @@ export default function InfernoEp4Screen() {
 
       {flow.phase === 'personal' ? (
         <InfernoPersonalChatScene
+          key={personalPage.id}
           page={personalPage}
           participants={conversation.participants}
+          partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
           // rebake 가 없으면 넘기지 않는다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
           // 흐려진 채 있다(위 화면 주석, InfernoPersonalChatSidebar 참고).
-          onRebakePress={conversation.rebake ? flow.handleRebakeOpen : undefined}
+          // 다시 보기에서도 넘기지 않는다 — 다시 굽기(투표)는 막고 결과만 보여준다(사용자 결정).
+          // 다시 굽기를 했던 회차라도 서버가 그 회차 대화를 다시 굽기 뒤 버전으로 바꿔 두어서
+          // (use-inferno-conversation 주석), 다시 보면 최종 1:1 대화가 그대로 나온다.
+          onRebakePress={conversation.rebake && !replay.isReplay ? flow.handleRebakeOpen : undefined}
         />
       ) : null}
 
@@ -138,8 +166,9 @@ export default function InfernoEp4Screen() {
 
       {flow.phase === 'rebakeChat' ? (
         <InfernoPersonalChatScene
-          page={{ id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] }}
+          page={rebakePage}
           participants={rebakeChatParticipants}
+          partner={findPersonalChatPartner([rebakePage], rebakeChatParticipants)}
           onPageDone={flow.handleLineDone}
         />
       ) : null}

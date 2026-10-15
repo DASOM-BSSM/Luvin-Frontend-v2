@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
+import LandscapeOnly from '@/src/components/landscape-only';
 import InfernoIntroCard from '@/src/features/inferno/components/inferno-intro-card';
 import { INFERNO_EPISODE_HREFS } from '@/src/features/inferno/constants/routes';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
@@ -47,16 +48,19 @@ export default function InfernoScreen() {
     router.push(href);
   }
 
+  // 세로로 돌아가는 순간에는 감춘다(LandscapeOnly 주석 참고).
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="러빈지옥 시작하기"
-      className="flex-1 bg-default-white"
-      onPress={handleScreenPress}
-    >
-      <View className="flex-1 px-[29px] py-[22px]">
-        <InfernoIntroCard episode={episode} />
-      </View>
-    </Pressable>
+    <LandscapeOnly>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="러빈지옥 시작하기"
+        className="flex-1 bg-default-white"
+        onPress={handleScreenPress}
+      >
+        <View className="flex-1 px-[29px] py-[22px]">
+          <InfernoIntroCard episode={episode} />
+        </View>
+      </Pressable>
+    </LandscapeOnly>
   );
 }

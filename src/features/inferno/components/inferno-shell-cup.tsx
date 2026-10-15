@@ -38,6 +38,8 @@ export default function InfernoShellCup({ cup, disabled, onPress }: InfernoShell
       ) : (
         <View className="h-[40px] w-[76px]" />
       )}
+      {/* 책상이 컵 바닥을 이만큼 덮으므로(inferno-minigame-scene), 프레첼은 이만큼 띄워 책상 선 위에 세운다. */}
+      <View className="h-inferno-cup-hidden" />
       <Animated.View className="absolute bottom-0" style={cupStyle}>
         <Pressable
           accessibilityRole="button"

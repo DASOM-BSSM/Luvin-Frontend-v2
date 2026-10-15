@@ -8,6 +8,7 @@ import type { AiReportView } from "@/src/features/inferno/api/ai-season-types";
 import { aiSeasonKeys } from "@/src/features/inferno/api/query-keys";
 import { getInfernoSeasonSummary } from "@/src/features/inferno/api/season-summary";
 import useAiSeasonStatus from "@/src/features/inferno/hooks/use-ai-season-status";
+import useGenerationTimeout from "@/src/features/inferno/hooks/use-generation-timeout";
 import type { InfernoSeasonSummary } from "@/src/features/inferno/types";
 import { mapAiHighlights, mapAiReport, mapFinalMatchFromReport } from "@/src/features/inferno/utils/map-ai-season-report";
 
@@ -86,6 +87,18 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
   });
 
   const isReportReady = seasonReportQuery.data != null;
+  // 3분 넘게 리포트가 안 오면 실패로 보고 "다시 시도" 를 띄운다(use-generation-timeout).
+  useGenerationTimeout(
+    isAiConnected && seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed,
+    handleGenerationTimeout,
+  );
+
+  function handleGenerationTimeout() {
+    if (__DEV__) {
+      console.log("[ep5] 생성 대기 시간 초과 -> 실패로 처리");
+    }
+    setHasGenerationFailed(true);
+  }
 
   function triggerGeneration() {
     hasRequestedGeneration.current = true;

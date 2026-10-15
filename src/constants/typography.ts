@@ -63,9 +63,10 @@ export const okMallangBTitleStyle = {
 export const infernoMiniGameLayout = {
   width: {
     'inferno-cup': '100px',
-    // 카드 뒤집기 HUD 좌우 칸. 오른쪽 하트 4개 폭(6219:4039)만큼 왼쪽에도 빈 칸을 둬서
-    // "MINI GAME" 제목이 가운데 오게 한다.
-    'inferno-hud-side': '88px',
+    // 카드 뒤집기 HUD 좌우 칸. 오른쪽 하트 줄 폭만큼 왼쪽에도 빈 칸을 둬서
+    // "MINI GAME" 제목이 가운데 오게 한다. 하트 5개(사용자 요청, 시안 6219:4039 는 4개):
+    // 하트 20 × 5 + 간격 8 × 4 = 132. 목숨 수(CARDFLIP_LIVES)를 바꾸면 이 값도 같이 바꿀 것.
+    'inferno-hud-side': '132px',
   },
   height: {
     'inferno-cup': '114px',
@@ -73,8 +74,15 @@ export const infernoMiniGameLayout = {
     'inferno-cup-visible': '103.2px',
     'inferno-game-gap': '44px',
     'inferno-table': '44px',
+    // 야바위 책상. 컵 바닥을 덮으려고 inferno-cup-hidden 만큼 위로 올라오므로 그만큼 더 높다(44 + 10.8).
+    'inferno-shell-table': '54.8px',
   },
-  spacing: { 'inferno-cup-gap': '70px' },
+  spacing: {
+    'inferno-cup-gap': '70px',
+    // 컵(114) 중 책상 뒤로 가려지는 아래쪽. 114 - inferno-cup-visible(103.2). 책상을 이만큼
+    // 올려 컵 바닥을 덮고, 프레첼은 이만큼 띄워 책상 선 위에 서게 한다.
+    'inferno-cup-hidden': '10.8px',
+  },
 };
 
 /**

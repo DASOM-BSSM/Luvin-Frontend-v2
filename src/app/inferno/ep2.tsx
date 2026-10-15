@@ -6,10 +6,13 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoFeedbackScene from '@/src/features/inferno/components/inferno-feedback-scene';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
 
 /** 이 화면이 보여주는 회차. */
 const EPISODE_ORDER = 2;
@@ -33,23 +36,27 @@ const EPISODE_ORDER = 2;
  */
 export default function InfernoEp2Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
-  const saveCheckpoint = useInfernoStore((state) => state.saveCheckpoint);
   // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
-  const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
-  const flow = useInfernoEp2Flow(conversation, initialStep);
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
+  const flow = useInfernoEp2Flow(conversation, checkpoint.initialStep);
 
+  // 완료 쪽지를 먼저 닫는다 — RN `Modal` 은 화면과 따로 맨 위에 뜨는 창이라, 닫지 않고 나가면
+  // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
   function finishEpisode() {
+    flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
     router.dismissTo('/');
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
-    saveCheckpoint(EPISODE_ORDER, flow.step);
+    checkpoint.saveStep(flow.step);
     router.dismissTo('/');
   }
 
@@ -68,7 +75,8 @@ export default function InfernoEp2Screen() {
     !conversation.matchReveal ||
     !conversation.personalChatPages ||
     !conversation.feedbackTopics ||
-    conversation.pages.length === 0
+    conversation.pages.length === 0 ||
+    generationLoader.isShowing
   ) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
@@ -77,6 +85,8 @@ export default function InfernoEp2Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );
@@ -111,6 +121,7 @@ export default function InfernoEp2Screen() {
           key={personalPage.id}
           page={personalPage}
           participants={conversation.participants}
+          partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
           onFeedbackPress={flow.handleFeedbackOpen}
         />
