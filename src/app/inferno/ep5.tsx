@@ -8,6 +8,7 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
 import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -33,6 +34,7 @@ const EPISODE_ORDER = 5;
  */
 export default function InfernoEp5Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const breadProfile = useBreadProfile();
   const {
@@ -42,10 +44,13 @@ export default function InfernoEp5Screen() {
     hasGenerationFailed,
     retryGeneration,
   } = useInfernoSeasonSummary(EPISODE_ORDER);
-  const flow = useInfernoEp5Flow();
+  // 지난번에 "잠시 나가기" 로 나갔다면 그 페이지에서 이어 본다. 처음 들어오는 회차면 0.
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
+  const flow = useInfernoEp5Flow(checkpoint.initialStep);
 
-  // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
+  // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
+    checkpoint.saveStep(flow.pageIndex);
     router.dismissTo('/');
   }
 
@@ -82,10 +87,13 @@ export default function InfernoEp5Screen() {
     );
   }
 
-  // "다음 시즌 시작하기": 새 시즌의 첫 회차로 이어지는 동작이라 가이드(ep0)로 보낸다.
+  // "다음 시즌 시작하기": 첫 시즌만 무료라 다음 시즌은 토큰이 필요하다(constants/season). 바로
+  // 새 시즌으로 들어가지 않고 홈으로 돌아가 토큰 안내(NOTICE 모달)를 띄운다(사용자 결정).
+  // 새 시즌을 실제로 만드는 API 는 백엔드에 요청해 둔 상태라, 생기면 그 안내 다음에 붙인다.
   function handleNextSeasonPress() {
     completeEpisode(EPISODE_ORDER);
-    router.push('/inferno/ep0');
+    requestNextSeasonNotice();
+    router.dismissTo('/');
   }
 
   // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
@@ -99,7 +107,13 @@ export default function InfernoEp5Screen() {
   function renderPage(summary: InfernoSeasonSummary, myProfile: BreadProfile) {
     switch (flow.pageIndex) {
       case 0:
-        return <InfernoFinalMatchScene result={summary.finalMatch} myProfile={myProfile} />;
+        return (
+          <InfernoFinalMatchScene
+            mine={myProfile}
+            partner={summary.finalMatch.profile}
+            summaryLine={summary.finalMatch.summaryLine}
+          />
+        );
       case 1:
         return <InfernoAnalysisScene report={summary.report} />;
       case 2:

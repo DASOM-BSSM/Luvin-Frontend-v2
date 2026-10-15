@@ -2,9 +2,13 @@ import { router } from 'expo-router';
 
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
+import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
+import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp1Flow from '@/src/features/inferno/hooks/use-inferno-ep1-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -16,13 +20,13 @@ const EPISODE_ORDER = 1;
 /** 대화 끝 투표 모달. Figma `ep1-투표` (5466:4550, 5466:4555, 5466:4557). */
 const VOTE_MODAL_TITLE = 'VOTE';
 const VOTE_MODAL_ACTION = '투표하기';
-const VOTE_MODAL_WIDTH = 'w-[366px]';
+const VOTE_MODAL_WIDTH = 'min-w-[366px]';
 
 /** 투표 완료 모달. Figma `ep1-끝` (5467:5645, 5467:5650~5467:5652). */
 const DONE_MODAL_TITLE = 'NOTICE';
 const DONE_MODAL_MESSAGE = '첫인상 투표가 완료되었어요!';
 const DONE_MODAL_ACTION = '에피소드 끝내기';
-const DONE_MODAL_WIDTH = 'w-[344px]';
+const DONE_MODAL_WIDTH = 'min-w-[344px]';
 
 /**
  * 러빈지옥 ep1. Figma `ep1-전체대화`(5425:886), `ep1-전체대화 끝`(6137:2782),
@@ -35,30 +39,36 @@ const DONE_MODAL_WIDTH = 'w-[344px]';
  */
 export default function InfernoEp1Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
-  const saveCheckpoint = useInfernoStore((state) => state.saveCheckpoint);
   // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
-  const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
     useInfernoConversation(EPISODE_ORDER);
-  const flow = useInfernoEp1Flow(conversation, initialStep);
+  // 대화가 와도 줄넘기 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(use-generation-loader 주석 참고).
+  const generationLoader = useGenerationLoader(isLoading);
+  // 이미 투표한 회차를 다시 보는지. 다시 보기면 투표 모달 없이 이미 고른 반죽을 보여준다.
+  const replay = useEpisodeReplay(EPISODE_ORDER);
+  const flow = useInfernoEp1Flow(conversation, checkpoint.initialStep, replay);
 
+  // 완료 쪽지를 먼저 닫는다 — RN `Modal` 은 화면과 따로 맨 위에 뜨는 창이라, 닫지 않고 나가면
+  // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
   function finishEpisode() {
+    flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
     router.dismissTo('/');
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
-    saveCheckpoint(EPISODE_ORDER, flow.step);
+    checkpoint.saveStep(flow.step);
     router.dismissTo('/');
   }
 
   // vote 는 회차마다 있을 수도 없을 수도 있는 필드라(types/index.ts 주석 참고) ep1
   // 데이터에는 항상 있지만 타입상 좁혀 둬야 한다. AI가 아직 대화를 안 만들었거나
   // 실패했으면 빈 화면 대신 안내를 보여준다(§11).
-  if (!episode || !conversation || !conversation.vote) {
+  if (!episode || !conversation || !conversation.vote || generationLoader.isShowing) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
         <InfernoEpisodeStatus
@@ -66,6 +76,8 @@ export default function InfernoEp1Screen() {
           isLoading={isLoading}
           hasGenerationFailed={hasGenerationFailed}
           onRetry={retryGeneration}
+          isLoaderShowing={generationLoader.isShowing}
+          onLoaderExitComplete={generationLoader.handleExitComplete}
         />
       </InfernoEpisodeFrame>
     );
@@ -73,6 +85,7 @@ export default function InfernoEp1Screen() {
 
   const page = conversation.pages[flow.pageIndex];
   const voteOptions = conversation.participants.filter(({ isMine }) => !isMine);
+  const myParticipant = conversation.participants.find(({ isMine }) => isMine);
 
   return (
     <InfernoEpisodeFrame
@@ -80,19 +93,33 @@ export default function InfernoEp1Screen() {
       surface={flow.isBallotOpen ? 'note' : 'plain'}
       skipLabel="잠시 나가기"
       onPreviousPress={flow.goPrevious}
-      onNextPress={flow.goNext}
+      // 다시 보기의 투표 결과 장면에서는 "다음화면" 이 회차를 끝낸다.
+      onNextPress={flow.isReplay && flow.isBallotOpen ? finishEpisode : flow.goNext}
       onSkipPress={handleExitPress}
     >
       {flow.isBallotOpen ? (
-        <InfernoVoteScene
-          message={conversation.vote.ballotMessage}
-          options={voteOptions}
-          selectedId={flow.selectedId}
-          isSubmitting={flow.isSubmitting}
-          errorMessage={flow.submitError}
-          onSelect={flow.handleSelect}
-          onSubmit={flow.handleSubmit}
-        />
+        flow.isReplay ? (
+          // 다시 보기: 투표지 대신 내 반죽과 내가 투표한 반죽을 나란히 보여준다(사용자 요청,
+          // ep5 최종 매칭 장면을 "VOTE" 제목으로). 회차를 끝내는 건 상단 바 "다음화면" 이다.
+          // 참가자 목록에는 늘 내 분신(REPRESENTATIVE)이 있다. 없으면 데이터가 어긋난 경우라 그리지 않는다.
+          myParticipant ? (
+            <InfernoFinalMatchScene
+              title="VOTE"
+              mine={myParticipant}
+              partner={conversation.participants.find(({ id }) => id === flow.selectedId)}
+            />
+          ) : null
+        ) : (
+          <InfernoVoteScene
+            message={conversation.vote.ballotMessage}
+            options={voteOptions}
+            selectedId={flow.selectedId}
+            isSubmitting={flow.isSubmitting}
+            errorMessage={flow.submitError}
+            onSelect={flow.handleSelect}
+            onSubmit={flow.handleSubmit}
+          />
+        )
       ) : (
         /* 쪽이 바뀌면 타자를 처음부터 다시 치도록 key 로 갈아 끼운다. */
         <InfernoChatScene
@@ -105,7 +132,7 @@ export default function InfernoEp1Screen() {
 
       <InfernoNoteModal
         visible={flow.openModal === 'vote'}
-        widthClass={VOTE_MODAL_WIDTH}
+        minWidthClass={VOTE_MODAL_WIDTH}
         title={VOTE_MODAL_TITLE}
         message={conversation.vote.modalMessage}
         actionLabel={VOTE_MODAL_ACTION}
@@ -114,7 +141,7 @@ export default function InfernoEp1Screen() {
       />
       <InfernoNoteModal
         visible={flow.openModal === 'done'}
-        widthClass={DONE_MODAL_WIDTH}
+        minWidthClass={DONE_MODAL_WIDTH}
         title={DONE_MODAL_TITLE}
         message={DONE_MODAL_MESSAGE}
         actionLabel={DONE_MODAL_ACTION}

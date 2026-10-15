@@ -14,8 +14,7 @@ import SectionHeader from "@/src/components/ui/section-header";
 import Text from "@/src/components/ui/text";
 import { pink } from "@/src/constants/colors";
 import useBreadProfile from "@/src/features/bread/hooks/use-bread-profile";
-import EpisodeThumbnailCard from "@/src/features/home/components/episode-thumbnail-card";
-import type { BreadProfile, WeeklyEpisode } from "@/src/features/home/types";
+import type { BreadProfile } from "@/src/features/home/types";
 import { formatEpisodeLabel } from "@/src/features/home/utils/format-episode";
 import useAiSeasonStatus from "@/src/features/inferno/hooks/use-ai-season-status";
 import { getBreadFlavorName } from "@/src/features/inferno/utils/character-persona";
@@ -24,12 +23,8 @@ import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
 import { LANE_ROTATION_DEG } from "@/src/features/luvin-hell/games/bread-crossing/engine/constants";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
-import EpisodeHistoryRow from "@/src/features/oven/components/episode-history-row";
-
-interface PastEpisodePreview {
-  label: string;
-  body: string;
-}
+import { infernoIntroHref } from "@/src/features/inferno/constants/routes";
+import SeasonCard, { type SeasonEpisodeItem } from "@/src/features/oven/components/season-card";
 
 /** ep1 은 회차 대본과 무관하게 "안녕하세요 {유저 반죽}입니다!"로 고정한다(사용자 지정). */
 const GREETING_EPISODE_ORDER = 1;
@@ -53,18 +48,13 @@ function resolveEpisodeTitle(order: number, myProfile: BreadProfile): string | u
 }
 
 /**
- * 진행 중인 회차 카드에 쓸 값. `useInfernoStore.completedOrders`의 원래 주석대로
+ * 시즌 카드 아래에 펼칠 회차 한 줄. `useInfernoStore.completedOrders`의 원래 주석대로
  * ("API 가 생기면 이 저장은 서버 상태로 대체될 자리") `AiSeasonStatusView.currentEpisode`가
  * 그 서버 상태다 — 회차 번호는 서버 값을 쓰고, 제목은 위 `resolveEpisodeTitle`이 정한다.
  */
-function toWeeklyEpisode(order: number, myProfile: BreadProfile): WeeklyEpisode | undefined {
+function toSeasonEpisode(order: number, myProfile: BreadProfile): SeasonEpisodeItem | undefined {
   const title = resolveEpisodeTitle(order, myProfile);
-  return title ? { order, title } : undefined;
-}
-
-function toPastEpisodePreview(order: number, myProfile: BreadProfile): PastEpisodePreview | undefined {
-  const title = resolveEpisodeTitle(order, myProfile);
-  return title ? { label: formatEpisodeLabel(order), body: title } : undefined;
+  return title ? { order, label: formatEpisodeLabel(order), body: title } : undefined;
 }
 
 /** 두 미리보기 카드 공용 우상단 하트 3개. 실제 게임 상태와 무관한 장식용이라 항상 꽉 차 있다. */
@@ -340,16 +330,23 @@ export default function OvenScreen() {
   const [breadPreviewLabelShown, setBreadPreviewLabelShown] = useState(false);
 
   const currentOrder = seasonQuery.data?.currentEpisode;
-  const currentEpisode =
-    currentOrder !== undefined && myProfile ? toWeeklyEpisode(currentOrder, myProfile) : undefined;
-  const pastOrders = currentOrder
-    ? Array.from({ length: Math.max(currentOrder - 1, 0) }, (_, index) => currentOrder - 1 - index)
+  // 시즌 하나 = Episode 01 부터 지금 회차까지, 최신 회차가 맨 위(시안 이미지 순서). 지난 시즌 목록을
+  // 주는 API 가 아직 없어서(백엔드에 요청해 둔 상태) 지금 시즌 하나만 "SEASON 01" 로 묶는다.
+  // API 가 생기면 시즌마다 카드를 하나씩 띄운다.
+  const seasonOrders = currentOrder
+    ? Array.from({ length: currentOrder }, (_, index) => currentOrder - index)
     : [];
-  const pastEpisodes = myProfile
-    ? pastOrders
-        .map((order) => toPastEpisodePreview(order, myProfile))
-        .filter((episode): episode is PastEpisodePreview => episode !== undefined)
+  const seasonEpisodes = myProfile
+    ? seasonOrders
+        .map((order) => toSeasonEpisode(order, myProfile))
+        .filter((episode): episode is SeasonEpisodeItem => episode !== undefined)
     : [];
+
+  // 지난 회차 다시 보기. 홈에서 들어갈 때처럼 회차 시작 화면부터 본다. 대화는 서버에 이미
+  // 저장돼 있어서 새로 만들지 않고 불러온다(use-ai-episode-messages — 이미 있으면 생성 요청 안 함).
+  function handleSeasonEpisodePress(order: number) {
+    router.push(infernoIntroHref(order));
+  }
 
   function handleMiniGameNavigate() {
     router.push("/luvin-hell");
@@ -390,21 +387,16 @@ export default function OvenScreen() {
             <Text variant="body-s" className="text-text-muted">
               에피소드 정보를 불러오지 못했어요
             </Text>
-          ) : !currentEpisode ? (
+          ) : seasonEpisodes.length === 0 ? (
             <Text variant="body-s" className="text-text-muted">
               아직 진행 중인 에피소드가 없어요
             </Text>
           ) : (
-            <>
-              <EpisodeThumbnailCard episode={currentEpisode} />
-              {pastEpisodes.map((episode) => (
-                <EpisodeHistoryRow
-                  key={episode.label}
-                  label={episode.label}
-                  body={episode.body}
-                />
-              ))}
-            </>
+            <SeasonCard
+              seasonNumber={1}
+              episodes={seasonEpisodes}
+              onEpisodePress={handleSeasonEpisodePress}
+            />
           )}
         </View>
 

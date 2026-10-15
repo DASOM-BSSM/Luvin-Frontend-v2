@@ -17,6 +17,10 @@ import { defaultColor, yellow } from '@/src/constants/colors';
  * - `gameInfo`        : 미니게임 Ready/Result 화면의 "게임 설명" 버튼(6285:7061 등) — bg white,
  *   테두리 gray, py-6, 라벨 14px. `outline`과 border/폰트 크기가 달라 분리했다.
  * - `notice`          : 안내 모달 버튼 (6602:3957) — yellow/300 바탕에 yellow/400 테두리, 가로 꽉
+ * - `noticeFit`       : `notice` 와 생김새가 같고 폭만 다르다 — `w-full`(부모의 100%) 대신
+ *   `self-stretch` 로 옆 글자 폭에 맞춰 늘어난다. 폭이 정해지지 않고 글에 맞춰 늘어나는 상자
+ *   (러빈지옥 쪽지 모달) 안에서 `w-full` 을 쓰면, 레이아웃 엔진이 100% 를 "쓸 수 있는 최대 폭"
+ *   기준으로 재서 상자가 글과 무관하게 최대 폭까지 늘어났다(사용자 지적). 그래서 분리했다.
  * - `noticeSoft`      : `notice` 의 한 단계 연한 짝 (5482:1895) — yellow/200 바탕에 yellow/300
  *   테두리. Figma `button2` 의 `status=activate, hover=off` 에 해당하고, `notice` 가 그
  *   `hover=on` 이다. "나의 빵에게" 피드백 화면처럼 두 버튼이 한 화면에 같이 놓일 때 쓴다.
@@ -37,6 +41,7 @@ export type ButtonVariant =
   | 'modeSelectSecondary'
   | 'gameInfo'
   | 'notice'
+  | 'noticeFit'
   | 'noticeSoft'
   | 'infoSave';
 
@@ -49,6 +54,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   modeSelectSecondary: 'border border-default-gray',
   gameInfo: 'border border-default-gray bg-default-bg px-[20px] py-[6px]',
   notice: 'w-full border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
+  noticeFit: 'self-stretch border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
   noticeSoft: 'w-full border border-yellow-300 bg-yellow-200 px-[16px] py-[6px]',
   infoSave: 'w-full bg-yellow-300 px-[10px] py-[8px]',
 };
@@ -66,6 +72,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   modeSelectSecondary: 'text-default-black',
   gameInfo: 'text-text-primary',
   notice: 'text-text-primary',
+  noticeFit: 'text-text-primary',
   noticeSoft: 'text-text-primary',
   infoSave: 'text-text-primary',
 };
@@ -79,6 +86,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   modeSelectSecondary: 'body-m',
   gameInfo: 'body-s',
   notice: 'body-m',
+  noticeFit: 'body-m',
   noticeSoft: 'body-m',
   infoSave: 'body-s',
 };

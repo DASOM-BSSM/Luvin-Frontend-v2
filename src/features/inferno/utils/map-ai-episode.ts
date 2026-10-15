@@ -14,6 +14,11 @@ import type {
   InfernoParticipant,
 } from '@/src/features/inferno/types';
 import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno/utils/character-persona';
+import {
+  paginateByHeight,
+  type ChatPageBudget,
+  type ChatPageBudgets,
+} from '@/src/features/inferno/utils/paginate-chat';
 
 /**
  * AI 시즌 상태(participants) + 회차 메시지를 화면이 이미 알고 있는 `InfernoConversation`
@@ -25,9 +30,6 @@ import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno
  * "대표가 아니면 후보"로 충분해서 값을 하나만 비교한다.
  */
 const REPRESENTATIVE_ROLE = 'REPRESENTATIVE';
-
-/** 한 쪽(page)에 몇 마디씩 담을지. 서버가 쪽 경계를 안 줘서 임의로 정한 값 — 실제 대화 길이 보고 조정할 것. */
-const MESSAGES_PER_PAGE = 3;
 
 /**
  * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
@@ -83,26 +85,34 @@ function toChatMessage(message: AiMessageView, representativeId: string | undefi
   };
 }
 
+/**
+ * 메시지를 쪽(page)으로 나눈다. 서버가 쪽 경계를 주지 않는다.
+ *
+ * 예전에는 무조건 세 마디씩 잘랐는데, 한 마디가 길어 말풍선이 두세 줄로 늘어나면 한 쪽이
+ * 화면 높이를 넘어 위아래가 잘리고 여백 없이 붙어 보였다(사용자 지적). 지금은 화면 높이에서
+ * 위아래 여백을 뺀 만큼만 채우고, 넘칠 것 같은 마디부터 다음 쪽으로 넘긴다(paginate-chat).
+ */
 function chunkIntoPages(
   messages: AiMessageView[],
   question: string | undefined,
   representativeId: string | undefined,
+  budget: ChatPageBudget,
 ): InfernoChatPage[] {
   if (messages.length === 0) {
     return [];
   }
 
-  const pages: InfernoChatPage[] = [];
-  for (let start = 0; start < messages.length; start += MESSAGES_PER_PAGE) {
-    const chunk = messages.slice(start, start + MESSAGES_PER_PAGE);
-    pages.push({
-      id: `page-${start}`,
-      question: start === 0 ? question : undefined,
-      messages: chunk.map((message) => toChatMessage(message, representativeId)),
-    });
-  }
+  const ranges = paginateByHeight(
+    messages.map((message) => message.text),
+    budget,
+    question !== undefined,
+  );
 
-  return pages;
+  return ranges.map(([start, end]) => ({
+    id: `page-${start}`,
+    question: start === 0 ? question : undefined,
+    messages: messages.slice(start, end).map((message) => toChatMessage(message, representativeId)),
+  }));
 }
 
 /**
@@ -161,6 +171,8 @@ export function mapAiEpisodeToConversation(
   season: AiSeasonStatusView,
   episode: AiEpisodeMessagesView,
   myProfile: BreadProfile | null,
+  /** 화면 크기에서 만든 쪽 예산(paginate-chat 의 buildChatPageBudgets). */
+  pageBudgets: ChatPageBudgets,
 ): InfernoConversation {
   const participants = buildParticipants(season, myProfile);
   const representativeId = season.characters.find((character) => character.role === REPRESENTATIVE_ROLE)
@@ -170,7 +182,7 @@ export function mapAiEpisodeToConversation(
     return {
       episodeOrder: episode.episodeNumber,
       participants,
-      pages: chunkIntoPages(episode.messages, episode.topic?.title, representativeId),
+      pages: chunkIntoPages(episode.messages, episode.topic?.title, representativeId, pageBudgets.group),
       vote: EPISODE_VOTE_PROMPTS[episode.episodeNumber],
     };
   }
@@ -181,9 +193,9 @@ export function mapAiEpisodeToConversation(
   return {
     episodeOrder: episode.episodeNumber,
     participants,
-    pages: chunkIntoPages(groupMessages, undefined, representativeId),
+    pages: chunkIntoPages(groupMessages, undefined, representativeId, pageBudgets.group),
     matchReveal: buildMatchReveal(personalMessages, participants, representativeId),
-    personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId),
+    personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId, pageBudgets.personal),
     feedbackTopics: buildFeedbackTopics(personalMessages, representativeId),
   };
 }

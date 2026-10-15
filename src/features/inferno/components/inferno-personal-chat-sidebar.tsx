@@ -84,6 +84,10 @@ interface InfernoPersonalChatSidebarProps {
  * 아직 없는 회차도 같은 방식으로(onRebakePress 를 안 넘겨서) 흐려진 채로 둔다.
  *
  * 반죽 둘은 personDough(팔다리 있는 반죽)를 쓴다(BreadCharacter 주석 참고).
+ *
+ * 폭은 시안(384)보다 좁은 300 이다(사용자 요청: 1:1 대화창을 가로로 더 길게). 안에 든 것 중
+ * 가장 넓은 반죽 줄도 67 + 107 + 11 + 반죽 폭(최대 107) = 292 라 300 안에 들어간다. 이 폭을
+ * 바꾸면 constants/chat-layout 의 PERSONAL_CHAT_LAYOUT.reservedWidth 도 같이 바꿀 것.
  */
 export default function InfernoPersonalChatSidebar({
   mine,
@@ -92,7 +96,7 @@ export default function InfernoPersonalChatSidebar({
   onRebakePress,
 }: InfernoPersonalChatSidebarProps) {
   return (
-    <View className="w-[384px] flex-col">
+    <View className="w-[300px] flex-col">
       <View className="h-[25px]" />
 
       <View className="w-[205px] flex-col items-center gap-[12px]">

@@ -8,12 +8,17 @@ import InfernoDotBackground from '@/src/features/inferno/components/inferno-dot-
 interface InfernoNoteModalProps {
   visible: boolean;
   /**
-   * 쪽지 폭 클래스. 시안 값을 그대로 넘긴다(VOTE 366, NOTICE 344).
+   * 쪽지 최소 폭 클래스. 시안 값을 `min-w-[…]` 로 넘긴다(VOTE 366, NOTICE 344).
    *
-   * 시안은 글에 맞춰 늘어나는 상자지만, 폭을 비워 두면 안쪽의 `w-full` 들이 기댈 곳이 없어
-   * 화면 폭 기준으로 퍼져 버린다. 그래서 폭은 부르는 쪽이 정한다.
+   * 시안은 글에 맞춰 늘어나는 상자다. 예전에는 시안 폭으로 고정해서(안쪽의 `w-full` 들이 기댈
+   * 폭이 필요했다), 글이 길어지면 상자가 늘지 않고 그 폭 안에서 줄이 바뀌었다(사용자 지적).
+   * 지금은 시안 폭을 최소로 두고 글에 맞춰 가로로 늘어나며, 화면의 90% 를 넘을 때만 줄을 바꾼다.
+   * 안쪽은 `w-full` 대신 부모 폭에 맞춰 늘어나게(stretch) 해서 폭을 비워도 화면 끝까지 퍼지지 않는다.
+   *
+   * NOTE: NativeWind 는 소스에 그대로 적힌 클래스만 만든다. 그래서 숫자만 받아 클래스를 조립하지
+   * 않고 부르는 쪽이 `min-w-[366px]` 문자열 그대로 넘긴다.
    */
-  widthClass: string;
+  minWidthClass: string;
   /** 쪽지 맨 위 분홍 글자. 예: "VOTE", "NOTICE" */
   title: string;
   message: string;
@@ -27,7 +32,7 @@ interface InfernoNoteModalProps {
  * 러빈지옥 화면 위에 뜨는 쪽지 모달. Figma `ep1-투표` (5466:4550), `ep1-끝` (5467:5645).
  *
  * 물방울 무늬 종이 위에 흰 쪽지가 한 겹 얹힌 모양이라 두 겹으로 짠다. 바깥이 무늬(반경 12),
- * 안쪽이 흰 쪽지(반경 8)다. 폭은 쪽지마다 달라서 부르는 쪽이 넘긴다(widthClass).
+ * 안쪽이 흰 쪽지(반경 8)다. 최소 폭은 쪽지마다 달라서 부르는 쪽이 넘긴다(minWidthClass).
  *
  * NOTE: 제목은 Tailwind 클래스가 아니라 style 로 폰트를 넣는다. `font-ok-mallang-b` 는
  * 실기기에서 폰트가 깨진다(src/constants/typography.ts 주석 참고).
@@ -39,7 +44,7 @@ interface InfernoNoteModalProps {
  */
 export default function InfernoNoteModal({
   visible,
-  widthClass,
+  minWidthClass,
   title,
   message,
   actionLabel,
@@ -65,20 +70,22 @@ export default function InfernoNoteModal({
       >
         {/* 안쪽을 눌렀을 때 닫히지 않도록 이벤트를 여기서 멈춘다. */}
         <Pressable
-          className={`overflow-hidden rounded-[12px] bg-default-white px-[24px] py-[20px] ${widthClass}`}
+          className={`max-w-[90%] overflow-hidden rounded-[12px] bg-default-white px-[24px] py-[20px] ${minWidthClass}`}
         >
           <InfernoDotBackground variant="modal" />
           <View className="rounded-[8px] bg-default-white px-[30px] py-[20px]">
-            <View className="w-full flex-col items-center gap-[20px]">
-              <View className="w-full flex-col items-start gap-[4px]">
-                <Text className="w-full text-center text-pink-500" style={okMallangBTitleStyle}>
+            <View className="flex-col items-center gap-[20px]">
+              <View className="flex-col items-stretch gap-[4px] self-stretch">
+                <Text className="text-center text-pink-500" style={okMallangBTitleStyle}>
                   {title}
                 </Text>
-                <Text variant="body-m" className="w-full text-center text-default-black">
+                <Text variant="body-m" className="text-center text-default-black">
                   {message}
                 </Text>
               </View>
-              <Button label={actionLabel} variant="notice" onPress={onActionPress} />
+              {/* `notice` 가 아니라 `noticeFit` — 폭이 글에 맞춰 정해지는 상자라 `w-full` 버튼을 쓰면
+                  상자가 최대 폭까지 늘어난다(Button 의 noticeFit 주석 참고). */}
+              <Button label={actionLabel} variant="noticeFit" onPress={onActionPress} />
             </View>
           </View>
         </Pressable>
