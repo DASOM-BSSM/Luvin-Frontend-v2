@@ -9,10 +9,19 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
 /** 지금 떠 있는 모달. 없으면 undefined. */
 export type InfernoEp3Modal = 'done';
 
+/**
+ * 이어보기 자리 중 "투표지" 를 뜻하는 값. 대화 쪽은 0..n-1 이라 겹치지 않는 큰 수로 둔다.
+ * 미니게임을 이긴 뒤 투표지에서 나갔으면 다시 들어와도 게임을 다시 하지 않고 투표지로 간다.
+ * 게임 도중에 나갔으면 마지막 대화 쪽으로 남겨서, 다시 들어오면 게임을 처음부터 한다.
+ */
+export const EP3_BALLOT_STEP = 1000;
+
 /** 같은 결과·문구를 공유하는 두 미니게임 중 어느 쪽인지. 시안이 둘 다 "Episode 03"이다. */
 export type InfernoEp3Game = 'shell' | 'cardflip';
 
 interface InfernoEp3Flow {
+  /** "잠시 나가기" 가 남길 자리. 대화 쪽 번호, 투표지면 EP3_BALLOT_STEP. */
+  step: number;
   pageIndex: number;
   isGameOpen: boolean;
   isGamePromptOpen: boolean;
@@ -49,20 +58,25 @@ interface InfernoEp3Flow {
  */
 export default function useInfernoEp3Flow(
   conversation: InfernoConversation | undefined,
+  /** 이어볼 자리(use-episode-checkpoint). 처음 들어오면 0. */
+  initialStep: number,
   /** 다시 보기 여부와 그때 보여줄 이미 고른 반죽(use-episode-replay). */
   replay: EpisodeReplay,
 ): InfernoEp3Flow {
+  const resumesAtBallot = initialStep === EP3_BALLOT_STEP;
   const recordSelection = useInfernoSelectionStore((state) => state.recordSelection);
-  const [pageIndex, setPageIndex] = useState(0);
+  const [rawPageIndex, setPageIndex] = useState(resumesAtBallot ? 0 : initialStep);
   const [isLastPageTyped, setIsLastPageTyped] = useState(false);
   const [isGamePromptOpen, setIsGamePromptOpen] = useState(false);
   const [isGameOpen, setIsGameOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState<InfernoEp3Game>('shell');
-  const [isBallotOpen, setIsBallotOpen] = useState(false);
+  const [isBallotOpen, setIsBallotOpen] = useState(resumesAtBallot);
   const [openModal, setOpenModal] = useState<InfernoEp3Modal | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
 
   const lastPageIndex = conversation ? conversation.pages.length - 1 : 0;
+  // 저장된 자리가 쪽 수를 넘으면(쪽 나누기가 바뀐 경우) 마지막 쪽으로 잘라낸다.
+  const pageIndex = Math.min(rawPageIndex, Math.max(lastPageIndex, 0));
   const isLastPage = pageIndex >= lastPageIndex;
 
   useEffect(() => {
@@ -145,12 +159,12 @@ export default function useInfernoEp3Flow(
 
   function showPreviousPage() {
     setIsLastPageTyped(false);
-    setPageIndex((index) => index - 1);
+    setPageIndex(pageIndex - 1);
   }
 
   function showNextPage() {
     setIsLastPageTyped(false);
-    setPageIndex((index) => index + 1);
+    setPageIndex(pageIndex + 1);
   }
 
   // 모달을 직접 열었으니 자동으로 열 타이머는 필요 없다(handleGameStart 주석 참고).
@@ -184,6 +198,7 @@ export default function useInfernoEp3Flow(
   }
 
   return {
+    step: isBallotOpen ? EP3_BALLOT_STEP : pageIndex,
     pageIndex,
     isGameOpen,
     isGamePromptOpen,

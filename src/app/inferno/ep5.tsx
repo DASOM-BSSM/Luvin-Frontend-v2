@@ -8,6 +8,7 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
 import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -43,10 +44,13 @@ export default function InfernoEp5Screen() {
     hasGenerationFailed,
     retryGeneration,
   } = useInfernoSeasonSummary(EPISODE_ORDER);
-  const flow = useInfernoEp5Flow();
+  // 지난번에 "잠시 나가기" 로 나갔다면 그 페이지에서 이어 본다. 처음 들어오는 회차면 0.
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
+  const flow = useInfernoEp5Flow(checkpoint.initialStep);
 
-  // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
+  // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
+    checkpoint.saveStep(flow.pageIndex);
     router.dismissTo('/');
   }
 

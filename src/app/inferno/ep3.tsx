@@ -9,6 +9,7 @@ import InfernoMiniGameScene from '@/src/features/inferno/components/inferno-mini
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
 import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
@@ -34,7 +35,9 @@ export default function InfernoEp3Screen() {
   const generationLoader = useGenerationLoader(isLoading);
   // 이미 투표한 회차를 다시 보는지. 다시 보기면 미니게임 없이 이미 고른 반죽을 보여준다.
   const replay = useEpisodeReplay(EPISODE_ORDER);
-  const flow = useInfernoEp3Flow(conversation, replay);
+  // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
+  const flow = useInfernoEp3Flow(conversation, checkpoint.initialStep, replay);
 
   // 완료 쪽지를 먼저 닫는다 — RN `Modal` 은 화면과 따로 맨 위에 뜨는 창이라, 닫지 않고 나가면
   // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
@@ -51,8 +54,9 @@ export default function InfernoEp3Screen() {
     finishEpisode();
   }
 
-  // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
+  // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
+    checkpoint.saveStep(flow.step);
     router.dismissTo('/');
   }
 

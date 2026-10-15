@@ -7,6 +7,7 @@ import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-epis
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
+import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp1Flow from '@/src/features/inferno/hooks/use-inferno-ep1-flow';
@@ -38,9 +39,8 @@ const DONE_MODAL_WIDTH = 'min-w-[344px]';
  */
 export default function InfernoEp1Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
-  const saveCheckpoint = useInfernoStore((state) => state.saveCheckpoint);
   // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
-  const initialStep = useInfernoStore((state) => state.checkpoints[EPISODE_ORDER]) ?? 0;
+  const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
@@ -49,7 +49,7 @@ export default function InfernoEp1Screen() {
   const generationLoader = useGenerationLoader(isLoading);
   // 이미 투표한 회차를 다시 보는지. 다시 보기면 투표 모달 없이 이미 고른 반죽을 보여준다.
   const replay = useEpisodeReplay(EPISODE_ORDER);
-  const flow = useInfernoEp1Flow(conversation, initialStep, replay);
+  const flow = useInfernoEp1Flow(conversation, checkpoint.initialStep, replay);
 
   // 완료 쪽지를 먼저 닫는다 — RN `Modal` 은 화면과 따로 맨 위에 뜨는 창이라, 닫지 않고 나가면
   // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
@@ -61,7 +61,7 @@ export default function InfernoEp1Screen() {
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
-    saveCheckpoint(EPISODE_ORDER, flow.step);
+    checkpoint.saveStep(flow.step);
     router.dismissTo('/');
   }
 
