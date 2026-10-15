@@ -10,10 +10,12 @@ import InfernoHighlightScene from '@/src/features/inferno/components/inferno-hig
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
+import useStartNextSeason from '@/src/features/inferno/hooks/use-start-next-season';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import type { InfernoSeasonSummary } from '@/src/features/inferno/types';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import type { BreadProfile } from '@/src/features/home/types';
+import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
 
 const EPISODE_ORDER = 5;
 
@@ -43,6 +45,8 @@ export default function InfernoEp5Screen() {
     retryGeneration,
   } = useInfernoSeasonSummary(EPISODE_ORDER);
   const flow = useInfernoEp5Flow();
+  const surveyResultQuery = useMySurveyResult();
+  const startNextSeasonMutation = useStartNextSeason();
 
   // "잠시 나가기" 는 스킵과 다르다. 본 것으로 치지 않아서 다시 들어오면 처음부터다.
   function handleExitPress() {
@@ -82,9 +86,17 @@ export default function InfernoEp5Screen() {
     );
   }
 
-  // "다음 시즌 시작하기": 새 시즌의 첫 회차로 이어지는 동작이라 가이드(ep0)로 보낸다.
+  // "다음 시즌 시작하기": 서버에 새 시즌을 연 뒤, 새 시즌의 첫 회차로 이어지는 동작이라
+  // 가이드(ep0)로 보낸다. 이번 시즌 완료 기록(completeEpisode)은 남기지 않는다 — 성공하면
+  // 훅이 로컬 진행도를 새 시즌 기준(빈 상태)으로 비우기 때문이다. 설문 결과는 최신 것을
+  // 넘기고, 아직 못 받았으면 생략해서 서버가 최신 결과를 쓰게 한다.
   function handleNextSeasonPress() {
-    completeEpisode(EPISODE_ORDER);
+    startNextSeasonMutation.mutate(surveyResultQuery.data?.resultId, {
+      onSuccess: handleNextSeasonStarted,
+    });
+  }
+
+  function handleNextSeasonStarted() {
     router.push('/inferno/ep0');
   }
 
@@ -109,6 +121,8 @@ export default function InfernoEp5Screen() {
           <InfernoWrapUpScene
             onEndSeasonPress={handleEndSeasonPress}
             onNextSeasonPress={handleNextSeasonPress}
+            isStartingNextSeason={startNextSeasonMutation.isPending}
+            hasNextSeasonFailed={startNextSeasonMutation.isError}
           />
         );
     }
