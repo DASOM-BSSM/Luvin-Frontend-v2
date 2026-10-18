@@ -10,7 +10,6 @@ import type {
   AiRerollView,
   AiSeasonStatusView,
   AiSelectionView,
-  StartNextSeasonRequest,
 } from '@/src/features/inferno/api/ai-season-types';
 
 /**
@@ -45,16 +44,6 @@ export async function createSeasonFromSurvey(surveyResultId: string): Promise<Ai
     );
   }
 
-  return data.data;
-}
-
-/**
- * `POST /api/ai/seasons/next`. 지금 시즌을 마치고 다음 시즌을 연다(ep5 "다음 시즌 시작하기").
- * `from-survey`와 달리 이미 시즌이 있어도 그대로 돌려주지 않고 새 시즌을 만든다 — 그래서
- * 재시도가 시즌을 두 번 만들지 않도록 `clientRequestId`를 같이 보낸다.
- */
-export async function startNextSeason(request: StartNextSeasonRequest): Promise<AiSeasonStatusView> {
-  const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/next', request);
   return data.data;
 }
 

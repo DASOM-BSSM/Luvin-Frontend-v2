@@ -837,36 +837,6 @@
                 }
             }
         },
-        "/api/auth/apple": {
-            "post": {
-                "tags": [
-                    "auth-controller"
-                ],
-                "operationId": "appleLogin",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AppleLoginRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseAuthLoginResponse"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/api/analysis": {
             "get": {
                 "tags": [
@@ -936,24 +906,6 @@
             }
         },
         "/api/ai/seasons": {
-            "get": {
-                "tags": [
-                    "ai-season-controller"
-                ],
-                "operationId": "listSeasons",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseListAiSeasonSummaryView"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "tags": [
                     "ai-season-controller"
@@ -968,35 +920,6 @@
                         }
                     },
                     "required": true
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "*/*": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseAiSeasonStatusView"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/ai/seasons/next": {
-            "post": {
-                "tags": [
-                    "ai-season-controller"
-                ],
-                "operationId": "startNextSeason",
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StartNextSeasonRequest"
-                            }
-                        }
-                    }
                 },
                 "responses": {
                     "200": {
@@ -2171,7 +2094,7 @@
                     "success": {
                         "type": "string",
                         "minLength": 1,
-                        "pattern": "^(\uc131\uacf5|\uc2e4\ud328)$"
+                        "pattern": "^(성공|실패)$"
                     }
                 }
             },
@@ -2589,10 +2512,6 @@
                     "sourceSurveyResultId": {
                         "type": "string",
                         "format": "uuid"
-                    },
-                    "seasonNumber": {
-                        "type": "integer",
-                        "format": "int32"
                     }
                 }
             },
@@ -3433,78 +3352,6 @@
                     },
                     "data": {
                         "$ref": "#/components/schemas/AiEpisodeMessagesView"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "code": {
-                        "type": "string"
-                    }
-                }
-            },
-            "AppleLoginRequest": {
-                "type": "object",
-                "properties": {
-                    "identityToken": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "fullName": {
-                        "type": "string"
-                    }
-                }
-            },
-            "StartNextSeasonRequest": {
-                "type": "object",
-                "properties": {
-                    "surveyResultId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "clientRequestId": {
-                        "type": "string"
-                    }
-                }
-            },
-            "AiSeasonSummaryView": {
-                "type": "object",
-                "properties": {
-                    "seasonId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "seasonNumber": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "currentEpisode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "completedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                }
-            },
-            "ApiResponseListAiSeasonSummaryView": {
-                "type": "object",
-                "properties": {
-                    "success": {
-                        "type": "boolean"
-                    },
-                    "data": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AiSeasonSummaryView"
-                        }
                     },
                     "message": {
                         "type": "string"
