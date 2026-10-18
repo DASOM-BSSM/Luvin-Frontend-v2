@@ -18,6 +18,7 @@ import EpisodeCardSkeleton from '@/src/features/home/components/episode-card-ske
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
@@ -56,9 +57,12 @@ export default function HomeScreen() {
 
   // 로그인 안 된 채로 홈에 들어오면(딥링크 등) 온보딩으로 돌려보낸다. hydrate 가 끝나기
   // 전에는 아직 모르는 상태이므로 판단하지 않는다.
+  //
+  // 홈은 다른 화면 아래에 깔린 채로도 이 effect 가 돈다(예: 마이페이지에서 로그아웃). 그때 맨 위
+  // 화면만 바꾸면 아래 화면이 남아 스택이 꼬이므로 전부 비우고 온보딩으로 보낸다(LUV-56).
   useEffect(() => {
     if (!isHydrating && !isAuthenticated) {
-      router.replace('/onboarding');
+      resetToOnboarding();
     }
   }, [isHydrating, isAuthenticated]);
 
