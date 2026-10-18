@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   runOnJS,
   useAnimatedReaction,
@@ -52,7 +52,7 @@ export interface DinoEngine {
   playerY: SharedValue<number>;
   duckSquash: SharedValue<number>;
   slots: ObstacleSlot[];
-  /** 슬롯별 현재 반죽 종류(장애물 다양화). 스폰될 때만 갱신되는 React state — 매프레임 아님. */
+  /** 슬롯별 반죽 종류(장애물 다양화). 마운트 때 한 번 정해지고 바뀌지 않는다(이미지 재로딩 방지). */
   doughTypes: BreadType[];
   /** Tap 제스처(점프)에서 호출. 워클릿 함수. */
   triggerJump: () => void;
@@ -84,8 +84,11 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
   const kindFlags = Array.from({ length: POOL_SIZE }, () => useSharedValue(INACTIVE_KIND));
   const slots: ObstacleSlot[] = xs.map((x, i) => ({ x, kindFlag: kindFlags[i] }));
 
-  // 반죽 종류 다양화: 스폰(=낮은 빈도 이벤트)마다만 갱신되는 React state라 매프레임 리렌더는 없다.
-  const [doughTypes, setDoughTypes] = useState<BreadType[]>(() => {
+  // 반죽 종류 다양화: 슬롯마다 처음 한 번만 랜덤으로 정하고 바꾸지 않는다. 예전엔 스폰할 때마다
+  // 종류를 새로 뽑아 이미지 source 를 갈아끼웠는데, 그러면 expo-image 가 매번 이미지를 다시
+  // 불러와야 해서 기기가 바쁠 때(시뮬레이터 연속 캡처 중 재현) 다 불러오기 전에 반죽이 화면을
+  // 지나가 버려 "보이지 않는 장애물"에 부딪혔다. 슬롯 10개가 돌아가며 나오므로 종류는 계속 섞인다.
+  const [doughTypes] = useState<BreadType[]>(() => {
     const types: BreadType[] = [];
     let prev: BreadType | null = null;
     for (let i = 0; i < POOL_SIZE; i++) {
@@ -95,17 +98,6 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
     }
     return types;
   });
-  const lastDoughTypeRef = useRef<BreadType | null>(doughTypes[POOL_SIZE - 1] ?? null);
-
-  const assignDoughType = (slotIndex: number) => {
-    const picked = pickNextDoughType(lastDoughTypeRef.current);
-    lastDoughTypeRef.current = picked;
-    setDoughTypes((prev) => {
-      const next = [...prev];
-      next[slotIndex] = picked;
-      return next;
-    });
-  };
 
   const triggerJump = () => {
     'worklet';
@@ -162,7 +154,6 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
       if (idx !== -1) {
         kindFlags[idx].value = decision.kind === 'ground' ? GROUND_KIND : AIR_KIND;
         xs[idx].value = FRAME_WIDTH;
-        runOnJS(assignDoughType)(idx);
       }
     }
 
