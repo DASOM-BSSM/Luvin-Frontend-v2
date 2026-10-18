@@ -20,6 +20,8 @@ interface InfernoNoticeModalProps {
   onClose: () => void;
   /** 버튼을 눌렀을 때. */
   onActionPress: () => void;
+  /** 버튼을 막는다. 버튼이 서버 요청을 보내는 동안 다시 누르지 못하게 할 때 쓴다(§11). */
+  isActionDisabled?: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export default function InfernoNoticeModal({
   actionLabel = ACTION_LABEL,
   onClose,
   onActionPress,
+  isActionDisabled = false,
 }: InfernoNoticeModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -61,7 +64,7 @@ export default function InfernoNoticeModal({
                 {message}
               </Text>
             </View>
-            <Button label={actionLabel} variant="notice" onPress={onActionPress} />
+            <Button label={actionLabel} variant="notice" disabled={isActionDisabled} onPress={onActionPress} />
           </View>
         </Pressable>
       </Pressable>

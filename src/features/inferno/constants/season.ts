@@ -14,4 +14,8 @@ export const COMPLETED_SEASON_STATUS = 'COMPLETED';
 export const NEXT_SEASON_NOTICE = {
   message: `다음 시즌을 시작하려면 토큰 ${NEXT_SEASON_TOKEN_COST}개가 필요해요!`,
   actionLabel: '미니게임으로 토큰 모으기',
+  /** 토큰이 충분할 때의 버튼. 누르면 `POST /api/ai/seasons/next` 로 새 시즌을 연다. */
+  startLabel: `토큰 ${NEXT_SEASON_TOKEN_COST}개로 시작하기`,
+  /** 새 시즌을 여는 요청이 진행 중일 때의 버튼. */
+  startingLabel: '새 시즌 준비 중...',
 };

@@ -237,3 +237,22 @@ export interface InfernoSeasonSummary {
   report: InfernoSeasonReport;
   highlights: InfernoHighlight[];
 }
+
+/**
+ * EP5 를 끝낸 뒤 앱을 다시 열었을 때 오는 쪽지의 "보낸 사람". EP5 를 끝내는 순간 최종 매칭
+ * 상대(`InfernoSeasonSummary.finalMatch`)에서 정해져 MMKV 에 남는다(partner-letter-store.ts).
+ *
+ * 쪽지 본문은 여기 없다 — 본문은 AI 가 만들어 주는 값이라 펼칠 때 받아 온다(api/partner-letter.ts).
+ */
+export interface InfernoPartnerLetterSender {
+  /** 쪽지 한 통을 가리키는 값. 같은 쪽지를 펼치는 동안 본문이 바뀌지 않게 쿼리 키로 쓴다. */
+  id: string;
+  partnerName: string;
+  partnerType: BreadType;
+}
+
+/** 펼친 쪽지. */
+export interface InfernoPartnerLetter {
+  partnerName: string;
+  message: string;
+}

@@ -12,8 +12,10 @@ import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-check
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import type { InfernoSeasonSummary } from '@/src/features/inferno/types';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import { buildPartnerLetterSender } from '@/src/features/inferno/utils/partner-letter';
 import type { BreadProfile } from '@/src/features/home/types';
 
 const EPISODE_ORDER = 5;
@@ -35,6 +37,7 @@ const EPISODE_ORDER = 5;
 export default function InfernoEp5Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
   const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
+  const queueLetter = usePartnerLetterStore((state) => state.queueLetter);
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const breadProfile = useBreadProfile();
   const {
@@ -87,13 +90,22 @@ export default function InfernoEp5Screen() {
     );
   }
 
+  // 시즌을 끝까지 봤으면 최종 매칭 상대가 쪽지를 보낸다. 지금 뜨지 않고 다음에 앱을 열 때 가장
+  // 먼저 뜬다(partner-letter-store.ts). 두 마무리 버튼 모두 시즌을 끝까지 본 것이라 둘 다 보낸다.
+  // 가드로 좁혀진 값을 여기서 상수로 꺼내 둔다 — 아래 핸들러 안에서는 summary 의 좁혀진 타입이
+  // 유지되지 않는다(TS18048, renderPage 주석 참고).
+  const finalMatch = summary.finalMatch;
+
+  function queuePartnerLetter() {
+    queueLetter(buildPartnerLetterSender(finalMatch, String(Date.now())));
+  }
+
   // "다음 시즌 시작하기": 첫 시즌만 무료라 다음 시즌은 토큰이 필요하다(constants/season). 바로
   // 새 시즌으로 들어가지 않고 홈으로 돌아가 토큰 안내(NOTICE 모달)를 띄운다(사용자 결정).
-  // 새 시즌을 실제로 만드는 API(`POST /api/ai/seasons/next`, hooks/use-start-next-season.ts)는
-  // 생겼지만, 토큰 차감을 서버가 할지 앱이 `/api/tokens/use` 로 할지 백엔드와 정하는 중이라
-  // 아직 여기 붙이지 않는다 — 정해지면 그 안내 다음에 붙인다.
+  // 토큰이 충분하면 그 안내의 "토큰 N개로 시작하기"가 새 시즌을 연다(next-season-notice-modal.tsx).
   function handleNextSeasonPress() {
     completeEpisode(EPISODE_ORDER);
+    queuePartnerLetter();
     requestNextSeasonNotice();
     router.dismissTo('/');
   }
@@ -101,6 +113,7 @@ export default function InfernoEp5Screen() {
   // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
   function handleEndSeasonPress() {
     completeEpisode(EPISODE_ORDER);
+    queuePartnerLetter();
     router.dismissTo('/');
   }
 
