@@ -20,11 +20,12 @@ import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
+import NextSeasonNoticeModal from '@/src/features/inferno/components/next-season-notice-modal';
 import {
   INFERNO_EPISODE_HREFS,
   infernoIntroHref,
 } from '@/src/features/inferno/constants/routes';
-import { COMPLETED_SEASON_STATUS, NEXT_SEASON_NOTICE } from '@/src/features/inferno/constants/season';
+import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
@@ -118,6 +119,12 @@ export default function HomeScreen() {
   function handleNextSeasonMiniGamePress() {
     clearNextSeasonNotice();
     router.push('/luvin-hell');
+  }
+
+  // 다음 시즌이 열렸으면 새 시즌의 첫 회차(가이드 ep0)로 보낸다.
+  function handleNextSeasonStarted() {
+    clearNextSeasonNotice();
+    router.push(INFERNO_EPISODE_HREFS[0] ?? '/inferno');
   }
 
   // 성별이 없으면 서버가 시즌 생성을 막는다(409 PROFILE_REQUIRED). 로그로만 남기지 않고
@@ -235,12 +242,11 @@ export default function HomeScreen() {
         onClose={handleNoticeClose}
         onActionPress={handleNoticeSurveyPress}
       />
-      <InfernoNoticeModal
+      <NextSeasonNoticeModal
         visible={isNextSeasonNoticePending}
-        message={NEXT_SEASON_NOTICE.message}
-        actionLabel={NEXT_SEASON_NOTICE.actionLabel}
         onClose={clearNextSeasonNotice}
-        onActionPress={handleNextSeasonMiniGamePress}
+        onCollectTokensPress={handleNextSeasonMiniGamePress}
+        onSeasonStarted={handleNextSeasonStarted}
       />
       <ConfirmModal
         visible={isProfileRequiredVisible}
