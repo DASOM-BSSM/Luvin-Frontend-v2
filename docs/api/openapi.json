@@ -10,6 +10,20 @@
             "description": "Generated server url"
         }
     ],
+    "tags": [
+        {
+            "name": "감정일기",
+            "description": "일기 작성·조회·수정·삭제, 이모지 반응, 내 방들 피드"
+        },
+        {
+            "name": "감정일기 공유방",
+            "description": "공유방 생성·조회·수정·삭제, 멤버 관리(초대 방식), 방 일기 조회"
+        },
+        {
+            "name": "감정일기 댓글",
+            "description": "일기 댓글 작성·조회·수정·삭제"
+        }
+    ],
     "paths": {
         "/api/users/me": {
             "get": {
@@ -70,6 +84,277 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MessageResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diary-rooms/{roomId}": {
+            "put": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "공유방 수정",
+                "description": "방장만 가능 (403).",
+                "operationId": "updateRoom",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Request"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "공유방 삭제",
+                "description": "방장만 가능. 방의 일기·반응·댓글·멤버도 함께 삭제.",
+                "operationId": "deleteRoom",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries/{diaryId}": {
+            "get": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "일기 상세",
+                "description": "작성자 또는 일기가 속한 방의 방장·멤버만 조회 가능 (아니면 403).",
+                "operationId": "getDiary",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "일기 수정",
+                "description": "작성자만 가능. 제목·내용만 수정 (방은 옮길 수 없음).",
+                "operationId": "updateDiary",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "일기 삭제",
+                "description": "작성자만 가능. 달린 반응·댓글도 함께 삭제.",
+                "operationId": "deleteDiary",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries/{diaryId}/comments/{commentId}": {
+            "put": {
+                "tags": [
+                    "감정일기 댓글"
+                ],
+                "summary": "댓글 수정",
+                "description": "댓글 작성자만 가능 (403).",
+                "operationId": "updateComment",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Request"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "감정일기 댓글"
+                ],
+                "summary": "댓글 삭제",
+                "description": "댓글 작성자만 가능 (403).",
+                "operationId": "deleteComment",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "commentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
                                 }
                             }
                         }
@@ -746,6 +1031,323 @@
                 }
             }
         },
+        "/api/diary-rooms": {
+            "get": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "내 공유방 목록",
+                "description": "내가 방장이거나 멤버인 방. 최근 참여한 방이 먼저.",
+                "operationId": "getMyRooms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "공유방 생성",
+                "description": "만든 사람이 방장(OWNER)으로 자동 등록.",
+                "operationId": "createRoom",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Request"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diary-rooms/{roomId}/members": {
+            "get": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "멤버 목록",
+                "description": "방장·멤버만 조회 가능 (403).",
+                "operationId": "getRoomMembers",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListMemberResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "멤버 추가(초대)",
+                "description": "방장만 가능 (403). 없는 사용자 404. 이미 멤버여도 200.",
+                "operationId": "addMember",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AddMemberRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseMembershipResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries": {
+            "get": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "내 일기 목록",
+                "description": "내가 쓴 일기만 최신순. size 최대 50.",
+                "operationId": "getAllDiaries",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "일기 작성",
+                "description": "일기는 항상 공유방 안에서 쓴다. 그 방의 방장·멤버만 작성 가능 (아니면 403, 없는 방 404).",
+                "operationId": "createDiary",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries/{diaryId}/like": {
+            "post": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "이모지 반응 토글",
+                "description": "이모지 문자 그대로 전송. 같은 이모지 다시 누르면 취소, 다른 이모지면 교체. 한 사람당 일기 하나에 반응 1개. 이모지 1개가 아니면 400.",
+                "operationId": "toggleReaction",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReactionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseReactionResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries/{diaryId}/comments": {
+            "get": {
+                "tags": [
+                    "감정일기 댓글"
+                ],
+                "summary": "댓글 목록",
+                "description": "일기를 볼 수 있는 사람만 가능 (403). 작성순.",
+                "operationId": "getComments",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "감정일기 댓글"
+                ],
+                "summary": "댓글 작성",
+                "description": "일기를 볼 수 있는 사람만 가능 (403).",
+                "operationId": "createComment",
+                "parameters": [
+                    {
+                        "name": "diaryId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Request"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/daily_questions/{questionId}/answer": {
             "post": {
                 "tags": [
@@ -1005,6 +1607,37 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponseAiSeasonStatusView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ai/seasons/letters/{letterId}/read": {
+            "post": {
+                "tags": [
+                    "ai-season-controller"
+                ],
+                "operationId": "markLetterRead",
+                "parameters": [
+                    {
+                        "name": "letterId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
                                 }
                             }
                         }
@@ -1622,6 +2255,37 @@
                 }
             }
         },
+        "/api/episodes/{episodeId}/note": {
+            "get": {
+                "tags": [
+                    "note-controller"
+                ],
+                "operationId": "getNote",
+                "parameters": [
+                    {
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NoteResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/episodes/{episodeId}/matches": {
             "get": {
                 "tags": [
@@ -1656,6 +2320,37 @@
                 }
             }
         },
+        "/api/episodes/{episodeId}/ai-situations/reason": {
+            "get": {
+                "tags": [
+                    "vote-reason-controller"
+                ],
+                "operationId": "getVoteReason",
+                "parameters": [
+                    {
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VoteReasonResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/episodes/likes": {
             "get": {
                 "tags": [
@@ -1672,6 +2367,61 @@
                                     "items": {
                                         "$ref": "#/components/schemas/LikeMessageResponse"
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diary-rooms/{roomId}/diaries": {
+            "get": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "공유방 일기 조회",
+                "description": "방장·멤버만 조회 가능 (403). 최신순. 작성자 닉네임·빵 타입, 반응 수, 댓글 수, 내 반응 포함.",
+                "operationId": "getRoomDiaries",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListFeedItem"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diaries/community": {
+            "get": {
+                "tags": [
+                    "감정일기"
+                ],
+                "summary": "내 방들 피드",
+                "description": "내가 방장이거나 멤버인 모든 공유방의 일기를 최신순으로 최대 50개.",
+                "operationId": "getMyRoomsFeed",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListFeedItem"
                                 }
                             }
                         }
@@ -1870,6 +2620,26 @@
                 }
             }
         },
+        "/api/ai/seasons/letters/unread": {
+            "get": {
+                "tags": [
+                    "ai-season-controller"
+                ],
+                "operationId": "getUnreadLetter",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePartnerLetterView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/ai/seasons/episodes/{number}": {
             "get": {
                 "tags": [
@@ -1918,6 +2688,122 @@
                     }
                 }
             }
+        },
+        "/api/diary-rooms/{roomId}/members/me": {
+            "delete": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "공유방 나가기",
+                "description": "방장은 나갈 수 없음 (400). 이미 나간 상태여도 200.",
+                "operationId": "leave",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseMembershipResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/diary-rooms/{roomId}/members/kick": {
+            "delete": {
+                "tags": [
+                    "감정일기 공유방"
+                ],
+                "summary": "멤버 강퇴",
+                "description": "방장만 가능 (403). 방장 자신은 강퇴 불가 (400). 멤버가 아닌 id여도 200.",
+                "operationId": "kickMember",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseKickResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/episodes/{episodeId}/feedback": {
+            "post": {
+                "tags": [
+                    "feedback-controller"
+                ],
+                "operationId": "saveFeedback",
+                "parameters": [
+                    {
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/FeedbackRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FeedbackResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -1944,6 +2830,66 @@
                 "properties": {
                     "message": {
                         "type": "string"
+                    }
+                }
+            },
+            "Request": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/Response"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Response": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "ownerId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "UpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 0
+                    },
+                    "content": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "minLength": 0
                     }
                 }
             },
@@ -2171,7 +3117,7 @@
                     "success": {
                         "type": "string",
                         "minLength": 1,
-                        "pattern": "^(\uc131\uacf5|\uc2e4\ud328)$"
+                        "pattern": "^(성공|실패)$"
                     }
                 }
             },
@@ -2343,6 +3289,122 @@
                     }
                 }
             },
+            "AddMemberRequest": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "userId"
+                ]
+            },
+            "ApiResponseMembershipResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/MembershipResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MembershipResponse": {
+                "type": "object",
+                "properties": {
+                    "roomId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "isMember": {
+                        "type": "boolean"
+                    },
+                    "memberCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "CreateRequest": {
+                "type": "object",
+                "properties": {
+                    "roomId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 100,
+                        "minLength": 0
+                    },
+                    "content": {
+                        "type": "string",
+                        "maxLength": 5000,
+                        "minLength": 0
+                    }
+                },
+                "required": [
+                    "roomId"
+                ]
+            },
+            "ReactionRequest": {
+                "type": "object",
+                "properties": {
+                    "emoji": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                }
+            },
+            "ApiResponseReactionResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/ReactionResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ReactionResponse": {
+                "type": "object",
+                "properties": {
+                    "diaryId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "emoji": {
+                        "type": "string"
+                    },
+                    "liked": {
+                        "type": "boolean"
+                    },
+                    "likeCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
             "DailyQuestionAnswerRequest": {
                 "type": "object",
                 "properties": {
@@ -2409,6 +3471,18 @@
                         "type": "boolean"
                     },
                     "accessToken": {
+                        "type": "string"
+                    }
+                }
+            },
+            "AppleLoginRequest": {
+                "type": "object",
+                "properties": {
+                    "identityToken": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "fullName": {
                         "type": "string"
                     }
                 }
@@ -2609,6 +3683,18 @@
                         "type": "string"
                     },
                     "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "StartNextSeasonRequest": {
+                "type": "object",
+                "properties": {
+                    "surveyResultId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "clientRequestId": {
                         "type": "string"
                     }
                 }
@@ -2972,6 +4058,9 @@
                         "type": "integer",
                         "format": "int64"
                     },
+                    "code": {
+                        "type": "string"
+                    },
                     "title": {
                         "type": "string"
                     },
@@ -2998,6 +4087,9 @@
                     "gameId": {
                         "type": "integer",
                         "format": "int64"
+                    },
+                    "code": {
+                        "type": "string"
                     },
                     "title": {
                         "type": "string"
@@ -3088,6 +4180,36 @@
                     }
                 }
             },
+            "NoteResponse": {
+                "type": "object",
+                "properties": {
+                    "noteId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "content": {
+                        "type": "string"
+                    }
+                }
+            },
+            "VoteReasonResponse": {
+                "type": "object",
+                "properties": {
+                    "episodeId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "basedOn": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "LikeMessageResponse": {
                 "type": "object",
                 "properties": {
@@ -3101,6 +4223,135 @@
                     },
                     "text": {
                         "type": "string"
+                    }
+                }
+            },
+            "ApiResponseListResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Response"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseListMemberResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MemberResponse"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MemberResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseListFeedItem": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FeedItem"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "FeedItem": {
+                "type": "object",
+                "properties": {
+                    "diaryId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "roomId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "authorId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "authorNickname": {
+                        "type": "string"
+                    },
+                    "authorBreadType": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "isMine": {
+                        "type": "boolean"
+                    },
+                    "likeCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "commentCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "liked": {
+                        "type": "boolean"
+                    },
+                    "emoji": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             },
@@ -3301,6 +4552,54 @@
                     }
                 }
             },
+            "AiSeasonSummaryView": {
+                "type": "object",
+                "properties": {
+                    "seasonId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "seasonNumber": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "currentEpisode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "completedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ApiResponseListAiSeasonSummaryView": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiSeasonSummaryView"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
             "AiHighlightView": {
                 "type": "object",
                 "properties": {
@@ -3308,8 +4607,43 @@
                         "type": "string",
                         "format": "uuid"
                     },
+                    "speakerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "speakerRole": {
+                        "type": "string",
+                        "enum": [
+                            "representative",
+                            "candidate"
+                        ]
+                    },
                     "text": {
                         "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "observedBehavior": {
+                        "type": "string"
+                    }
+                }
+            },
+            "AiReportTraitView": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "evidenceMessageIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     }
                 }
             },
@@ -3331,6 +4665,18 @@
                     },
                     "renderMode": {
                         "type": "string"
+                    },
+                    "representativeStrengths": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiReportTraitView"
+                        }
+                    },
+                    "representativeWeaknesses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AiReportTraitView"
+                        }
                     }
                 }
             },
@@ -3348,6 +4694,53 @@
                     },
                     "code": {
                         "type": "string"
+                    }
+                }
+            },
+            "ApiResponsePartnerLetterView": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PartnerLetterView"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PartnerLetterView": {
+                "type": "object",
+                "properties": {
+                    "letterId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "seasonId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "partnerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "partnerName": {
+                        "type": "string"
+                    },
+                    "partnerBreadType": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             },
@@ -3442,74 +4835,76 @@
                     }
                 }
             },
-            "AppleLoginRequest": {
-                "type": "object",
-                "properties": {
-                    "identityToken": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "fullName": {
-                        "type": "string"
-                    }
-                }
-            },
-            "StartNextSeasonRequest": {
-                "type": "object",
-                "properties": {
-                    "surveyResultId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "clientRequestId": {
-                        "type": "string"
-                    }
-                }
-            },
-            "AiSeasonSummaryView": {
-                "type": "object",
-                "properties": {
-                    "seasonId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "seasonNumber": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "status": {
-                        "type": "string"
-                    },
-                    "currentEpisode": {
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "completedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                }
-            },
-            "ApiResponseListAiSeasonSummaryView": {
+            "ApiResponseKickResponse": {
                 "type": "object",
                 "properties": {
                     "success": {
                         "type": "boolean"
                     },
                     "data": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AiSeasonSummaryView"
-                        }
+                        "$ref": "#/components/schemas/KickResponse"
                     },
                     "message": {
                         "type": "string"
                     },
                     "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "KickResponse": {
+                "type": "object",
+                "properties": {
+                    "roomId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "FeedbackRequest": {
+                "type": "object",
+                "required": [
+                    "messageId",
+                    "feedbackType",
+                    "content"
+                ],
+                "properties": {
+                    "messageId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "feedbackType": {
+                        "type": "string",
+                        "enum": [
+                            "AGREE",
+                            "DISAGREE"
+                        ]
+                    },
+                    "content": {
+                        "type": "string",
+                        "maxLength": 1000
+                    }
+                }
+            },
+            "FeedbackResponse": {
+                "type": "object",
+                "properties": {
+                    "feedbackId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "messageId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "message": {
                         "type": "string"
                     }
                 }
