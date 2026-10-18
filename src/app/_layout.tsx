@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import theme from "@/src/constants/theme";
 import { getAccessToken } from "@/src/features/auth/lib/token-storage";
 import { useAuthStore } from "@/src/features/auth/store/auth-store";
+import PartnerLetterModal from "@/src/features/inferno/components/partner-letter-modal";
 import useLandscapeRoutes from "@/src/hooks/use-landscape-routes";
 import QueryProvider from "@/src/providers/query-provider";
 
@@ -99,6 +100,8 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: theme.colors.default.bg },
           }}
         />
+        {/* EP5 이후 앱을 다시 열면 어느 화면으로 열리든 가장 먼저 뜨는 쪽지(partner-letter-store.ts). */}
+        <PartnerLetterModal />
       </QueryProvider>
     </GestureHandlerRootView>
   );

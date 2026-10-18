@@ -11,3 +11,8 @@ export const aiSeasonKeys = {
 export const likeKeys = {
   likedMessages: ['likes', 'messages'] as const,
 };
+
+/** EP5 이후 최종 매칭 상대가 보내는 쪽지. 쪽지 한 통마다 따로 받는다. */
+export const partnerLetterKeys = {
+  letter: (letterId: string) => ['partner-letter', letterId] as const,
+};
