@@ -27,9 +27,14 @@ export default function ObstacleSlotView({ x, kindFlag, doughType }: ObstacleSlo
   const groundStyle = useAnimatedStyle(() => ({ opacity: kindFlag.value === GROUND_KIND ? 1 : 0 }));
   const airStyle = useAnimatedStyle(() => ({ opacity: kindFlag.value === AIR_KIND ? 1 : 0 }));
 
+  // 지상/공중 박스는 레이아웃+opacity 만 있어서 새 아키텍처(Fabric)가 뷰를 납작하게 합쳐 버린다
+  // (view flattening). 그러면 안의 이미지(h-full)가 이 박스가 아닌 다른 기준으로 크기를 잡아
+  // 반죽이 박스보다 42px 아래, 흙 속에 그려졌다(시뮬레이터에서 확인 — 박스에 배경색만 줘도
+  // 정상 위치로 돌아왔다). collapsable={false} 로 박스를 실제 뷰로 남긴다.
   return (
     <Animated.View style={[{ position: 'absolute', top: 0, left: 0 }, wrapperStyle]}>
       <Animated.View
+        collapsable={false}
         style={[
           { position: 'absolute', top: GROUND_Y - GROUND_OBSTACLE_HEIGHT, width: OBSTACLE_WIDTH, height: GROUND_OBSTACLE_HEIGHT },
           groundStyle,
@@ -39,6 +44,7 @@ export default function ObstacleSlotView({ x, kindFlag, doughType }: ObstacleSlo
         <BreadCharacter type={doughType} state="dough" className="h-full w-full" contentPosition="bottom" />
       </Animated.View>
       <Animated.View
+        collapsable={false}
         style={[
           { position: 'absolute', top: AIR_OBSTACLE_Y, width: OBSTACLE_WIDTH, height: AIR_OBSTACLE_HEIGHT },
           airStyle,

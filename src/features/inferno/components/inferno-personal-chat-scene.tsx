@@ -20,8 +20,12 @@ interface InfernoPersonalChatSceneProps {
   onPageDone?: () => void;
   /** "나의 빵에게" 를 눌렀을 때. 넘기지 않으면 눌러도 아무 일도 하지 않는다. */
   onFeedbackPress?: () => void;
+  /** "나의 빵에게" 피드백을 이미 썼는지. 맞으면 폴더가 쓴 기회 모양(pink/300)이 된다. */
+  isFeedbackUsed?: boolean;
   /** "다시 굽기" 를 눌렀을 때. 넘기지 않으면 갈 곳이 없거나 이미 다시 굽기를 썼다는 뜻. */
   onRebakePress?: () => void;
+  /** 다시 굽기로 고른 상대와의 대화인지. 맞으면 "다시 굽기" 가 선택된 모양으로 흐려진다. */
+  isRebakeSelected?: boolean;
 }
 
 /**
@@ -44,7 +48,9 @@ export default function InfernoPersonalChatScene({
   partner,
   onPageDone,
   onFeedbackPress,
+  isFeedbackUsed,
   onRebakePress,
+  isRebakeSelected,
 }: InfernoPersonalChatSceneProps) {
   /** 다 쳐진 줄 수. 지금 쳐지고 있는 줄의 인덱스이기도 하다. */
   const [typedCount, setTypedCount] = useState(0);
@@ -69,7 +75,9 @@ export default function InfernoPersonalChatScene({
         mine={mine}
         partner={partner}
         onFeedbackPress={onFeedbackPress}
+        isFeedbackUsed={isFeedbackUsed}
         onRebakePress={onRebakePress}
+        isRebakeSelected={isRebakeSelected}
       />
 
       <View className="flex-1 flex-col pr-[40px]">

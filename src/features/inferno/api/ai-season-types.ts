@@ -41,18 +41,6 @@ export interface AiSeasonStatusView {
   currentEpisode: number;
   status: string;
   characters: AiCharacterView[];
-  /** 이 시즌을 만든 설문 결과. 옛 경로(`POST /api/ai/seasons`)로 만든 시즌엔 없다. */
-  sourceSurveyResultId?: string;
-  /** 몇 번째 시즌인지(1부터). `POST /api/ai/seasons/next`로 다음 시즌을 열 때마다 늘어난다. */
-  seasonNumber?: number;
-}
-
-/** `POST /api/ai/seasons/next` 요청 본문. 둘 다 생략 가능하다. */
-export interface StartNextSeasonRequest {
-  /** 새 시즌의 원천이 될 설문 결과. 생략하면 서버가 최신 결과를 쓴다. */
-  surveyResultId?: string;
-  /** 같은 "다음 시즌 시작" 시도를 재시도해도 시즌이 두 번 생기지 않게 하는 멱등 키. */
-  clientRequestId?: string;
 }
 
 export interface AiMessageView {
