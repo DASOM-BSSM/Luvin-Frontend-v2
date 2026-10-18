@@ -6,8 +6,14 @@ import type { EpisodeReplay } from '@/src/features/inferno/hooks/use-episode-rep
 import { useInfernoSelectionStore } from '@/src/features/inferno/store/selection-store';
 import type { InfernoConversation } from '@/src/features/inferno/types';
 
-/** 지금 떠 있는 모달. 없으면 undefined. */
-export type InfernoEp3Modal = 'done';
+/**
+ * 지금 떠 있는 모달. 없으면 undefined.
+ * `failureError` 는 미니게임 실패 결과를 서버에 보내지 못했을 때의 안내다.
+ */
+export type InfernoEp3Modal = 'done' | 'failureError';
+
+/** 서버 에러를 그대로 보여주지 않는다(§11) — ep1 과 같이 재시도를 유도하는 한 가지 문구만 쓴다. */
+export const EP3_SUBMIT_ERROR_MESSAGE = '결과를 보내지 못했어요. 다시 시도해주세요.';
 
 /**
  * 이어보기 자리 중 "투표지" 를 뜻하는 값. 대화 쪽은 0..n-1 이라 겹치지 않는 큰 수로 둔다.
@@ -34,14 +40,21 @@ interface InfernoEp3Flow {
   openModal?: InfernoEp3Modal;
   /** 아직 고르지 않았으면 undefined. */
   selectedId?: string;
+  /** 결과를 서버에 보내는 중인지. 버튼을 잠그고 문구를 바꾸는 데 쓴다(ep1 과 같다). */
+  isSubmitting: boolean;
+  /** 투표지 제출이 실패했을 때 보여줄 문구. 성공하거나 아직 안 눌렀으면 undefined. */
+  submitError?: string;
   goPrevious?: () => void;
   goNext?: () => void;
   handlePageDone: () => void;
   handlePromptClose: () => void;
   handleGameStart: () => void;
   handleGameSuccess: () => void;
-  /** 미니게임 실패 쪽지의 "에피소드 끝내기". 화면이 finishEpisode 전에 부른다. */
-  handleGameFailure: () => void;
+  /**
+   * 미니게임 실패 쪽지의 "에피소드 끝내기". 실패 결과를 서버에 보내고, 보냈으면 true.
+   * 화면은 true 일 때만 회차를 끝낸다 — 못 보냈으면 `failureError` 안내를 띄운다.
+   */
+  handleGameFailure: () => Promise<boolean>;
   handleModalClose: () => void;
   handleSelect: (participantId: string) => void;
   handleSubmit: () => void;
@@ -73,6 +86,8 @@ export default function useInfernoEp3Flow(
   const [isBallotOpen, setIsBallotOpen] = useState(resumesAtBallot);
   const [openModal, setOpenModal] = useState<InfernoEp3Modal | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
 
   const lastPageIndex = conversation ? conversation.pages.length - 1 : 0;
   // 저장된 자리가 쪽 수를 넘으면(쪽 나누기가 바뀐 경우) 마지막 쪽으로 잘라낸다.
@@ -118,18 +133,28 @@ export default function useInfernoEp3Flow(
   //
   // 서버가 정해 준 랜덤 상대(partnerId)를 기기에 남겨 둔다 — 다시 볼 때 내 반죽과 그 반죽을
   // 나란히 보여준다(selection-store 주석 참고). 다시 보기에서는 실패 결과를 다시 보내지 않는다.
-  function handleGameFailure() {
-    if (replay.isReplay) return;
+  //
+  // 예전에는 보내기만 하고 결과를 기다리지 않아서, 실패해도 회차가 끝난 것으로 기록됐다. 그러면 서버는
+  // 3화에 머문 채라 4화 대화를 만들지 못했다(LUV-56). 이제 서버가 받은 뒤에만 회차를 끝낸다.
+  async function handleGameFailure(): Promise<boolean> {
+    if (replay.isReplay) return true;
+    if (isSubmitting) return false;
 
     const { seasonId } = replay;
-    submitEpisode3Result(false)
-      .then((result) => {
-        if (seasonId && result.partnerId) {
-          recordSelection(seasonId, 3, result.partnerId);
-        }
-      })
-      // 기록은 다시 보기용 부가 정보라, 실패해도 회차 진행을 막지 않는다.
-      .catch(() => undefined);
+    setIsSubmitting(true);
+
+    try {
+      const result = await submitEpisode3Result(false);
+      if (seasonId && result.partnerId) {
+        recordSelection(seasonId, 3, result.partnerId);
+      }
+      return true;
+    } catch {
+      setOpenModal('failureError');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleSelect(participantId: string) {
@@ -141,16 +166,28 @@ export default function useInfernoEp3Flow(
 
   // 투표지의 "투표하기". ep1(use-inferno-ep1-flow)과 같은 규칙:
   // 고르지 않고 누르면 아무 일도 하지 않는다(§11, 없는 디자인을 지어내지 않는다).
-  function handleSubmit() {
+  //
+  // 완료 쪽지는 서버가 받았다고 확인해 준 뒤에만 연다(ep1 과 같다). 예전에는 결과를 기다리지 않고
+  // 바로 열어서, 전송이 실패해도 회차가 끝난 것으로 기록됐다(LUV-56, handleGameFailure 주석 참고).
+  async function handleSubmit() {
     // 다시 보기에서는 서버에 다시 보내지 않는다. 화면이 이 버튼을 "에피소드 끝내기"로 쓴다.
-    if (!conversation || !selectedId || replay.isReplay) return;
+    if (!conversation || !selectedId || isSubmitting || replay.isReplay) return;
 
-    submitEpisode3Result(true, selectedId);
-    // 다시 볼 때 "이미 고른 반죽"으로 보여주려고 기기에 남긴다(selection-store 주석 참고).
-    if (replay.seasonId) {
-      recordSelection(replay.seasonId, 3, selectedId);
+    setSubmitError(undefined);
+    setIsSubmitting(true);
+
+    try {
+      await submitEpisode3Result(true, selectedId);
+      // 다시 볼 때 "이미 고른 반죽"으로 보여주려고 기기에 남긴다(selection-store 주석 참고).
+      if (replay.seasonId) {
+        recordSelection(replay.seasonId, 3, selectedId);
+      }
+      setOpenModal('done');
+    } catch {
+      setSubmitError(EP3_SUBMIT_ERROR_MESSAGE);
+    } finally {
+      setIsSubmitting(false);
     }
-    setOpenModal('done');
   }
 
   function handleModalClose() {
@@ -207,6 +244,8 @@ export default function useInfernoEp3Flow(
     isReplay: replay.isReplay,
     openModal,
     selectedId: replay.isReplay ? replay.replaySelectedId : selectedId,
+    isSubmitting,
+    submitError,
     goPrevious: resolveGoPrevious(),
     goNext: resolveGoNext(),
     handlePageDone,

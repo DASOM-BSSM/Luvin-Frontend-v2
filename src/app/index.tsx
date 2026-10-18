@@ -14,9 +14,11 @@ import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-p
 import CreateQuestionCard from '@/src/features/home/components/create-question-card';
 import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
+import EpisodeCardSkeleton from '@/src/features/home/components/episode-card-skeleton';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
@@ -27,6 +29,7 @@ import {
 } from '@/src/features/inferno/constants/routes';
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
+import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
@@ -44,7 +47,8 @@ export default function HomeScreen() {
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
-  const completedOrders = useInfernoStore((state) => state.completedOrders);
+  // 기기 기록 + 서버 시즌 상태. 기기 기록만 보면 다시 로그인했을 때 처음부터로 돌아갔다(LUV-56).
+  const { completedOrders, isSyncing: isProgressSyncing } = useInfernoProgress();
   const isNextSeasonNoticePending = useInfernoStore((state) => state.isNextSeasonNoticePending);
   const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   const clearNextSeasonNotice = useInfernoStore((state) => state.clearNextSeasonNotice);
@@ -53,9 +57,12 @@ export default function HomeScreen() {
 
   // 로그인 안 된 채로 홈에 들어오면(딥링크 등) 온보딩으로 돌려보낸다. hydrate 가 끝나기
   // 전에는 아직 모르는 상태이므로 판단하지 않는다.
+  //
+  // 홈은 다른 화면 아래에 깔린 채로도 이 effect 가 돈다(예: 마이페이지에서 로그아웃). 그때 맨 위
+  // 화면만 바꾸면 아래 화면이 남아 스택이 꼬이므로 전부 비우고 온보딩으로 보낸다(LUV-56).
   useEffect(() => {
     if (!isHydrating && !isAuthenticated) {
-      router.replace('/onboarding');
+      resetToOnboarding();
     }
   }, [isHydrating, isAuthenticated]);
 
@@ -207,7 +214,9 @@ export default function HomeScreen() {
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
             onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
-          {weeklyEpisode ? (
+          {isProgressSyncing ? (
+            <EpisodeCardSkeleton />
+          ) : weeklyEpisode ? (
             <EpisodeThumbnailCard
               episode={weeklyEpisode}
               onPress={canOpenWeeklyEpisode ? handleWeeklyEpisodePress : undefined}

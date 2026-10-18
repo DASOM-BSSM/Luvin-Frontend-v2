@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import { EP4_REBAKE_PARTNER_ID } from '@/src/features/inferno/api/conversation';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp4Modals from '@/src/features/inferno/components/inferno-ep4-modals';
@@ -55,7 +55,7 @@ export default function InfernoEp4Screen() {
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // 완료 쪽지의 "에피소드 끝내기". 회차를 끝내고 ep1~3 과 같이 홈으로 돌려보낸다.
@@ -65,7 +65,7 @@ export default function InfernoEp4Screen() {
   function finishEpisode() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // rebake 는 일부러 뺀다(위 주석 참고) — matchReveal/personalChatPages 만 갖추면 되고,

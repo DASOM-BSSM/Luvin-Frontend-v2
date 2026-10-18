@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoCardFlipScene from '@/src/features/inferno/components/inferno-cardflip-scene';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
@@ -13,7 +14,7 @@ import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-check
 import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
-import useInfernoEp3Flow from '@/src/features/inferno/hooks/use-inferno-ep3-flow';
+import useInfernoEp3Flow, { EP3_SUBMIT_ERROR_MESSAGE } from '@/src/features/inferno/hooks/use-inferno-ep3-flow';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 
@@ -24,6 +25,9 @@ const DONE_MODAL_TITLE = 'NOTICE';
 const DONE_MODAL_MESSAGE = '미니게임 투표가 완료되었어요!';
 const DONE_MODAL_ACTION = '에피소드 끝내기';
 const DONE_MODAL_WIDTH = 'min-w-[344px]';
+/** 미니게임 실패 결과를 못 보냈을 때의 안내 버튼. 시안이 없어 임시 문구다. */
+const FAILURE_RETRY_LABEL = '다시 시도';
+const FAILURE_RETRYING_LABEL = '보내는 중...';
 
 export default function InfernoEp3Screen() {
   const completeEpisode = useInfernoStore((state) => state.completeEpisode);
@@ -44,20 +48,25 @@ export default function InfernoEp3Screen() {
   function finishEpisode() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // 미니게임 실패 쪽지의 "에피소드 끝내기". 투표 없이 나가지만 실패 결과는 서버에 남겨야
   // 한다(ep3 흐름 훅 주석 참고).
-  function handleGameFailureExit() {
-    flow.handleGameFailure();
-    finishEpisode();
+  //
+  // 서버가 받았을 때만 회차를 끝낸다 — 못 보냈으면 흐름 훅이 안내(failureError)를 띄우고 이 화면에
+  // 남는다. 그대로 끝내면 서버는 3화에 머물러 4화 대화를 만들지 못한다(LUV-56).
+  async function handleGameFailureExit() {
+    const isSent = await flow.handleGameFailure();
+    if (isSent) {
+      finishEpisode();
+    }
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1/ep2 와
@@ -120,6 +129,8 @@ export default function InfernoEp3Screen() {
             selectedId={flow.selectedId}
             onSelect={flow.handleSelect}
             onSubmit={flow.handleSubmit}
+            isSubmitting={flow.isSubmitting}
+            errorMessage={flow.submitError}
           />
         )
       ) : flow.isGameOpen ? (
@@ -153,6 +164,16 @@ export default function InfernoEp3Screen() {
         message={DONE_MODAL_MESSAGE}
         actionLabel={DONE_MODAL_ACTION}
         onActionPress={finishEpisode}
+        onClose={flow.handleModalClose}
+      />
+      {/* 미니게임 실패 결과를 서버에 보내지 못했을 때. "다시 시도" 로 다시 보내고, 받으면 회차를 끝낸다. */}
+      <InfernoNoteModal
+        visible={flow.openModal === 'failureError'}
+        minWidthClass={DONE_MODAL_WIDTH}
+        title={DONE_MODAL_TITLE}
+        message={EP3_SUBMIT_ERROR_MESSAGE}
+        actionLabel={flow.isSubmitting ? FAILURE_RETRYING_LABEL : FAILURE_RETRY_LABEL}
+        onActionPress={handleGameFailureExit}
         onClose={flow.handleModalClose}
       />
     </InfernoEpisodeFrame>
