@@ -123,7 +123,9 @@ export default function InfernoEp2Screen() {
           participants={conversation.participants}
           partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
-          onFeedbackPress={flow.handleFeedbackOpen}
+          // 피드백은 한 번 쓰는 기회라, 보낸 뒤엔 넘기지 않아서 다시 눌리지 않게 한다.
+          onFeedbackPress={flow.isFeedbackUsed ? undefined : flow.handleFeedbackOpen}
+          isFeedbackUsed={flow.isFeedbackUsed}
         />
       ) : null}
 

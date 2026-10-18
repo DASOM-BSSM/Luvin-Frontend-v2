@@ -40,6 +40,14 @@ interface InfernoEp2Flow {
   /** 완료 쪽지를 닫고 1:1 대화로 돌아간다. */
   handleFeedbackDone: () => void;
   feedback: InfernoFeedback;
+  /**
+   * "나의 빵에게" 피드백을 이미 보냈는지. 한 회차에 한 번 쓰는 기회라, 보낸 뒤엔 폴더가
+   * pink/300 으로 바뀌고 다시 눌리지 않는다(시안 `ep2-대화 끝` 5467:5564, 사용자 확인).
+   *
+   * 화면에만 들고 있어서 "잠시 나가기" 로 나갔다 들어오면 다시 쓸 수 있는 상태로 돌아간다 —
+   * 서버에 "썼는지" 를 물어볼 곳이 아직 없다.
+   */
+  isFeedbackUsed: boolean;
 }
 
 /**
@@ -69,6 +77,7 @@ export default function useInfernoEp2Flow(
 ): InfernoEp2Flow {
   const [step, setStep] = useState(initialStep);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isFeedbackUsed, setIsFeedbackUsed] = useState(false);
   const [isLastLineTyped, setIsLastLineTyped] = useState(false);
   const [openModal, setOpenModal] = useState<InfernoEp2Modal | undefined>(undefined);
 
@@ -140,6 +149,7 @@ export default function useInfernoEp2Flow(
 
   function handleFeedbackSubmit() {
     feedback.submit();
+    setIsFeedbackUsed(true);
     setOpenModal('feedbackDone');
   }
 
@@ -219,5 +229,6 @@ export default function useInfernoEp2Flow(
     handleFeedbackSubmit,
     handleFeedbackDone: returnToPersonalChat,
     feedback,
+    isFeedbackUsed,
   };
 }
