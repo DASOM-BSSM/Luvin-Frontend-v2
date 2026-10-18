@@ -1,12 +1,22 @@
 import type { MissionRange } from '@/src/features/luvin-hell/types';
 
-/** 미션 목표치(생존 기록) 랜덤 범위. */
-export const MISSION_RANGE: MissionRange = [60, 120];
+/** 미션 목표치(생존 기록) 랜덤 범위. 양끝 포함이라 최대 80 — 80 을 넘는 미션은 나오지 않는다. */
+export const MISSION_RANGE: MissionRange = [60, 80];
 
 // 씬 좌표계 (GameFrame 내부, px). GameFrame 크기(340x555)에 맞춘 값.
-export const FRAME_WIDTH = 340;
-export const FRAME_HEIGHT = 555;
-export const GROUND_Y = 450;
+// GameFrame 은 border-4 라 실제 씬이 그려지는 내부 영역은 테두리만큼 줄어든 332x547 이다 —
+// 바깥 크기(555)로 좌표를 잡으면 아래 정렬인 땅과 위 정렬인 스프라이트가 8px 어긋난다.
+const FRAME_BORDER_WIDTH = 4;
+export const FRAME_WIDTH = 340 - FRAME_BORDER_WIDTH * 2;
+export const FRAME_HEIGHT = 555 - FRAME_BORDER_WIDTH * 2;
+
+/**
+ * 땅 스택(밝은 잔디 7 + 어두운 잔디 18 + 흙바닥 83) 높이. Figma 미니게임1 기준 잔디 상단(y=443)에서
+ * 프레임 안쪽 하단(y=551)까지의 실측치.
+ */
+export const GROUND_STACK_HEIGHT = 108;
+/** 플레이어/지상 장애물이 딛고 서는 y — 잔디 윗면. */
+export const GROUND_Y = FRAME_HEIGHT - GROUND_STACK_HEIGHT;
 
 export const PLAYER_X = 40;
 export const PLAYER_WIDTH = 60;
@@ -25,6 +35,11 @@ export const DUCK_SPRING_CONFIG = { damping: 16, stiffness: 200 };
 export const OBSTACLE_WIDTH = 42;
 export const GROUND_OBSTACLE_HEIGHT = 42;
 export const AIR_OBSTACLE_HEIGHT = 42;
+/**
+ * 지상 장애물 히트박스 높이(땅 기준 아래 정렬). 반죽 PNG를 42px 폭에 맞추면 실제 그려지는 높이가
+ * 26~35px 이라, 렌더 박스(42) 기준으로 판정하면 눈으로는 넘었는데 부딪히는 오판정이 난다.
+ */
+export const GROUND_OBSTACLE_HITBOX_HEIGHT = 24;
 /** 공중 장애물 y좌표 — 숙이지 않으면 맞고, 숙이면 피할 수 있는 높이. */
 export const AIR_OBSTACLE_Y = PLAYER_STAND_Y - 6;
 

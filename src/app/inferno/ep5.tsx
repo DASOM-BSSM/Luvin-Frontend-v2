@@ -89,7 +89,9 @@ export default function InfernoEp5Screen() {
 
   // "다음 시즌 시작하기": 첫 시즌만 무료라 다음 시즌은 토큰이 필요하다(constants/season). 바로
   // 새 시즌으로 들어가지 않고 홈으로 돌아가 토큰 안내(NOTICE 모달)를 띄운다(사용자 결정).
-  // 새 시즌을 실제로 만드는 API 는 백엔드에 요청해 둔 상태라, 생기면 그 안내 다음에 붙인다.
+  // 새 시즌을 실제로 만드는 API(`POST /api/ai/seasons/next`, hooks/use-start-next-season.ts)는
+  // 생겼지만, 토큰 차감을 서버가 할지 앱이 `/api/tokens/use` 로 할지 백엔드와 정하는 중이라
+  // 아직 여기 붙이지 않는다 — 정해지면 그 안내 다음에 붙인다.
   function handleNextSeasonPress() {
     completeEpisode(EPISODE_ORDER);
     requestNextSeasonNotice();

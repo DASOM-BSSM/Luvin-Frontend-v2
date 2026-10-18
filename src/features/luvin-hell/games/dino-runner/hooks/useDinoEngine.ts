@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   runOnJS,
   useAnimatedReaction,
@@ -20,7 +20,7 @@ import {
   DUCK_SPRING_CONFIG,
   FRAME_WIDTH,
   GRAVITY,
-  GROUND_OBSTACLE_HEIGHT,
+  GROUND_OBSTACLE_HITBOX_HEIGHT,
   GROUND_Y,
   JUMP_VELOCITY,
   OBSTACLE_HITBOX_SCALE,
@@ -52,7 +52,7 @@ export interface DinoEngine {
   playerY: SharedValue<number>;
   duckSquash: SharedValue<number>;
   slots: ObstacleSlot[];
-  /** 슬롯별 현재 반죽 종류(장애물 다양화). 스폰될 때만 갱신되는 React state — 매프레임 아님. */
+  /** 슬롯별 반죽 종류(장애물 다양화). 마운트 때 한 번 정해지고 바뀌지 않는다(이미지 재로딩 방지). */
   doughTypes: BreadType[];
   /** Tap 제스처(점프)에서 호출. 워클릿 함수. */
   triggerJump: () => void;
@@ -84,8 +84,11 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
   const kindFlags = Array.from({ length: POOL_SIZE }, () => useSharedValue(INACTIVE_KIND));
   const slots: ObstacleSlot[] = xs.map((x, i) => ({ x, kindFlag: kindFlags[i] }));
 
-  // 반죽 종류 다양화: 스폰(=낮은 빈도 이벤트)마다만 갱신되는 React state라 매프레임 리렌더는 없다.
-  const [doughTypes, setDoughTypes] = useState<BreadType[]>(() => {
+  // 반죽 종류 다양화: 슬롯마다 처음 한 번만 랜덤으로 정하고 바꾸지 않는다. 예전엔 스폰할 때마다
+  // 종류를 새로 뽑아 이미지 source 를 갈아끼웠는데, 그러면 expo-image 가 매번 이미지를 다시
+  // 불러와야 해서 기기가 바쁠 때(시뮬레이터 연속 캡처 중 재현) 다 불러오기 전에 반죽이 화면을
+  // 지나가 버려 "보이지 않는 장애물"에 부딪혔다. 슬롯 10개가 돌아가며 나오므로 종류는 계속 섞인다.
+  const [doughTypes] = useState<BreadType[]>(() => {
     const types: BreadType[] = [];
     let prev: BreadType | null = null;
     for (let i = 0; i < POOL_SIZE; i++) {
@@ -95,17 +98,6 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
     }
     return types;
   });
-  const lastDoughTypeRef = useRef<BreadType | null>(doughTypes[POOL_SIZE - 1] ?? null);
-
-  const assignDoughType = (slotIndex: number) => {
-    const picked = pickNextDoughType(lastDoughTypeRef.current);
-    lastDoughTypeRef.current = picked;
-    setDoughTypes((prev) => {
-      const next = [...prev];
-      next[slotIndex] = picked;
-      return next;
-    });
-  };
 
   const triggerJump = () => {
     'worklet';
@@ -162,7 +154,6 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
       if (idx !== -1) {
         kindFlags[idx].value = decision.kind === 'ground' ? GROUND_KIND : AIR_KIND;
         xs[idx].value = FRAME_WIDTH;
-        runOnJS(assignDoughType)(idx);
       }
     }
 
@@ -176,12 +167,20 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
     for (let i = 0; i < POOL_SIZE; i++) {
       const kind = kindFlags[i].value;
       if (kind === INACTIVE_KIND) continue;
-      const obstacleBox = shrinkAabb(
-        kind === GROUND_KIND
-          ? { x: xs[i].value, y: GROUND_Y - GROUND_OBSTACLE_HEIGHT, width: OBSTACLE_WIDTH, height: GROUND_OBSTACLE_HEIGHT }
-          : { x: xs[i].value, y: AIR_OBSTACLE_Y, width: OBSTACLE_WIDTH, height: AIR_OBSTACLE_HEIGHT },
-        OBSTACLE_HITBOX_SCALE,
-      );
+      // 지상 장애물은 반죽이 땅에 붙어 그려지므로(contentPosition bottom) 판정 높이도 땅 기준으로 잡고,
+      // 가로만 OBSTACLE_HITBOX_SCALE 로 줄인다.
+      const groundHitboxWidth = OBSTACLE_WIDTH * OBSTACLE_HITBOX_SCALE;
+      const obstacleBox = kind === GROUND_KIND
+        ? {
+            x: xs[i].value + (OBSTACLE_WIDTH - groundHitboxWidth) / 2,
+            y: GROUND_Y - GROUND_OBSTACLE_HITBOX_HEIGHT,
+            width: groundHitboxWidth,
+            height: GROUND_OBSTACLE_HITBOX_HEIGHT,
+          }
+        : shrinkAabb(
+            { x: xs[i].value, y: AIR_OBSTACLE_Y, width: OBSTACLE_WIDTH, height: AIR_OBSTACLE_HEIGHT },
+            OBSTACLE_HITBOX_SCALE,
+          );
 
       if (isAabbOverlap(playerBox, obstacleBox)) {
         kindFlags[i].value = INACTIVE_KIND;
@@ -191,6 +190,26 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
   };
 
   useGameClock(tick, phase === 'playing');
+
+  // Ready 로 돌아올 때마다(첫 진입·다시하기) 엔진 상태를 처음으로 되돌린다. 안 그러면 run 스토어는
+  // 점수 0/하트 3으로 리셋됐는데 엔진의 생존거리·장애물 위치는 이전 판 그대로 남아서, 시작하자마자
+  // 이전 판 장애물에 연달아 부딪혀 Game Over 가 나거나 이전 거리로 바로 미션 성공이 난다.
+  // Ready 동안은 프레임 루프가 멈춰 있어 JS 스레드에서 shared value 를 써도 경합이 없다.
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    playerY.value = PLAYER_STAND_Y;
+    velocityY.value = 0;
+    isGrounded.value = 1;
+    isDucking.value = 0;
+    duckSquash.value = 0;
+    distance.value = 0;
+    spawnState.value = createInitialSpawnState();
+    for (let i = 0; i < POOL_SIZE; i++) {
+      kindFlags[i].value = INACTIVE_KIND;
+      xs[i].value = 0;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- shared value 참조는 마운트 내내 고정
+  }, [phase]);
 
   useAnimatedReaction(
     () => Math.floor(distance.value / SCORE_UNIT_PX),
