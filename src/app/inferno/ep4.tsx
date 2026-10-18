@@ -32,8 +32,9 @@ const EPISODE_ORDER = 4;
  *
  * "다시 굽기"는 API 연동 범위 밖이다 — 새 1:1 대화가 어떤 응답으로 내려오는지 알 방법이
  * 없어서(use-inferno-conversation 주석 참고) `conversation.rebake` 가 항상 undefined 고,
- * 그래서 아래에서 onRebakePress 를 안 넘긴다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
- * 흐려진 채 있다(InfernoPersonalChatSidebar 주석 참고, 이미 있던 처리라 새로 만들 것 없다).
+ * 그래서 아래에서 onRebakePress 를 안 넘긴다 — 폴더는 보통 모양 그대로 두고 눌러도 아무 일도
+ * 하지 않는다. 폴더가 흐려지는 건 다시 굽기로 고른 상대와 대화 중일 때뿐이다("선택됨" 표시,
+ * InfernoPersonalChatSidebar 주석 참고).
  *
  * 진행 순서는 흐름 훅(use-inferno-ep4-flow)이 정한다.
  */
@@ -144,8 +145,8 @@ export default function InfernoEp4Screen() {
           participants={conversation.participants}
           partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
-          // rebake 가 없으면 넘기지 않는다 — "다 쓴 다시 굽기"와 같은 방식으로 폴더가
-          // 흐려진 채 있다(위 화면 주석, InfernoPersonalChatSidebar 참고).
+          // rebake 가 없으면 넘기지 않는다 — 눌러도 아무 일도 하지 않는다(위 화면 주석,
+          // InfernoPersonalChatSidebar 참고). 흐려지지는 않는다 — 아직 다시 굽기를 고르지 않았다.
           // 다시 보기에서도 넘기지 않는다 — 다시 굽기(투표)는 막고 결과만 보여준다(사용자 결정).
           // 다시 굽기를 했던 회차라도 서버가 그 회차 대화를 다시 굽기 뒤 버전으로 바꿔 두어서
           // (use-inferno-conversation 주석), 다시 보면 최종 1:1 대화가 그대로 나온다.
@@ -170,6 +171,9 @@ export default function InfernoEp4Screen() {
           participants={rebakeChatParticipants}
           partner={findPersonalChatPartner([rebakePage], rebakeChatParticipants)}
           onPageDone={flow.handleLineDone}
+          // 다시 굽기를 골라 들어온 대화라 "다시 굽기" 가 선택된 모양으로 흐려진다(시안 5467:5876).
+          // onRebakePress 는 안 넘긴다 — 다시 굽기는 한 회차에 한 번만 쓸 수 있다.
+          isRebakeSelected
         />
       ) : null}
 
