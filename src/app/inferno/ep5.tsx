@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
@@ -54,7 +54,7 @@ export default function InfernoEp5Screen() {
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.pageIndex);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   const isLoading = isSummaryLoading || breadProfile.isLoading;
@@ -107,14 +107,14 @@ export default function InfernoEp5Screen() {
     completeEpisode(EPISODE_ORDER);
     queuePartnerLetter();
     requestNextSeasonNotice();
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
   function handleEndSeasonPress() {
     completeEpisode(EPISODE_ORDER);
     queuePartnerLetter();
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // summary/myProfile 을 매개변수로 받는 이유: 위 가드로 좁혀진 타입이 중첩 함수 클로저

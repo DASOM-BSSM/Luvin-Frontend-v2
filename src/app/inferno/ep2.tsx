@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp2Modals from '@/src/features/inferno/components/inferno-ep2-modals';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
@@ -51,13 +51,13 @@ export default function InfernoEp2Screen() {
   function finishEpisode() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // matchReveal/personalChatPages/feedbackTopics 는 매칭 회차 데이터가 갖춰지면 한꺼번에

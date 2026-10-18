@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
@@ -56,13 +56,13 @@ export default function InfernoEp1Screen() {
   function finishEpisode() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // vote 는 회차마다 있을 수도 없을 수도 있는 필드라(types/index.ts 주석 참고) ep1

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoCardFlipScene from '@/src/features/inferno/components/inferno-cardflip-scene';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
@@ -44,7 +45,7 @@ export default function InfernoEp3Screen() {
   function finishEpisode() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // 미니게임 실패 쪽지의 "에피소드 끝내기". 투표 없이 나가지만 실패 결과는 서버에 남겨야
@@ -57,7 +58,7 @@ export default function InfernoEp3Screen() {
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1/ep2 와
