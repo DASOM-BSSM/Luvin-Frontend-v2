@@ -5,6 +5,7 @@ import { clearAccessToken } from "@/src/features/auth/lib/token-storage";
 import { useAuthStore } from "@/src/features/auth/store/auth-store";
 import { useBreadStore } from "@/src/features/bread/store/bread-store";
 import { useInfernoStore } from "@/src/features/inferno/store/inferno-store";
+import { usePartnerLetterStore } from "@/src/features/inferno/store/partner-letter-store";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import { useProfileSettingsStore } from "@/src/features/my-page/store/profile-settings-store";
 import { useSurveyStore } from "@/src/features/survey/store/survey-store";
@@ -38,6 +39,7 @@ export default function useDeleteAccount() {
       // 탈퇴는 로그아웃과 달리 이 계정의 진행 기록까지 기기에서 지운다 — 같은 구글 계정으로
       // 다시 가입하면 처음부터 시작해야 한다.
       useInfernoStore.getState().forgetCurrentUser();
+      usePartnerLetterStore.getState().forgetCurrentUser();
       useProfileSettingsStore.getState().setNickname("");
       useProfileSettingsStore.getState().setGender("female");
       useTokenStore.getState().setBalance(0);
