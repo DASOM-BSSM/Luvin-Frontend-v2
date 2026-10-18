@@ -4,6 +4,11 @@ export const aiSeasonKeys = {
   all: ['ai-season'] as const,
   status: ['ai-season', 'status'] as const,
   episode: (episodeNumber: number) => ['ai-season', 'episode', episodeNumber] as const,
+  /** 회차의 "다시 굽기" 작업 상태. */
+  reroll: (episodeNumber: number) => ['ai-season', 'reroll', episodeNumber] as const,
+  /** 다시 굽기를 요청한 뒤 새 대화가 다 만들어졌는지 확인하는 폴링. */
+  rerollProgress: (episodeNumber: number, baseVersionId: string, attempt: number) =>
+    ['ai-season', 'reroll-progress', episodeNumber, baseVersionId, attempt] as const,
   report: ['ai-season', 'report'] as const,
 };
 

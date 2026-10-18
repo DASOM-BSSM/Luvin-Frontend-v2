@@ -19,7 +19,7 @@ const GENERATION_POLL_MS = 3000;
  * 여기서 흡수해서 "아직 없음"(null)으로 정규화한다 — 그 외 에러(네트워크/서버 오류 등)는
  * 그대로 던져서 기존 에러 처리가 그대로 동작하게 둔다.
  */
-async function fetchEpisodeMessagesOrNull(episodeNumber: number): Promise<AiEpisodeMessagesView | null> {
+export async function fetchEpisodeMessagesOrNull(episodeNumber: number): Promise<AiEpisodeMessagesView | null> {
   try {
     const data = await getEpisodeMessages(episodeNumber);
     if (__DEV__) {

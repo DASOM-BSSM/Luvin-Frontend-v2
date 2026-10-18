@@ -90,6 +90,7 @@ export interface AiEpisodeProgressView {
 export interface AiRerollView {
   jobId: string;
   jobStatus: string;
+  errorCode?: string;
 }
 
 export interface AiSelectionView {
