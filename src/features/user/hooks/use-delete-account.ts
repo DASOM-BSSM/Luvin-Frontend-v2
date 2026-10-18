@@ -35,7 +35,9 @@ export default function useDeleteAccount() {
       clearSession();
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
-      useInfernoStore.getState().resetProgress();
+      // 탈퇴는 로그아웃과 달리 이 계정의 진행 기록까지 기기에서 지운다 — 같은 구글 계정으로
+      // 다시 가입하면 처음부터 시작해야 한다.
+      useInfernoStore.getState().forgetCurrentUser();
       useProfileSettingsStore.getState().setNickname("");
       useProfileSettingsStore.getState().setGender("female");
       useTokenStore.getState().setBalance(0);

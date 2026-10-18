@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
+import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import { useInfernoSelectionStore } from '@/src/features/inferno/store/selection-store';
 import { isEpisodeReplay } from '@/src/features/inferno/utils/episode-replay';
 
@@ -12,12 +13,15 @@ export type EpisodeReplay = ReturnType<typeof useEpisodeReplay>;
  *
  * 다시 보기 여부는 회차에 들어온 순간 한 번만 정하고 고정한다 — ep1 에서 투표를 보내면 서버의
  * 현재 회차가 2 로 올라가는데, 그때 같은 화면이 갑자기 다시 보기로 바뀌면 안 되기 때문이다.
+ * 판단 기준이 끝낸 회차 목록으로 바뀐 뒤에도(episode-replay.ts, LUV-56) 같다 — 회차를 끝내는 순간
+ * 그 회차가 목록에 들어가므로, 고정하지 않으면 완료 쪽지가 떠 있는 화면이 다시 보기로 바뀐다.
  *
  * `seasonId` 는 투표를 보낼 때 고른 반죽을 기록하는 데 쓴다(selection-store).
  */
 export default function useEpisodeReplay(order: number) {
   const seasonQuery = useAiSeasonStatus();
   const season = seasonQuery.data;
+  const { completedOrders } = useInfernoProgress();
   const [frozenIsReplay, setFrozenIsReplay] = useState<boolean | undefined>(undefined);
   const recordedSelection = useInfernoSelectionStore((state) =>
     season ? state.selections[season.seasonId]?.[order] : undefined,
@@ -25,9 +29,9 @@ export default function useEpisodeReplay(order: number) {
 
   useEffect(() => {
     if (frozenIsReplay === undefined && season) {
-      setFrozenIsReplay(isEpisodeReplay(order, season));
+      setFrozenIsReplay(isEpisodeReplay(order, season, completedOrders));
     }
-  }, [frozenIsReplay, season, order]);
+  }, [frozenIsReplay, season, order, completedOrders]);
 
   return {
     isReplay: frozenIsReplay === true,

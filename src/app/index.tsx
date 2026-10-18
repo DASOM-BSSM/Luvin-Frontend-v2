@@ -14,6 +14,7 @@ import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-p
 import CreateQuestionCard from '@/src/features/home/components/create-question-card';
 import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
+import EpisodeCardSkeleton from '@/src/features/home/components/episode-card-skeleton';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
@@ -27,6 +28,7 @@ import {
 } from '@/src/features/inferno/constants/routes';
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
+import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
@@ -44,7 +46,8 @@ export default function HomeScreen() {
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
   const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
-  const completedOrders = useInfernoStore((state) => state.completedOrders);
+  // 기기 기록 + 서버 시즌 상태. 기기 기록만 보면 다시 로그인했을 때 처음부터로 돌아갔다(LUV-56).
+  const { completedOrders, isSyncing: isProgressSyncing } = useInfernoProgress();
   const isNextSeasonNoticePending = useInfernoStore((state) => state.isNextSeasonNoticePending);
   const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   const clearNextSeasonNotice = useInfernoStore((state) => state.clearNextSeasonNotice);
@@ -207,7 +210,9 @@ export default function HomeScreen() {
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
             onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
-          {weeklyEpisode ? (
+          {isProgressSyncing ? (
+            <EpisodeCardSkeleton />
+          ) : weeklyEpisode ? (
             <EpisodeThumbnailCard
               episode={weeklyEpisode}
               onPress={canOpenWeeklyEpisode ? handleWeeklyEpisodePress : undefined}

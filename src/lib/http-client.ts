@@ -46,7 +46,8 @@ httpClient.interceptors.response.use(
       useAuthStore.getState().clearSession();
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
-      useInfernoStore.getState().resetProgress();
+      // 진행 기록은 계정별로 남겨 두고 내려놓기만 한다(LUV-56). 다시 로그인하면 이어진다.
+      useInfernoStore.getState().switchUser(null);
       queryClient.clear();
       router.replace('/onboarding');
     }
