@@ -46,10 +46,10 @@ interface InfernoEp2Flow {
   handleFeedbackDone: () => void;
   feedback: InfernoFeedback;
   /**
-   * "나의 빵에게" 피드백을 이미 보냈는지. 한 회차에 한 번 쓰는 기회라, 보낸 뒤엔 폴더가
-   * pink/300 으로 바뀌고 다시 눌리지 않는다(시안 `ep2-대화 끝` 5467:5564, 사용자 확인).
+   * "나의 빵에게" 피드백을 이미 보냈는지. 보낸 뒤엔 폴더가 pink/300 으로 바뀐다(시안 `ep2-대화 끝`
+   * 5467:5564, 사용자 확인). 회차 한 번 제한은 앱에서 풀어서(사용자 결정) 보낸 뒤에도 또 누를 수 있다.
    *
-   * 서버(회차 조회의 `feedback`)가 기억해서 "잠시 나가기" 로 나갔다 들어와도 다시 쓸 수 없다.
+   * 서버(회차 조회의 `feedback`)가 기억해서 "잠시 나가기" 로 나갔다 들어와도 표시가 남는다.
    */
   isFeedbackUsed: boolean;
   /** 1:1 대화의 "다시 굽기" 폴더. 확인 쪽지를 띄운다. */
@@ -105,7 +105,7 @@ export default function useInfernoEp2Flow(
   const [openModal, setOpenModal] = useState<InfernoEp2Modal | undefined>(undefined);
 
   const feedback = useInfernoFeedbackFlow(conversation, handleFeedbackSubmitted);
-  // 한 회차에 한 번. 서버(회차 조회의 `feedback`)가 기억해서 나갔다 들어와도 다시 쓸 수 없다.
+  // 보낸 적이 있는지. 서버(회차 조회의 `feedback`)가 기억해서 나갔다 들어와도 남는다(폴더 색으로만 쓴다).
   const isFeedbackUsed = Boolean(conversation?.isFeedbackSubmitted);
 
   const groupPageCount = conversation?.pages.length ?? 0;

@@ -96,6 +96,7 @@ export default function InfernoFeedbackScene({
               options={options}
               selectedId={selectedMessageId}
               placeholder={PICK_PLACEHOLDER}
+              title={PICK_MESSAGE}
               onSelect={onSelectTopic}
             />
             <Button

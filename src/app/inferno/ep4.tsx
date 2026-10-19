@@ -31,8 +31,8 @@ const EPISODE_ORDER = 4;
  * ep4 시안은 없어서 ep2 시안을 그대로 쓴다(사용자 결정).
  *
  * "다시 굽기"는 `.../rerolls` API 로 붙였다(use-inferno-rebake). 투표하면 서버가 새 1:1 대화를
- * 만드는 동안 줄넘기 로더를 띄우고, 다 오면 새 대화를 처음부터 보여준다. 못 누르는 때(다시 보기,
- * 이미 썼음, 쓴 적이 있는지 아직 모름)는 폴더가 회색이고, 다시 굽기로 고른 상대와 대화하는 동안은
+ * 만드는 동안 줄넘기 로더를 띄우고, 다 오면 새 대화를 처음부터 보여준다. 다시 보기에서만 폴더가
+ * 회색이고(시즌 한 번 제한은 앱에서 풀었다, 사용자 결정), 다시 굽기로 고른 상대와 대화하는 동안은
  * "선택됨" 모양으로 흐려진다(InfernoPersonalChatSidebar 주석 참고).
  *
  * 진행 순서는 흐름 훅(use-inferno-ep4-flow)이 정한다.
@@ -133,16 +133,12 @@ export default function InfernoEp4Screen() {
   // 다시 보기에서는 막는다 — 다시 굽기(투표)는 막고 결과만 보여준다(사용자 결정). 다시 굽기를
   // 했던 회차라도 서버가 그 회차 대화를 다시 굽기 뒤 버전으로 바꿔 두어서(use-inferno-conversation
   // 주석), 다시 보면 최종 1:1 대화가 그대로 나온다.
-  // 시즌에 한 번이라 ep2 에서 이미 썼어도 막는다(isUsedElsewhere, constants/rebake).
-  const canRebake =
-    conversation.rebake != null &&
-    !replay.isReplay &&
-    rebake.isStatusKnown &&
-    !rebake.isUsed &&
-    !rebake.isUsedElsewhere;
-  // 피드백은 한 번 쓰는 기회라, 보낸 뒤엔 넘기지 않아서 다시 눌리지 않게 한다(ep2 와 같다).
-  // 지난 시즌에서는 피드백을 열지 않는다 — 피드백은 늘 최신 시즌에 들어간다(use-viewed-season).
-  const handleFeedbackPress = flow.isFeedbackUsed || exit.isPastSeason ? undefined : flow.handleFeedbackOpen;
+  // 시즌 한 번 제한은 앱에서 풀었다(사용자 결정) — 이미 썼어도, ep2 에서 썼어도 또 누를 수 있고,
+  // 서버가 거절하면 대기 화면에 실패 안내가 뜬다.
+  const canRebake = conversation.rebake != null && !replay.isReplay;
+  // 회차 한 번 제한은 앱에서 풀었다(사용자 결정) — 보낸 뒤에도 또 누를 수 있다(ep2 와 같다). 지난 시즌에서는
+  // 피드백을 열지 않는다 — 피드백은 늘 최신 시즌에 들어간다(use-viewed-season).
+  const handleFeedbackPress = exit.isPastSeason ? undefined : flow.handleFeedbackOpen;
 
   return (
     <InfernoEpisodeFrame
@@ -174,7 +170,8 @@ export default function InfernoEp4Screen() {
           participants={conversation.participants}
           partner={partner}
           onPageDone={flow.handleLineDone}
-          onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
+          // 다시 구운 새 대화(rebakeChat)에서도 또 누를 수 있다. 두 번째 요청은 새 버전을 기준으로 다시 기다린다.
+          onRebakePress={canRebake ? flow.handleRebakeOpen : undefined}
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
           likedMessageIds={conversation.likedMessageIds}
           // 지난 시즌에서는 하트를 켜고 끄지 않는다 — 하트는 늘 최신 시즌에 들어간다(use-viewed-season).
