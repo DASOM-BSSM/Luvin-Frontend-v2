@@ -36,7 +36,8 @@ const EPISODE_ORDER = 2;
  * Figma `나의 빵에게` (5467:6133, 5482:1883, 5467:6203, 5482:1923).
  *
  * "다시 굽기" 는 ep4 와 같은 흐름이다(확인 쪽지 → 투표지 → 새 대화, use-inferno-rebake). ep2 시안이
- * 따로 없어서 ep4 시안을 그대로 쓴다(사용자 결정). 시즌에 한 번이라 ep4 에서 썼으면 여기 폴더는 회색이다.
+ * 따로 없어서 ep4 시안을 그대로 쓴다(사용자 결정). 시즌 한 번 제한은 앱에서 풀었다(사용자 결정) — 몇 번이든
+ * 누를 수 있고, 서버가 거절하면 "대화를 만들지 못했어요" 안내가 뜬다.
  *
  * 바탕은 대화에서는 흰색(plain), 피드백에서는 물방울 배경 위 쪽지(note)다.
  */
@@ -128,13 +129,9 @@ export default function InfernoEp2Screen() {
   const rebakeOptions = conversation.rebake
     ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
     : [];
-  // 다시 보기·이미 씀(이 회차든 ep4 든)·쓴 적이 있는지 모름이면 회색으로 막는다(ep4 와 같다).
-  const canRebake =
-    conversation.rebake != null &&
-    !replay.isReplay &&
-    rebake.isStatusKnown &&
-    !rebake.isUsed &&
-    !rebake.isUsedElsewhere;
+  // 다시 보기에서만 회색으로 막는다(ep4 와 같다). 시즌 한 번 제한은 앱에서 풀었다(사용자 결정) — 이미
+  // 썼어도, ep4 에서 썼어도 또 누를 수 있고, 서버가 거절하면 대기 화면에 실패 안내가 뜬다.
+  const canRebake = conversation.rebake != null && !replay.isReplay;
 
   return (
     <InfernoEpisodeFrame
@@ -165,11 +162,13 @@ export default function InfernoEp2Screen() {
           participants={conversation.participants}
           partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
-          // 피드백은 한 번 쓰는 기회라, 보낸 뒤엔 넘기지 않아서 다시 눌리지 않게 한다.
-          // 지난 시즌에서도 넘기지 않는다 — 피드백은 늘 최신 시즌에 들어간다(use-viewed-season).
-          onFeedbackPress={flow.isFeedbackUsed || exit.isPastSeason ? undefined : flow.handleFeedbackOpen}
+          // 회차 한 번 제한은 앱에서 풀었다(사용자 결정) — 보낸 뒤에도 또 누를 수 있다. isFeedbackUsed 는
+          // 보낸 적이 있다는 표시(폴더 색)로만 쓴다. 지난 시즌에서는 넘기지 않는다 — 피드백은 늘 최신 시즌에
+          // 들어간다(use-viewed-season).
+          onFeedbackPress={exit.isPastSeason ? undefined : flow.handleFeedbackOpen}
           isFeedbackUsed={flow.isFeedbackUsed}
-          onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
+          // 다시 구운 새 대화(rebakeChat)에서도 또 누를 수 있다. 두 번째 요청은 새 버전을 기준으로 다시 기다린다.
+          onRebakePress={canRebake ? flow.handleRebakeOpen : undefined}
           // 다시 굽기로 고른 상대와 대화하는 동안은 "선택됨" 모양으로 흐려진다(ep4 와 같다).
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
           likedMessageIds={conversation.likedMessageIds}

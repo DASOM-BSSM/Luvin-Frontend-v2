@@ -53,7 +53,7 @@ interface InfernoEp4Flow {
   /** 완료 쪽지를 닫고 보던 대화로 돌아간다. */
   handleFeedbackDone: () => void;
   feedback: ReturnType<typeof useInfernoFeedbackBranch>['feedback'];
-  /** "나의 빵에게" 를 이미 썼는지. 한 회차에 한 번이다(use-inferno-feedback-branch 주석 참고). */
+  /** "나의 빵에게" 를 이미 썼는지. 폴더 색으로만 쓴다(use-inferno-feedback-branch 주석 참고). */
   isFeedbackUsed: boolean;
 }
 
@@ -83,8 +83,8 @@ interface InfernoEp4RebakeState {
  *
  * 되돌아가지 못하는 경계가 두 곳이다: reveal 쪽지를 닫으면 group 으로 못 돌아가고(매칭
  * 결과를 이미 봤는데 되돌리는 건 말이 안 된다, ep1 투표지와 같은 이유), rebakeVote 에서
- * 투표하면 personal 로 못 돌아간다(다시 굽기는 시즌에 한 번만 쓸 수 있다 — 단, 서버가 실패하면
- * 기회를 쓴 게 아니라서 "이전화면" 으로 돌아갈 수 있다). rebakeVote 자체는 ep1 투표지처럼
+ * 투표하면 personal 로 못 돌아간다(이미 새 대화를 요청했다 — 단, 서버가 실패하면 "이전화면" 으로
+ * 돌아갈 수 있다). rebakeVote 자체는 ep1 투표지처럼
  * "이전화면" 으로 personal 로 되돌아갈 수 있다(아직 투표를 안 한 상태니까).
  *
  * group·personal 은 ep2 처럼 여러 쪽이다. 예전에는 두 단계 모두 첫 쪽만 보여주고 바로 다음
