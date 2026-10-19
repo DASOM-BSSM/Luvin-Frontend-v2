@@ -131,8 +131,14 @@ export interface InfernoRebake {
   voteMessage: string;
   /** 고를 수 있는 반죽들의 participant id. 이미 매칭된 상대는 빠져 있다. */
   candidateIds: string[];
-  /** 새 상대와의 대화. 상대 쪽 줄의 participantId 는 자리표시자다(위 설명 참고). */
-  chatMessages: InfernoChatMessage[];
+  /**
+   * 새 상대와의 대화. 상대 쪽 줄의 participantId 는 자리표시자다(위 설명 참고).
+   *
+   * 로컬 대본(conversation.ts)만 채운다. 실제 API 에서는 다시 굽기가 끝나면 서버가 회차 대화를
+   * 새 버전으로 바꿔 두어서, 새 상대와의 대화가 `personalChatPages` 로 내려온다
+   * (use-inferno-rebake 주석 참고).
+   */
+  chatMessages?: InfernoChatMessage[];
 }
 
 /**
@@ -145,6 +151,11 @@ export interface InfernoRebake {
  */
 export interface InfernoConversation {
   episodeOrder: number;
+  /**
+   * 서버가 이 대화에 붙인 버전. "다시 굽기"가 끝나면 서버가 회차 대화를 새 버전으로 바꾸므로,
+   * 이 값이 바뀌었는지로 새 대화가 도착했는지 안다(use-inferno-rebake). 로컬 대본엔 없다.
+   */
+  versionId?: string;
   participants: InfernoParticipant[];
   pages: InfernoChatPage[];
   vote?: InfernoVotePrompt;
@@ -164,6 +175,11 @@ export interface InfernoConversation {
    * 데이터가 아니라 분신이 내놓는 설명이라, API 가 붙으면 다른 응답에서 올 값이다.
    */
   feedbackTopics?: InfernoFeedbackTopic[];
+  /**
+   * "나의 빵에게" 피드백을 이미 보냈는지. 한 회차에 한 번이라 서버(회차 조회의 `feedback`)가
+   * 기억한다 — 나갔다 들어와도 다시 쓸 수 없다. 로컬 대본엔 없다.
+   */
+  isFeedbackSubmitted?: boolean;
   /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
   rebake?: InfernoRebake;
 }

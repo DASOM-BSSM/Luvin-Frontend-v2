@@ -64,8 +64,8 @@ interface InfernoPersonalChatSidebarProps {
   isFeedbackUsed?: boolean;
   /**
    * "다시 굽기" 를 눌렀을 때. 넘기지 않으면 갈 곳이 없거나(ep2) 이미 다시 굽기를
-   * 썼다는 뜻이라(ep4, 한 회차에 한 번만 쓸 수 있다) 눌러도 아무 일도 하지 않는다.
-   * 생김새는 바꾸지 않는다 — 흐려지는 건 isRebakeSelected 가 정한다.
+   * 썼다는 뜻이라(ep4, 한 회차에 한 번만 쓸 수 있다) 눌러도 아무 일도 하지 않고, 폴더가
+   * 회색으로 바뀐다. 선택된 상태(isRebakeSelected)면 그 모양이 우선한다.
    */
   onRebakePress?: () => void;
   /**
@@ -99,10 +99,12 @@ interface InfernoPersonalChatSidebarProps {
  *
  * - "다시 굽기" 가 흐려지면(같은 pink/400 에 채움 불투명도 0.5, 글자 rgba(29,29,29,0.5))
  *   지금 이 기능을 선택했다는 뜻이다(isRebakeSelected, 시안 5467:5876 의 5467:5888).
- *   "다 써서 못 누른다" 가 아니다. 그래서 누를 수 있는지(onRebakePress)와 흐려지는지를 따로
- *   받는다 — ep2 처럼 다시 굽기 자체가 없는 회차나 다시 보기는 눌러도 아무 일도 없지만
- *   흐려지지는 않는다. 예전엔 못 누르면 회색(default/gray)으로 칠했는데 시안 SVG 는
- *   `#FFBCCA` + fill-opacity 0.5 다.
+ *   "다 써서 못 누른다" 와는 다른 모양이다 — 시안 SVG 는 `#FFBCCA` + fill-opacity 0.5 다.
+ *
+ * - 못 누르는 "다시 굽기"(onRebakePress 를 안 넘김 — 다시 보기, 시즌에 이미 썼거나(ep2·ep4 어디서든)
+ *   썼는지 아직 모르는 때)는 폴더가 회색(default/gray), 글자가 반투명이다.
+ *   한때 이 회색을 없애고 보통 모양으로 뒀더니 눌릴 것처럼 보여서 "클릭이 안 된다" 는 제보가
+ *   나왔다 — 그래서 되돌렸다(사용자 결정). 선택된 상태가 이 모양보다 우선한다.
  *
  * "나의 빵에게" 도 같은 방식이다 — 다 썼으면 부르는 쪽이 onFeedbackPress 를 넘기지 않는다.
  *
@@ -120,6 +122,8 @@ export default function InfernoPersonalChatSidebar({
   onRebakePress,
   isRebakeSelected = false,
 }: InfernoPersonalChatSidebarProps) {
+  const isRebakeDisabled = !isRebakeSelected && !onRebakePress;
+
   return (
     <View className="w-[300px] flex-col">
       <View className="h-[25px]" />
@@ -127,9 +131,11 @@ export default function InfernoPersonalChatSidebar({
       <View className="w-[205px] flex-col items-center gap-[12px]">
         <PersonalChatShortcut
           label="다시 굽기"
-          iconColor={theme.pink[400]}
+          iconColor={isRebakeDisabled ? theme.default.gray : theme.pink[400]}
           iconOpacity={isRebakeSelected ? SELECTED_FOLDER_OPACITY : 1}
-          labelClassName={isRebakeSelected ? 'text-default-black/50' : 'text-text-primary'}
+          labelClassName={
+            isRebakeSelected || isRebakeDisabled ? 'text-default-black/50' : 'text-text-primary'
+          }
           onPress={onRebakePress}
         />
         <PersonalChatShortcut

@@ -4,12 +4,14 @@ import { useAuthStore } from '@/src/features/auth/store/auth-store';
 
 import type {
   AiCharacterProfileRequest,
+  AiEpisodeFeedbackView,
   AiEpisodeMessagesView,
   AiEpisodeProgressView,
   AiReportView,
   AiRerollView,
   AiSeasonStatusView,
   AiSelectionView,
+  EpisodeFeedbackHttpRequest,
   StartNextSeasonRequest,
 } from '@/src/features/inferno/api/ai-season-types';
 
@@ -114,6 +116,33 @@ export async function requestReroll(episodeNumber: number, partnerId: string): P
   const { data } = await httpClient.post<ApiEnvelope<AiRerollView>>(
     `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
     { partnerId },
+  );
+  return data.data;
+}
+
+/**
+ * `GET /api/ai/seasons/episodes/{number}/rerolls`. 이 회차의 "다시 굽기" 작업 상태.
+ * 아직 다시 굽기를 한 적이 없을 때 어떤 응답이 오는지는 스펙에 없다 — 부르는 쪽
+ * (use-inferno-rebake)이 404/409 와 빈 data 를 "없음"으로 흡수한다.
+ */
+export async function getRerollStatus(episodeNumber: number): Promise<AiRerollView | null> {
+  const { data } = await httpClient.get<ApiEnvelope<AiRerollView | null>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
+  );
+  return data.data ?? null;
+}
+
+/**
+ * `POST /api/ai/seasons/episodes/{number}/feedback`. "나의 빵에게" 피드백(ep2·ep4 의 1:1 대화).
+ * `messageId`는 회차 조회(`GET .../episodes/{number}`)로 받은 메시지 id 를 그대로 보낸다.
+ */
+export async function submitEpisodeFeedback(
+  episodeNumber: number,
+  request: EpisodeFeedbackHttpRequest,
+): Promise<AiEpisodeFeedbackView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiEpisodeFeedbackView>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/feedback`,
+    request,
   );
   return data.data;
 }

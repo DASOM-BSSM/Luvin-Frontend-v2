@@ -9,4 +9,6 @@ export const ERROR_MESSAGES = {
   nextSeasonFailed: '다음 시즌을 시작하지 못했어요. 다시 시도해주세요',
   /** EP5 이후 최종 매칭 상대가 보낸 쪽지 본문을 받지 못했을 때. */
   partnerLetterFailed: '쪽지를 펼치지 못했어요. 다시 시도해주세요',
+  /** "나의 빵에게" 피드백 저장 실패. 서버 code 가 아직 정해지지 않아 하나로 묶는다. */
+  feedbackFailed: '피드백을 보내지 못했어요. 다시 시도해주세요',
 };

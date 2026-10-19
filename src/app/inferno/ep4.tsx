@@ -1,10 +1,10 @@
 
 import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
-import { EP4_REBAKE_PARTNER_ID } from '@/src/features/inferno/api/conversation';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp4Modals from '@/src/features/inferno/components/inferno-ep4-modals';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoEpisodeStatus from '@/src/features/inferno/components/inferno-episode-status';
+import InfernoFeedbackScene from '@/src/features/inferno/components/inferno-feedback-scene';
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
@@ -12,6 +12,7 @@ import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp4Flow from '@/src/features/inferno/hooks/use-inferno-ep4-flow';
+import useInfernoRebake from '@/src/features/inferno/hooks/use-inferno-rebake';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
@@ -26,15 +27,13 @@ const EPISODE_ORDER = 4;
  *
  * ep2와 뼈대가 같다 — 투표 없이 전체대화 한 쪽 뒤에 매칭 결과 쪽지가 뜨고, 그걸 닫으면
  * 매칭 상대와의 1:1 대화로 넘어간다. 그 대화에서 "다시 굽기" 를 누르면 남은 반죽 중 하나로
- * 투표해 새 1:1 대화로 넘어갈 수 있다 — 둘 중 어느 쪽이든 대화 문구는 같다
- * (EP4_REBAKE_PARTNER_ID 주석 참고). "나의 빵에게" 피드백으로 빠지는 시안은 아직 없어서
- * 그 버튼은 눌러도 아무 일도 하지 않는다.
+ * 투표해 새 1:1 대화로 넘어갈 수 있다. "나의 빵에게" 는 ep2 와 같은 피드백 쪽지로 빠진다 —
+ * ep4 시안은 없어서 ep2 시안을 그대로 쓴다(사용자 결정).
  *
- * "다시 굽기"는 API 연동 범위 밖이다 — 새 1:1 대화가 어떤 응답으로 내려오는지 알 방법이
- * 없어서(use-inferno-conversation 주석 참고) `conversation.rebake` 가 항상 undefined 고,
- * 그래서 아래에서 onRebakePress 를 안 넘긴다 — 폴더는 보통 모양 그대로 두고 눌러도 아무 일도
- * 하지 않는다. 폴더가 흐려지는 건 다시 굽기로 고른 상대와 대화 중일 때뿐이다("선택됨" 표시,
- * InfernoPersonalChatSidebar 주석 참고).
+ * "다시 굽기"는 `.../rerolls` API 로 붙였다(use-inferno-rebake). 투표하면 서버가 새 1:1 대화를
+ * 만드는 동안 줄넘기 로더를 띄우고, 다 오면 새 대화를 처음부터 보여준다. 못 누르는 때(다시 보기,
+ * 이미 썼음, 쓴 적이 있는지 아직 모름)는 폴더가 회색이고, 다시 굽기로 고른 상대와 대화하는 동안은
+ * "선택됨" 모양으로 흐려진다(InfernoPersonalChatSidebar 주석 참고).
  *
  * 진행 순서는 흐름 훅(use-inferno-ep4-flow)이 정한다.
  */
@@ -50,7 +49,13 @@ export default function InfernoEp4Screen() {
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
   // 이미 본 회차를 다시 보는지. 다시 보기면 다시 굽기(투표)를 막고 결과(최종 1:1 대화)만 보여준다.
   const replay = useEpisodeReplay(EPISODE_ORDER);
-  const flow = useInfernoEp4Flow(conversation, checkpoint.initialStep);
+  const rebake = useInfernoRebake(EPISODE_ORDER, conversation?.versionId, conversation?.rebake != null);
+  // 새 대화가 와도 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(위 generationLoader 와 같다).
+  const rebakeLoader = useGenerationLoader(rebake.isWaiting);
+  const flow = useInfernoEp4Flow(conversation, checkpoint.initialStep, {
+    isReady: rebake.isReady && !rebakeLoader.isShowing,
+    hasFailed: rebake.hasFailed,
+  });
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
@@ -68,7 +73,17 @@ export default function InfernoEp4Screen() {
     void leaveInferno();
   }
 
-  // rebake 는 일부러 뺀다(위 주석 참고) — matchReveal/personalChatPages 만 갖추면 되고,
+  // 투표지의 "투표하기". 흐름을 대기 단계로 넘기고 서버에 다시 굽기를 보낸다.
+  function handleRebakeSubmit() {
+    if (!flow.rebakeSelectedId) {
+      return;
+    }
+
+    flow.handleRebakeSubmit();
+    rebake.request(flow.rebakeSelectedId);
+  }
+
+  // rebake 가 없어도 화면은 그린다(폴더만 회색) — matchReveal/personalChatPages 만 갖추면 되고,
   // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1~3 과
   // 같은 이유).
   //
@@ -104,25 +119,28 @@ export default function InfernoEp4Screen() {
     conversation.personalChatPages[
       Math.min(flow.personalPageIndex, conversation.personalChatPages.length - 1)
     ];
-  const rebakePage = { id: 'ep4-rebake', messages: conversation.rebake?.chatMessages ?? [] };
+  const partner = findPersonalChatPartner(conversation.personalChatPages, conversation.participants);
   const rebakeOptions = conversation.rebake
     ? conversation.participants.filter(({ id }) => conversation.rebake!.candidateIds.includes(id))
     : [];
-  const rebakeSelected = conversation.participants.find(({ id }) => id === flow.rebakeSelectedId);
-
-  // rebakeChat 은 상대가 투표로 정해지므로, 고른 참가자를 자리표시자 id 로 감싸 끼운다.
-  const rebakeChatParticipants = rebakeSelected
-    ? [
-        ...conversation.participants.filter(({ isMine }) => isMine),
-        { ...rebakeSelected, id: EP4_REBAKE_PARTNER_ID },
-      ]
-    : conversation.participants;
+  // 다시 보기에서는 막는다 — 다시 굽기(투표)는 막고 결과만 보여준다(사용자 결정). 다시 굽기를
+  // 했던 회차라도 서버가 그 회차 대화를 다시 굽기 뒤 버전으로 바꿔 두어서(use-inferno-conversation
+  // 주석), 다시 보면 최종 1:1 대화가 그대로 나온다.
+  // 시즌에 한 번이라 ep2 에서 이미 썼어도 막는다(isUsedElsewhere, constants/rebake).
+  const canRebake =
+    conversation.rebake != null &&
+    !replay.isReplay &&
+    rebake.isStatusKnown &&
+    !rebake.isUsed &&
+    !rebake.isUsedElsewhere;
+  // 피드백은 한 번 쓰는 기회라, 보낸 뒤엔 넘기지 않아서 다시 눌리지 않게 한다(ep2 와 같다).
+  const handleFeedbackPress = flow.isFeedbackUsed ? undefined : flow.handleFeedbackOpen;
 
   return (
     <InfernoEpisodeFrame
       episode={episode}
-      // 투표지만 ep1 투표지와 같은 쪽지 바탕이고, 나머지는 흰 바탕을 그대로 쓴다.
-      surface={flow.phase === 'rebakeVote' ? 'note' : 'plain'}
+      // 투표지·피드백만 쪽지 바탕이고, 나머지는 흰 바탕을 그대로 쓴다.
+      surface={flow.phase === 'rebakeVote' || flow.phase === 'feedback' ? 'note' : 'plain'}
       skipLabel="잠시 나가기"
       onPreviousPress={flow.goPrevious}
       onNextPress={flow.goNext}
@@ -138,19 +156,20 @@ export default function InfernoEp4Screen() {
         />
       ) : null}
 
-      {flow.phase === 'personal' ? (
+      {flow.phase === 'personal' || flow.phase === 'rebakeChat' ? (
+        // rebakeChat 은 다시 굽기 뒤 서버가 바꿔 준 새 1:1 대화다(use-inferno-ep4-flow 주석).
+        // 다시 굽기로 고른 상대와 대화하는 동안은 "다시 굽기" 가 선택된 모양으로 흐려진다
+        // (시안 5467:5876) — 들어올 때 이미 썼다고 나온 경우(rebake.isUsed)도 마찬가지다.
         <InfernoPersonalChatScene
-          key={personalPage.id}
+          key={`${flow.phase}-${personalPage.id}`}
           page={personalPage}
           participants={conversation.participants}
-          partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
+          partner={partner}
           onPageDone={flow.handleLineDone}
-          // rebake 가 없으면 넘기지 않는다 — 눌러도 아무 일도 하지 않는다(위 화면 주석,
-          // InfernoPersonalChatSidebar 참고). 흐려지지는 않는다 — 아직 다시 굽기를 고르지 않았다.
-          // 다시 보기에서도 넘기지 않는다 — 다시 굽기(투표)는 막고 결과만 보여준다(사용자 결정).
-          // 다시 굽기를 했던 회차라도 서버가 그 회차 대화를 다시 굽기 뒤 버전으로 바꿔 두어서
-          // (use-inferno-conversation 주석), 다시 보면 최종 1:1 대화가 그대로 나온다.
-          onRebakePress={conversation.rebake && !replay.isReplay ? flow.handleRebakeOpen : undefined}
+          onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
+          isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
+          onFeedbackPress={handleFeedbackPress}
+          isFeedbackUsed={flow.isFeedbackUsed}
         />
       ) : null}
 
@@ -161,19 +180,36 @@ export default function InfernoEp4Screen() {
           options={rebakeOptions}
           selectedId={flow.rebakeSelectedId}
           onSelect={flow.handleRebakeSelect}
-          onSubmit={flow.handleRebakeSubmit}
+          onSubmit={handleRebakeSubmit}
         />
       ) : null}
 
-      {flow.phase === 'rebakeChat' ? (
-        <InfernoPersonalChatScene
-          page={rebakePage}
-          participants={rebakeChatParticipants}
-          partner={findPersonalChatPartner([rebakePage], rebakeChatParticipants)}
-          onPageDone={flow.handleLineDone}
-          // 다시 굽기를 골라 들어온 대화라 "다시 굽기" 가 선택된 모양으로 흐려진다(시안 5467:5876).
-          // onRebakePress 는 안 넘긴다 — 다시 굽기는 한 회차에 한 번만 쓸 수 있다.
-          isRebakeSelected
+      {flow.phase === 'rebakeWaiting' ? (
+        // 새 대화를 만드는 동안은 줄넘기 로더, 실패하면 "대화를 만들지 못했어요" + "다시 시도".
+        <InfernoEpisodeStatus
+          isError={false}
+          isLoading={rebake.isWaiting}
+          hasGenerationFailed={rebake.hasFailed}
+          onRetry={rebake.retry}
+          isLoaderShowing={rebakeLoader.isShowing}
+          onLoaderExitComplete={rebakeLoader.handleExitComplete}
+        />
+      ) : null}
+
+      {flow.phase === 'feedback' ? (
+        <InfernoFeedbackScene
+          step={flow.feedback.step}
+          topics={conversation.feedbackTopics ?? []}
+          selectedMessageId={flow.feedback.selectedTopicId}
+          shownTopic={flow.feedback.shownTopic}
+          feedback={flow.feedback.feedback}
+          onSelectTopic={flow.feedback.handleTopicSelect}
+          onFindPress={flow.feedback.handleTopicFind}
+          onWriteStartPress={flow.feedback.handleWriteStart}
+          onFeedbackChange={flow.feedback.handleFeedbackChange}
+          onSubmitPress={flow.handleFeedbackSubmit}
+          isSubmitting={flow.feedback.isSubmitting}
+          errorMessage={flow.feedback.submitError}
         />
       ) : null}
 
@@ -186,6 +222,8 @@ export default function InfernoEp4Screen() {
         onRevealAction={flow.handleRevealAction}
         onRebakeStart={flow.handleRebakeStart}
         onFinishEpisode={finishEpisode}
+        onFeedbackStart={flow.handleFeedbackStart}
+        onFeedbackDone={flow.handleFeedbackDone}
       />
     </InfernoEpisodeFrame>
   );

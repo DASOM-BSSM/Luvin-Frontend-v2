@@ -16,15 +16,14 @@ import { buildChatPageBudgets } from '@/src/features/inferno/utils/paginate-chat
  * 무관)이었다 — 잘못 짚은 방향이라 되돌렸다. 회차 대화는 여전히 이 파일(ai-season.ts)
  * 하나로만 연결한다.
  *
- * ep4 의 "다시 굽기"(rebake)만 예외로, `conversation.rebake` 가 항상 undefined 라 화면
- * (ep4.tsx)이 "다시 굽기" 버튼 자체를 숨겨서 그 경로로 못 들어가게 막아 둔다.
+ * ep4 의 "다시 굽기"(rebake)는 use-inferno-rebake 가 따로 맡는다 — 여기서는 후보만 채워 주고
+ * (map-ai-episode), 요청과 새 대화 기다리기는 그 훅이 한다.
  *
  * 백엔드 확인: 새 1:1 대화는 새 엔드포인트가 아니라 `GET .../episodes/{number}` 재호출로
  * 받는다(reroll 성공 시 서버가 해당 회차의 내부 versionId 를 새 버전으로 바꿔치기해 둬서,
  * 같은 조회를 다시 하면 새 1:1 대화가 처음부터 내려온다 — 기존에 받아 둔 메시지는 버리고
- * 통째로 교체해야 한다). 다만 `POST .../rerolls` 응답에는 jobId/jobStatus 만 있고 "reroll이
- * 끝났는지"를 확인할 전용 조회 엔드포인트가 아직 없다 — 백엔드가 추가해 주기로 했으니
- * (`GET .../episodes/{number}/rerolls` 예정) 그게 생기면 여기 채울 것.
+ * 통째로 교체해야 한다). reroll 이 실패했는지는 `GET .../episodes/{number}/rerolls` 로 본다
+ * (스펙에 추가됨, use-inferno-rebake 주석 참고).
  */
 const AI_CONNECTED_EPISODES = new Set([1, 2, 3, 4]);
 
