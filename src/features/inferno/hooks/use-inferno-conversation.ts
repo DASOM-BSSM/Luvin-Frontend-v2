@@ -4,8 +4,13 @@ import { getInfernoConversation } from '@/src/features/inferno/api/conversation'
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import useAiEpisodeMessages from '@/src/features/inferno/hooks/use-ai-episode-messages';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
+import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
 import type { InfernoConversation } from '@/src/features/inferno/types';
-import { isEpisodeFullyGenerated, mapAiEpisodeToConversation } from '@/src/features/inferno/utils/map-ai-episode';
+import {
+  buildCharactersFromMessages,
+  isEpisodeFullyGenerated,
+  mapAiEpisodeToConversation,
+} from '@/src/features/inferno/utils/map-ai-episode';
 import { buildChatPageBudgets } from '@/src/features/inferno/utils/paginate-chat';
 
 /**
@@ -48,6 +53,9 @@ export default function useInfernoConversation(order: number): {
   const myProfile = useBreadStore((state) => state.profile);
   const statusQuery = useAiSeasonStatus();
   const episodeQuery = useAiEpisodeMessages(order, isAiConnected);
+  // 지난 시즌을 다시 볼 때는 참가자를 그 회차 메시지의 화자로 만든다 — `/me` 는 최신 시즌 참가자만
+  // 준다(buildCharactersFromMessages 주석). 생성을 기다리지도 않으니 로딩·에러도 회차 조회만 본다.
+  const { isPastSeason } = useViewedSeason();
   // 대화를 화면 높이에 맞춰 쪽으로 나누려고 창 크기를 읽는다(paginate-chat). 러빈지옥은 가로로
   // 잠기는데 잠기기 직전 한 순간은 세로 값이 올 수 있어서, 긴 쪽을 폭·짧은 쪽을 높이로 본다 —
   // 그래야 방향이 정리되는 동안 쪽 수가 바뀌어 흐름의 쪽 번호가 흔들리지 않는다.
@@ -71,18 +79,25 @@ export default function useInfernoConversation(order: number): {
   // 오판하지 않는다 — 그러면 matchReveal이 계속 undefined인데 로딩 표시도 꺼져서 화면이
   // 그냥 멈춰 보인다(사용자 확인된 버그, isEpisodeFullyGenerated 주석 참고).
   const isReady = episodeQuery.data != null && isEpisodeFullyGenerated(order, episodeQuery.data.messages);
+  const season = isPastSeason
+    ? episodeQuery.data
+      ? { characters: buildCharactersFromMessages(episodeQuery.data.messages) }
+      : undefined
+    : statusQuery.data;
   const conversation =
-    statusQuery.data && episodeQuery.data && isReady
-      ? mapAiEpisodeToConversation(statusQuery.data, episodeQuery.data, myProfile, pageBudgets)
+    season && episodeQuery.data && isReady
+      ? mapAiEpisodeToConversation(season, episodeQuery.data, myProfile, pageBudgets)
       : undefined;
 
   return {
     conversation,
-    isLoading:
-      statusQuery.isLoading ||
-      episodeQuery.isLoading ||
-      (episodeQuery.isSuccess && !isReady && !episodeQuery.hasGenerationFailed),
-    isError: statusQuery.isError || episodeQuery.isError,
+    // 지난 시즌에 대화가 없으면 기다려도 생기지 않는다 — 로딩이 아니라 "대화가 아직 없어요" 를 보여준다.
+    isLoading: isPastSeason
+      ? episodeQuery.isLoading
+      : statusQuery.isLoading ||
+        episodeQuery.isLoading ||
+        (episodeQuery.isSuccess && !isReady && !episodeQuery.hasGenerationFailed),
+    isError: isPastSeason ? episodeQuery.isError : statusQuery.isError || episodeQuery.isError,
     hasGenerationFailed: episodeQuery.hasGenerationFailed,
     retryGeneration: episodeQuery.retryGeneration,
   };

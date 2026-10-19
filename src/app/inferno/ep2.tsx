@@ -1,5 +1,4 @@
 
-import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEp2Modals from '@/src/features/inferno/components/inferno-ep2-modals';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
@@ -8,13 +7,13 @@ import InfernoFeedbackScene from '@/src/features/inferno/components/inferno-feed
 import InfernoPersonalChatScene from '@/src/features/inferno/components/inferno-personal-chat-scene';
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import useInfernoRebake from '@/src/features/inferno/hooks/use-inferno-rebake';
 import useToggleEpisodeMessageLike from '@/src/features/inferno/hooks/use-toggle-episode-message-like';
-import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
 
@@ -42,7 +41,8 @@ const EPISODE_ORDER = 2;
  * 바탕은 대화에서는 흰색(plain), 피드백에서는 물방울 배경 위 쪽지(note)다.
  */
 export default function InfernoEp2Screen() {
-  const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  // 나가기·완료 기록. 지난 시즌을 다시 볼 때는 완료를 기록하지 않고 오븐으로 돌아간다(use-episode-exit).
+  const exit = useEpisodeExit(EPISODE_ORDER);
   // 지난번에 "잠시 나가기" 로 나갔다면 그 자리에서 이어 본다. 처음 들어오는 회차면 0.
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
 
@@ -67,8 +67,7 @@ export default function InfernoEp2Screen() {
   // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
   function finishEpisode() {
     flow.handleModalClose();
-    completeEpisode(EPISODE_ORDER);
-    void leaveInferno();
+    exit.completeAndLeave();
   }
 
   // 말풍선을 누르면 그 줄의 하트를 켜고 끈다.
@@ -79,7 +78,7 @@ export default function InfernoEp2Screen() {
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    void leaveInferno();
+    exit.leave();
   }
 
   // 투표지의 "투표하기". 흐름을 대기 단계로 넘기고 서버에 다시 굽기를 보낸다(ep4 와 같다).
@@ -111,7 +110,7 @@ export default function InfernoEp2Screen() {
     generationLoader.isShowing
   ) {
     return (
-      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel={exit.skipLabel} onSkipPress={handleExitPress}>
         <InfernoEpisodeStatus
           isError={isError}
           isLoading={isLoading}
@@ -142,7 +141,7 @@ export default function InfernoEp2Screen() {
       episode={episode}
       // 피드백·다시 굽기 투표지만 물방울 배경 위 쪽지고, 대화는 흰 바탕을 그대로 쓴다.
       surface={flow.phase === 'feedback' || flow.phase === 'rebakeVote' ? 'note' : 'plain'}
-      skipLabel="잠시 나가기"
+      skipLabel={exit.skipLabel}
       onPreviousPress={flow.goPrevious}
       onNextPress={flow.goNext}
       onSkipPress={handleExitPress}
@@ -167,13 +166,16 @@ export default function InfernoEp2Screen() {
           partner={findPersonalChatPartner(conversation.personalChatPages, conversation.participants)}
           onPageDone={flow.handleLineDone}
           // 피드백은 한 번 쓰는 기회라, 보낸 뒤엔 넘기지 않아서 다시 눌리지 않게 한다.
-          onFeedbackPress={flow.isFeedbackUsed ? undefined : flow.handleFeedbackOpen}
+          // 지난 시즌에서도 넘기지 않는다 — 피드백은 늘 최신 시즌에 들어간다(use-viewed-season).
+          onFeedbackPress={flow.isFeedbackUsed || exit.isPastSeason ? undefined : flow.handleFeedbackOpen}
           isFeedbackUsed={flow.isFeedbackUsed}
           onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
           // 다시 굽기로 고른 상대와 대화하는 동안은 "선택됨" 모양으로 흐려진다(ep4 와 같다).
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
           likedMessageIds={conversation.likedMessageIds}
-          onMessageLikePress={handleMessageLikePress}
+          // 지난 시즌에서는 하트를 켜고 끄지 않는다 — 하트는 늘 최신 시즌에 들어간다(use-viewed-season).
+          // 그 시즌에 눌러 둔 하트는 그대로 보인다(likedMessageIds).
+          onMessageLikePress={exit.isPastSeason ? undefined : handleMessageLikePress}
         />
       ) : null}
 

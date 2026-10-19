@@ -1,5 +1,6 @@
 import type { BreadProfile } from '@/src/features/home/types';
 import type {
+  AiCharacterView,
   AiEpisodeMessagesView,
   AiMessageView,
   AiSeasonStatusView,
@@ -33,6 +34,38 @@ import {
  */
 const REPRESENTATIVE_ROLE = 'REPRESENTATIVE';
 
+/** 대표가 아닌 참가자의 role. 메시지로 참가자를 만들 때(buildCharactersFromMessages) 붙인다. */
+const CANDIDATE_ROLE = 'CANDIDATE';
+
+/** 대화를 바꾸는 데 필요한 시즌 정보. 참가자 목록만 쓴다. */
+type ConversationSeason = Pick<AiSeasonStatusView, 'characters'>;
+
+/**
+ * 회차 메시지의 화자로 참가자 목록을 만든다. 지난 시즌을 다시 볼 때 쓴다(use-viewed-season) — 참가자는
+ * `GET /api/ai/seasons/me`(최신 시즌만 준다)에서 오는데, 지난 시즌의 참가자를 주는 API 는 아직 없다.
+ * 참가자의 빵·이름은 캐릭터 id 만으로 정해지므로(deriveCharacterPersona) 화자 id 만 있으면 된다.
+ *
+ * 대표(나)는 `fromRepresentative` 로 가린다. 평소에는 이 필드를 믿지 않고 role 로 판정하지만(isFromMe
+ * 주석), 지난 시즌은 role 을 받을 곳이 없다. 그 회차에서 한 번도 말하지 않은 참가자는 목록에 없다.
+ */
+export function buildCharactersFromMessages(messages: AiMessageView[]): AiCharacterView[] {
+  const characters = new Map<string, AiCharacterView>();
+
+  for (const message of messages) {
+    if (characters.has(message.speakerId)) {
+      continue;
+    }
+
+    characters.set(message.speakerId, {
+      characterId: message.speakerId,
+      role: message.fromRepresentative ? REPRESENTATIVE_ROLE : CANDIDATE_ROLE,
+      gender: '',
+    });
+  }
+
+  return [...characters.values()];
+}
+
 /**
  * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
  * 둘 다 그룹대화 → 매칭 → 1:1대화 뼈대는 같아서 같은 분기를 탄다.
@@ -51,7 +84,7 @@ const MATCH_REVEAL_EPISODES = new Set([2, 4]);
 const GROUP_SCENE_KINDS = new Set(['group', 'candidates_only']);
 const PERSONAL_SCENE_KIND = 'one_to_one';
 
-function buildParticipants(season: AiSeasonStatusView, myProfile: BreadProfile | null): InfernoParticipant[] {
+function buildParticipants(season: ConversationSeason, myProfile: BreadProfile | null): InfernoParticipant[] {
   return season.characters.map((character) => {
     if (character.role === REPRESENTATIVE_ROLE) {
       return {
@@ -191,7 +224,7 @@ export function isEpisodeFullyGenerated(episodeNumber: number, messages: AiMessa
 }
 
 export function mapAiEpisodeToConversation(
-  season: AiSeasonStatusView,
+  season: ConversationSeason,
   episode: AiEpisodeMessagesView,
   myProfile: BreadProfile | null,
   /** 화면 크기에서 만든 쪽 예산(paginate-chat 의 buildChatPageBudgets). */

@@ -9,6 +9,7 @@ import { aiSeasonKeys } from '@/src/features/inferno/api/query-keys';
 import { REBAKE_EPISODES } from '@/src/features/inferno/constants/rebake';
 import { fetchEpisodeMessagesOrNull } from '@/src/features/inferno/hooks/use-ai-episode-messages';
 import useGenerationTimeout from '@/src/features/inferno/hooks/use-generation-timeout';
+import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
 import {
   FAILED_REROLL_STATUS,
   isRerollUsed,
@@ -31,9 +32,9 @@ type RerollProgress = 'waiting' | 'failed' | 'ready';
  * 다시 굽기를 한 적이 없을 때 서버가 무엇을 주는지는 스펙에 없다. 404/409 로 막거나 data 를
  * 비워 주는 경우를 모두 "기록 없음"(null)으로 받는다 — 그 외 에러는 그대로 던진다.
  */
-async function fetchRerollStatusOrNull(episodeNumber: number): Promise<AiRerollView | null> {
+async function fetchRerollStatusOrNull(episodeNumber: number, seasonId?: string): Promise<AiRerollView | null> {
   try {
-    return await getRerollStatus(episodeNumber);
+    return await getRerollStatus(episodeNumber, seasonId);
   } catch (error) {
     if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 409)) {
       return null;
@@ -87,6 +88,9 @@ async function checkRerollProgress(
  *
  * NOTE: 실제 서버로는 아직 확인하지 못했다(이 체크아웃에 API 주소가 없다). 특히 "기록 없음"
  * 응답 모양과, 서버가 시즌 한 번 제한을 어떻게 알려 주는지는 서버를 붙여 보고 맞출 것.
+ *
+ * 지난 시즌을 다시 볼 때(use-viewed-season)는 그 시즌 기록만 읽어서 폴더 모양을 맞추고, 요청은 보내지
+ * 않는다 — 다시 굽기 요청은 늘 최신 시즌에 들어간다. 화면도 다시 보기에서는 다시 굽기를 열지 않는다.
  */
 export default function useInfernoRebake(
   episodeNumber: number,
@@ -99,17 +103,18 @@ export default function useInfernoRebake(
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [currentRequest, setCurrentRequest] = useState<RebakeRequest | undefined>(undefined);
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  const { pastSeasonId, isPastSeason } = useViewedSeason();
 
   const statusQuery = useQuery({
-    queryKey: aiSeasonKeys.reroll(episodeNumber),
-    queryFn: () => fetchRerollStatusOrNull(episodeNumber),
+    queryKey: aiSeasonKeys.reroll(episodeNumber, pastSeasonId),
+    queryFn: () => fetchRerollStatusOrNull(episodeNumber, pastSeasonId),
     enabled: isAuthenticated && enabled,
   });
 
   const otherStatusQueries = useQueries({
     queries: REBAKE_EPISODES.filter((order) => order !== episodeNumber).map((order) => ({
-      queryKey: aiSeasonKeys.reroll(order),
-      queryFn: () => fetchRerollStatusOrNull(order),
+      queryKey: aiSeasonKeys.reroll(order, pastSeasonId),
+      queryFn: () => fetchRerollStatusOrNull(order, pastSeasonId),
       enabled: isAuthenticated && enabled,
     })),
   });
@@ -151,7 +156,7 @@ export default function useInfernoRebake(
 
   /** 투표지에서 고른 상대로 다시 굽기를 보낸다. */
   function request(partnerId: string) {
-    if (!versionId) {
+    if (!versionId || isPastSeason) {
       return;
     }
 
