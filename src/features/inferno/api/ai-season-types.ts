@@ -47,6 +47,18 @@ export interface AiSeasonStatusView {
   seasonNumber?: number;
 }
 
+/** `GET /api/ai/seasons` 의 한 줄. 지금까지 연 시즌들(지난 시즌 포함)의 요약이다. */
+export interface AiSeasonSummaryView {
+  seasonId: string;
+  /** 몇 번째 시즌인지(1부터). */
+  seasonNumber?: number;
+  status: string;
+  currentEpisode: number;
+  createdAt?: string;
+  /** 끝난 시즌만 있다. */
+  completedAt?: string;
+}
+
 /** `POST /api/ai/seasons/next` 요청 본문. 둘 다 생략 가능하다. */
 export interface StartNextSeasonRequest {
   /** 새 시즌의 원천이 될 설문 결과. 생략하면 서버가 최신 결과를 쓴다. */

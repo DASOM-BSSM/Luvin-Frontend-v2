@@ -3,6 +3,8 @@ export const aiSeasonKeys = {
   /** 시즌 하나에 딸린 쿼리 전부. 시즌이 바뀌면 이 접두사로 한꺼번에 비운다. */
   all: ['ai-season'] as const,
   status: ['ai-season', 'status'] as const,
+  /** 지난 시즌까지 포함한 시즌 목록. `all` 접두사 아래라 새 시즌을 열면 같이 비워진다. */
+  list: ['ai-season', 'list'] as const,
   episode: (episodeNumber: number) => ['ai-season', 'episode', episodeNumber] as const,
   /** 회차의 "다시 굽기" 작업 상태. */
   reroll: (episodeNumber: number) => ['ai-season', 'reroll', episodeNumber] as const,

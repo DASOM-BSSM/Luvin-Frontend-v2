@@ -10,6 +10,7 @@ import type {
   AiReportView,
   AiRerollView,
   AiSeasonStatusView,
+  AiSeasonSummaryView,
   AiSelectionView,
   EpisodeFeedbackHttpRequest,
   StartNextSeasonRequest,
@@ -57,6 +58,15 @@ export async function createSeasonFromSurvey(surveyResultId: string): Promise<Ai
  */
 export async function startNextSeason(request: StartNextSeasonRequest): Promise<AiSeasonStatusView> {
   const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/next', request);
+  return data.data;
+}
+
+/**
+ * `GET /api/ai/seasons`. 지금까지 연 시즌 목록(지난 시즌 포함). 오븐 화면이 시즌마다 카드를
+ * 따로 보여줄 때 쓴다.
+ */
+export async function listSeasons(): Promise<AiSeasonSummaryView[]> {
+  const { data } = await httpClient.get<ApiEnvelope<AiSeasonSummaryView[]>>('/api/ai/seasons');
   return data.data;
 }
 
