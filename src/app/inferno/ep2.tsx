@@ -13,6 +13,7 @@ import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loa
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import useInfernoRebake from '@/src/features/inferno/hooks/use-inferno-rebake';
+import usePersonalChatLikes from '@/src/features/inferno/hooks/use-personal-chat-likes';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
@@ -52,6 +53,8 @@ export default function InfernoEp2Screen() {
   const generationLoader = useGenerationLoader(isLoading);
   // 이미 본 회차를 다시 보는지. 다시 보기면 다시 굽기(투표)를 막는다(ep4 와 같다).
   const replay = useEpisodeReplay(EPISODE_ORDER);
+  // 1:1 대화에서 말풍선을 눌러 켠 하트.
+  const likes = usePersonalChatLikes(EPISODE_ORDER);
   const rebake = useInfernoRebake(EPISODE_ORDER, conversation?.versionId, conversation?.rebake != null);
   // 새 대화가 와도 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(위 generationLoader 와 같다).
   const rebakeLoader = useGenerationLoader(rebake.isWaiting);
@@ -164,6 +167,8 @@ export default function InfernoEp2Screen() {
           onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
           // 다시 굽기로 고른 상대와 대화하는 동안은 "선택됨" 모양으로 흐려진다(ep4 와 같다).
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
+          likedMessageIds={likes.likedMessageIds}
+          onMessageLikePress={likes.toggle}
         />
       ) : null}
 
