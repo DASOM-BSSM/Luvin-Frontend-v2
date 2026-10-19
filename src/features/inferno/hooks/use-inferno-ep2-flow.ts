@@ -49,8 +49,7 @@ interface InfernoEp2Flow {
    * "나의 빵에게" 피드백을 이미 보냈는지. 한 회차에 한 번 쓰는 기회라, 보낸 뒤엔 폴더가
    * pink/300 으로 바뀌고 다시 눌리지 않는다(시안 `ep2-대화 끝` 5467:5564, 사용자 확인).
    *
-   * 화면에만 들고 있어서 "잠시 나가기" 로 나갔다 들어오면 다시 쓸 수 있는 상태로 돌아간다 —
-   * 서버에 "썼는지" 를 물어볼 곳이 아직 없다.
+   * 서버(회차 조회의 `feedback`)가 기억해서 "잠시 나가기" 로 나갔다 들어와도 다시 쓸 수 없다.
    */
   isFeedbackUsed: boolean;
   /** 1:1 대화의 "다시 굽기" 폴더. 확인 쪽지를 띄운다. */
@@ -102,11 +101,12 @@ export default function useInfernoEp2Flow(
 ): InfernoEp2Flow {
   const [step, setStep] = useState(initialStep);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [isFeedbackUsed, setIsFeedbackUsed] = useState(false);
   const [isLastLineTyped, setIsLastLineTyped] = useState(false);
   const [openModal, setOpenModal] = useState<InfernoEp2Modal | undefined>(undefined);
 
-  const feedback = useInfernoFeedbackFlow(conversation);
+  const feedback = useInfernoFeedbackFlow(conversation, handleFeedbackSubmitted);
+  // 한 회차에 한 번. 서버(회차 조회의 `feedback`)가 기억해서 나갔다 들어와도 다시 쓸 수 없다.
+  const isFeedbackUsed = Boolean(conversation?.isFeedbackSubmitted);
 
   const groupPageCount = conversation?.pages.length ?? 0;
   const personalPageCount = conversation?.personalChatPages?.length ?? 0;
@@ -211,7 +211,10 @@ export default function useInfernoEp2Flow(
 
   function handleFeedbackSubmit() {
     feedback.submit();
-    setIsFeedbackUsed(true);
+  }
+
+  // 서버에 저장된 뒤에야 완료 쪽지를 띄운다. 실패하면 쓰던 화면에 남아 다시 보낼 수 있다.
+  function handleFeedbackSubmitted() {
     setOpenModal('feedbackDone');
   }
 

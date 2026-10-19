@@ -106,7 +106,7 @@ export default function useInfernoEp4Flow(
   const [step, setStep] = useState(initialStep);
   const [isLastLineTyped, setIsLastLineTyped] = useState(false);
   const [openModal, setOpenModal] = useState<InfernoEp4Modal | undefined>(undefined);
-  const feedbackBranch = useInfernoFeedbackBranch(conversation);
+  const feedbackBranch = useInfernoFeedbackBranch(conversation, handleFeedbackSubmitted);
 
   const groupPageCount = conversation?.pages.length ?? 0;
   const personalPageCount = conversation?.personalChatPages?.length ?? 0;
@@ -202,7 +202,11 @@ export default function useInfernoEp4Flow(
   }
 
   function handleFeedbackSubmit() {
-    feedbackBranch.submit();
+    feedbackBranch.feedback.submit();
+  }
+
+  // 서버에 저장된 뒤에야 완료 쪽지를 띄운다. 실패하면 쓰던 화면에 남아 다시 보낼 수 있다.
+  function handleFeedbackSubmitted() {
     setOpenModal('feedbackDone');
   }
 

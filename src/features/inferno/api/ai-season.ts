@@ -4,12 +4,14 @@ import { useAuthStore } from '@/src/features/auth/store/auth-store';
 
 import type {
   AiCharacterProfileRequest,
+  AiEpisodeFeedbackView,
   AiEpisodeMessagesView,
   AiEpisodeProgressView,
   AiReportView,
   AiRerollView,
   AiSeasonStatusView,
   AiSelectionView,
+  EpisodeFeedbackHttpRequest,
   StartNextSeasonRequest,
 } from '@/src/features/inferno/api/ai-season-types';
 
@@ -128,6 +130,21 @@ export async function getRerollStatus(episodeNumber: number): Promise<AiRerollVi
     `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
   );
   return data.data ?? null;
+}
+
+/**
+ * `POST /api/ai/seasons/episodes/{number}/feedback`. "나의 빵에게" 피드백(ep2·ep4 의 1:1 대화).
+ * `messageId`는 회차 조회(`GET .../episodes/{number}`)로 받은 메시지 id 를 그대로 보낸다.
+ */
+export async function submitEpisodeFeedback(
+  episodeNumber: number,
+  request: EpisodeFeedbackHttpRequest,
+): Promise<AiEpisodeFeedbackView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiEpisodeFeedbackView>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/feedback`,
+    request,
+  );
+  return data.data;
 }
 
 /** `POST /api/ai/seasons/episodes/1/selection`. ep1 투표. */
