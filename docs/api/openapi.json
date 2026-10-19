@@ -1836,6 +1836,56 @@
                 }
             }
         },
+        "/api/ai/seasons/episodes/{number}/likes": {
+            "post": {
+                "tags": [
+                    "ai-season-controller"
+                ],
+                "operationId": "toggleEpisodeMessageLike",
+                "parameters": [
+                    {
+                        "name": "number",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "season_id",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EpisodeMessageLikeHttpRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseAiMessageLikeView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/ai/seasons/episodes/{number}/generations": {
             "post": {
                 "tags": [
@@ -3600,6 +3650,9 @@
                     },
                     "fullName": {
                         "type": "string"
+                    },
+                    "authorizationCode": {
+                        "type": "string"
                     }
                 }
             },
@@ -3872,6 +3925,47 @@
                     },
                     "data": {
                         "$ref": "#/components/schemas/AiRerollView"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "EpisodeMessageLikeHttpRequest": {
+                "type": "object",
+                "properties": {
+                    "messageId": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+                "required": [
+                    "messageId"
+                ]
+            },
+            "AiMessageLikeView": {
+                "type": "object",
+                "properties": {
+                    "messageId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "liked": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ApiResponseAiMessageLikeView": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/AiMessageLikeView"
                     },
                     "message": {
                         "type": "string"
@@ -4769,47 +4863,22 @@
             "AiHighlightView": {
                 "type": "object",
                 "properties": {
-                    "messageId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "speakerId": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "speakerRole": {
-                        "type": "string",
-                        "enum": [
-                            "representative",
-                            "candidate"
-                        ]
-                    },
-                    "text": {
+                    "message": {
                         "type": "string"
                     },
                     "reason": {
                         "type": "string"
-                    },
-                    "observedBehavior": {
-                        "type": "string"
                     }
                 }
             },
-            "AiReportTraitView": {
+            "AiReportHighlightsView": {
                 "type": "object",
                 "properties": {
-                    "title": {
-                        "type": "string"
+                    "episode2": {
+                        "$ref": "#/components/schemas/AiHighlightView"
                     },
-                    "description": {
-                        "type": "string"
-                    },
-                    "evidenceMessageIds": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
+                    "episode4": {
+                        "$ref": "#/components/schemas/AiHighlightView"
                     }
                 }
             },
@@ -4820,29 +4889,29 @@
                         "type": "string",
                         "format": "uuid"
                     },
-                    "narrative": {
+                    "tendency": {
                         "type": "string"
                     },
-                    "highlights": {
+                    "feedback": {
+                        "type": "string"
+                    },
+                    "strengths": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/AiHighlightView"
+                            "type": "string"
                         }
+                    },
+                    "weaknesses": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "highlights": {
+                        "$ref": "#/components/schemas/AiReportHighlightsView"
                     },
                     "renderMode": {
                         "type": "string"
-                    },
-                    "representativeStrengths": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AiReportTraitView"
-                        }
-                    },
-                    "representativeWeaknesses": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/AiReportTraitView"
-                        }
                     }
                 }
             },
@@ -4942,6 +5011,13 @@
                     },
                     "feedback": {
                         "$ref": "#/components/schemas/AiEpisodeFeedbackView"
+                    },
+                    "likedMessageIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
                     }
                 }
             },
