@@ -77,6 +77,23 @@ export interface AiEpisodeMessagesView {
   messages: AiMessageView[];
   hasMore: boolean;
   nextAfterSequence?: number;
+  /** 이 회차에 남긴 "나의 빵에게" 피드백. 아직 안 썼으면 없다. */
+  feedback?: AiEpisodeFeedbackView | null;
+}
+
+/** `POST /api/ai/seasons/episodes/{number}/feedback` 요청 본문. */
+export interface EpisodeFeedbackHttpRequest {
+  /** 피드백할 1:1 대화 한 줄. `AiMessageView.messageId` 그대로. */
+  messageId: string;
+  /** 피드백 글. 최대 1000자. */
+  content?: string;
+}
+
+/** 저장된 "나의 빵에게" 피드백. */
+export interface AiEpisodeFeedbackView {
+  messageId: string;
+  content: string;
+  createdAt: string;
 }
 
 export interface AiEpisodeProgressView {

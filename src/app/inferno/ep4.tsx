@@ -208,6 +208,8 @@ export default function InfernoEp4Screen() {
           onWriteStartPress={flow.feedback.handleWriteStart}
           onFeedbackChange={flow.feedback.handleFeedbackChange}
           onSubmitPress={flow.handleFeedbackSubmit}
+          isSubmitting={flow.feedback.isSubmitting}
+          errorMessage={flow.feedback.submitError}
         />
       ) : null}
 

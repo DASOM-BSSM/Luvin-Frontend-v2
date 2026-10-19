@@ -221,6 +221,7 @@ export function mapAiEpisodeToConversation(
     matchReveal: buildMatchReveal(personalMessages, participants, representativeId),
     personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId, pageBudgets.personal),
     feedbackTopics: buildFeedbackTopics(personalMessages, representativeId),
+    isFeedbackSubmitted: episode.feedback != null,
     // 예전엔 reroll 완료를 확인할 조회 엔드포인트가 없어서 비워 뒀는데, `GET .../episodes/{number}/rerolls`
     // 가 생겨서 붙였다(use-inferno-rebake 주석 참고). 어느 회차에 있는지는 constants/rebake 참고.
     rebake: REBAKE_EPISODES.includes(episode.episodeNumber)

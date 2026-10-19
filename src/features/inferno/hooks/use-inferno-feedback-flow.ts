@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
-import { submitInfernoFeedback } from '@/src/features/inferno/api/conversation';
+import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import type { InfernoFeedbackStep } from '@/src/features/inferno/components/inferno-feedback-scene';
+import useSubmitEpisodeFeedback from '@/src/features/inferno/hooks/use-submit-episode-feedback';
 import type { InfernoConversation, InfernoFeedbackTopic } from '@/src/features/inferno/types';
 
 interface InfernoFeedbackFlow {
@@ -18,7 +19,11 @@ interface InfernoFeedbackFlow {
   handleTopicFind: () => void;
   handleWriteStart: () => void;
   handleFeedbackChange: (value: string) => void;
-  /** 보낸다. 완료 쪽지를 띄우는 건 부르는 쪽(ep2 흐름)이 한다. */
+  /** 보내는 중인지. 버튼을 잠그고 문구를 바꾸는 데 쓴다. */
+  isSubmitting: boolean;
+  /** 마지막으로 보내기가 실패했을 때 보여줄 문구. 성공하거나 아직 안 눌렀으면 undefined. */
+  submitError?: string;
+  /** 보낸다. 성공하면 onSubmitted 를 부른다 — 완료 쪽지를 띄우는 건 부르는 쪽(ep2 흐름)이 한다. */
   submit: () => void;
 }
 
@@ -31,11 +36,14 @@ interface InfernoFeedbackFlow {
  */
 export default function useInfernoFeedbackFlow(
   conversation: InfernoConversation | undefined,
+  /** 서버에 저장이 끝났을 때. */
+  onSubmitted: () => void,
 ): InfernoFeedbackFlow {
   const [step, setStep] = useState<InfernoFeedbackStep>('pick');
   const [selectedTopicId, setSelectedTopicId] = useState<string | undefined>(undefined);
   const [shownTopicId, setShownTopicId] = useState<string | undefined>(undefined);
   const [feedback, setFeedback] = useState('');
+  const submitMutation = useSubmitEpisodeFeedback();
 
   const shownTopic = conversation?.feedbackTopics?.find(
     ({ messageId }) => messageId === shownTopicId,
@@ -46,6 +54,7 @@ export default function useInfernoFeedbackFlow(
     setSelectedTopicId(undefined);
     setShownTopicId(undefined);
     setFeedback('');
+    submitMutation.reset();
   }
 
   function handleTopicSelect(messageId: string) {
@@ -74,11 +83,14 @@ export default function useInfernoFeedbackFlow(
    * 지어내지 않았다(ep1 투표와 같은 판단). 상태 디자인이 나오면 여기에 붙일 것(§11).
    */
   function submit() {
-    if (!conversation || !shownTopicId) {
+    if (!conversation || !shownTopicId || submitMutation.isPending) {
       return;
     }
 
-    submitInfernoFeedback(conversation.episodeOrder, shownTopicId, feedback);
+    submitMutation.mutate(
+      { episodeNumber: conversation.episodeOrder, messageId: shownTopicId, content: feedback },
+      { onSuccess: onSubmitted },
+    );
   }
 
   return {
@@ -91,6 +103,8 @@ export default function useInfernoFeedbackFlow(
     handleTopicFind,
     handleWriteStart,
     handleFeedbackChange,
+    isSubmitting: submitMutation.isPending,
+    submitError: submitMutation.isError ? ERROR_MESSAGES.feedbackFailed : undefined,
     submit,
   };
 }
