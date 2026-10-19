@@ -148,10 +148,34 @@ export interface AiHighlightView {
   text: string;
 }
 
-/** `GET /api/ai/seasons/report`. */
+/** 새 형식 리포트의 회차별 하이라이트 한 줄. `highlights` 객체의 값(`episode2`, `episode4` …). */
+export interface AiEpisodeHighlightView {
+  message: string;
+  reason?: string;
+}
+
+/**
+ * `GET /api/ai/seasons/report`.
+ *
+ * 응답 형식이 둘이다(실기기 확인, 2026-10-19). 명세(openapi.json)에는 아직 옛 형식만 있다.
+ * - 옛 형식: `narrative` 한 문단 + `highlights` 배열(`AiHighlightView[]`).
+ * - 새 형식(`renderMode: "llm"`): `tendency`·`feedback` 문단, `strengths`·`weaknesses` 문자열 배열,
+ *   `highlights` 가 회차별 객체(`{ episode2: { message, reason }, episode4: … }`).
+ * 시즌마다 만들어진 때의 형식으로 남아 있어서(지난 시즌 다시 보기) 둘 다 받는다 — 어느 쪽인지는
+ * `renderMode` 값이 아니라 실제 모양으로 가린다(map-ai-season-report.ts).
+ */
 export interface AiReportView {
   finalPartnerId: string;
-  highlights: AiHighlightView[];
-  narrative: string;
-  renderMode: string;
+  highlights: AiHighlightView[] | Record<string, AiEpisodeHighlightView | undefined>;
+  /** 옛 형식. */
+  narrative?: string;
+  /** 새 형식: 대화에서 보인 성향. */
+  tendency?: string;
+  /** 새 형식: 성향에 대한 조언. */
+  feedback?: string;
+  /** 새 형식: 강점. 아직 보여줄 화면이 없다. */
+  strengths?: string[];
+  /** 새 형식: 약점. 아직 보여줄 화면이 없다. */
+  weaknesses?: string[];
+  renderMode?: string;
 }
