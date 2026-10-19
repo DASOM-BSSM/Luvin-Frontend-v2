@@ -2,12 +2,12 @@ import { Pressable, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
-import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
 import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
+import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
@@ -35,7 +35,8 @@ const EPISODE_ORDER = 5;
  * 화면으로 합쳐서 처리한다(§11 — 빈 화면 금지).
  */
 export default function InfernoEp5Screen() {
-  const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  // 나가기·완료 기록. 지난 시즌을 다시 볼 때는 완료를 기록하지 않고 오븐으로 돌아간다(use-episode-exit).
+  const exit = useEpisodeExit(EPISODE_ORDER);
   const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   const queueLetter = usePartnerLetterStore((state) => state.queueLetter);
   const episode = findInfernoEpisode(EPISODE_ORDER);
@@ -49,12 +50,13 @@ export default function InfernoEp5Screen() {
   } = useInfernoSeasonSummary(EPISODE_ORDER);
   // 지난번에 "잠시 나가기" 로 나갔다면 그 페이지에서 이어 본다. 처음 들어오는 회차면 0.
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
-  const flow = useInfernoEp5Flow(checkpoint.initialStep);
+  // 지난 시즌은 "시즌 마무리" 페이지 없이 하이라이트까지만 보여준다(use-inferno-ep5-flow 주석).
+  const flow = useInfernoEp5Flow(checkpoint.initialStep, exit.isPastSeason);
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.pageIndex);
-    void leaveInferno();
+    exit.leave();
   }
 
   const isLoading = isSummaryLoading || breadProfile.isLoading;
@@ -65,7 +67,7 @@ export default function InfernoEp5Screen() {
   // 빈 화면 대신 안내를 보여준다(§11, ep1~4 와 같은 이유).
   if (!episode || !summary || !myProfile) {
     return (
-      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="note" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="note" skipLabel={exit.skipLabel} onSkipPress={handleExitPress}>
         <View className="flex-1 items-center justify-center gap-[12px] px-[30px]">
           <Text variant="body-m" className="text-center text-default-black">
             {hasGenerationFailed
@@ -104,17 +106,15 @@ export default function InfernoEp5Screen() {
   // 새 시즌으로 들어가지 않고 홈으로 돌아가 토큰 안내(NOTICE 모달)를 띄운다(사용자 결정).
   // 토큰이 충분하면 그 안내의 "토큰 N개로 시작하기"가 새 시즌을 연다(next-season-notice-modal.tsx).
   function handleNextSeasonPress() {
-    completeEpisode(EPISODE_ORDER);
     queuePartnerLetter();
     requestNextSeasonNotice();
-    void leaveInferno();
+    exit.completeAndLeave();
   }
 
   // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
   function handleEndSeasonPress() {
-    completeEpisode(EPISODE_ORDER);
     queuePartnerLetter();
-    void leaveInferno();
+    exit.completeAndLeave();
   }
 
   // summary/myProfile 을 매개변수로 받는 이유: 위 가드로 좁혀진 타입이 중첩 함수 클로저
@@ -147,7 +147,7 @@ export default function InfernoEp5Screen() {
     <InfernoEpisodeFrame
       episode={episode}
       surface="note"
-      skipLabel="잠시 나가기"
+      skipLabel={exit.skipLabel}
       onPreviousPress={flow.goPrevious}
       onNextPress={flow.goNext}
       onSkipPress={handleExitPress}

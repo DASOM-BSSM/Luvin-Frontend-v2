@@ -14,8 +14,8 @@ export interface SeasonHistory {
   /** 펼쳤을 때 보여줄 회차 번호. 최신 회차가 맨 위다(시안 이미지 순서). */
   episodeOrders: number[];
   /**
-   * 지금 진행 중인 시즌인지. 지금 시즌의 회차만 다시 볼 수 있다 — 회차 대화 API
-   * (`GET /api/ai/seasons/episodes/{number}`)가 시즌을 고르지 못하고 늘 지금 시즌 것을 준다.
+   * 지금 진행 중인 시즌인지. 지난 시즌 회차는 시즌 id 를 붙여 읽기 전용으로 연다 — 회차 조회 API 가
+   * `season_id` 로 시즌을 고를 수 있다(use-viewed-season).
    */
   isCurrent: boolean;
 }

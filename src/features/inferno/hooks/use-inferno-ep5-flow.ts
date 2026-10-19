@@ -20,9 +20,15 @@ export interface InfernoEp5Flow {
 export default function useInfernoEp5Flow(
   /** 이어볼 페이지(use-episode-checkpoint). 처음 들어오면 0. */
   initialStep: number,
+  /**
+   * 마지막 "시즌 마무리" 페이지를 뺄지. 지난 시즌을 다시 볼 때 뺀다 — 그 페이지의 "시즌 끝내기",
+   * "다음 시즌 시작하기" 는 지금 시즌을 바꾸는 버튼이다(use-viewed-season).
+   */
+  withoutWrapUp = false,
 ): InfernoEp5Flow {
+  const pageCount = withoutWrapUp ? PAGE_COUNT - 1 : PAGE_COUNT;
   // 저장된 자리가 페이지 수를 넘으면(페이지 구성이 바뀐 경우) 마지막 페이지로 잘라낸다.
-  const [pageIndex, setPageIndex] = useState(Math.min(Math.max(initialStep, 0), PAGE_COUNT - 1));
+  const [pageIndex, setPageIndex] = useState(Math.min(Math.max(initialStep, 0), pageCount - 1));
 
   function showPreviousPage() {
     setPageIndex((index) => index - 1);
@@ -35,6 +41,6 @@ export default function useInfernoEp5Flow(
   return {
     pageIndex,
     goPrevious: pageIndex > 0 ? showPreviousPage : undefined,
-    goNext: pageIndex < PAGE_COUNT - 1 ? showNextPage : undefined,
+    goNext: pageIndex < pageCount - 1 ? showNextPage : undefined,
   };
 }

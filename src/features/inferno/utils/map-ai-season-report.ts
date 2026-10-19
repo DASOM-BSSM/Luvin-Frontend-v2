@@ -26,7 +26,7 @@ export function mapAiHighlights(highlights: AiHighlightView[]): InfernoHighlight
  */
 export function mapFinalMatchFromReport(
   report: AiReportView,
-  season: AiSeasonStatusView,
+  season: Pick<AiSeasonStatusView, 'characters'>,
 ): InfernoFinalMatchResult | undefined {
   const character = season.characters.find((candidate) => candidate.characterId === report.finalPartnerId);
   if (!character) {

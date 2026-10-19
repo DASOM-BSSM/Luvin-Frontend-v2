@@ -1,6 +1,5 @@
 import { router } from 'expo-router';
 
-import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoCardFlipScene from '@/src/features/inferno/components/inferno-cardflip-scene';
 import InfernoChatScene from '@/src/features/inferno/components/inferno-chat-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
@@ -11,11 +10,11 @@ import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-mod
 import InfernoVoteScene from '@/src/features/inferno/components/inferno-vote-scene';
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
 import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useEpisodeReplay from '@/src/features/inferno/hooks/use-episode-replay';
 import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loader';
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp3Flow, { EP3_SUBMIT_ERROR_MESSAGE } from '@/src/features/inferno/hooks/use-inferno-ep3-flow';
-import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 
 const EPISODE_ORDER = 3;
@@ -30,7 +29,8 @@ const FAILURE_RETRY_LABEL = '다시 시도';
 const FAILURE_RETRYING_LABEL = '보내는 중...';
 
 export default function InfernoEp3Screen() {
-  const completeEpisode = useInfernoStore((state) => state.completeEpisode);
+  // 나가기·완료 기록. 지난 시즌을 다시 볼 때는 완료를 기록하지 않고 오븐으로 돌아간다(use-episode-exit).
+  const exit = useEpisodeExit(EPISODE_ORDER);
 
   const episode = findInfernoEpisode(EPISODE_ORDER);
   const { conversation, isLoading, isError, hasGenerationFailed, retryGeneration } =
@@ -47,8 +47,7 @@ export default function InfernoEp3Screen() {
   // 세로로 돌아가는 동안 쪽지만 남아 보인다(LandscapeOnly 로도 가려지지 않는다, ep4 와 같은 이유).
   function finishEpisode() {
     flow.handleModalClose();
-    completeEpisode(EPISODE_ORDER);
-    void leaveInferno();
+    exit.completeAndLeave();
   }
 
   // 미니게임 실패 쪽지의 "에피소드 끝내기". 투표 없이 나가지만 실패 결과는 서버에 남겨야
@@ -66,14 +65,14 @@ export default function InfernoEp3Screen() {
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
     checkpoint.saveStep(flow.step);
-    void leaveInferno();
+    exit.leave();
   }
 
   // AI가 아직 대화를 안 만들었거나 실패했으면 빈 화면 대신 안내를 보여준다(§11, ep1/ep2 와
   // 같은 이유).
   if (!episode || !conversation || !conversation.vote || generationLoader.isShowing) {
     return (
-      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel="잠시 나가기" onSkipPress={handleExitPress}>
+      <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="plain" skipLabel={exit.skipLabel} onSkipPress={handleExitPress}>
         <InfernoEpisodeStatus
           isError={isError}
           isLoading={isLoading}
@@ -104,7 +103,7 @@ export default function InfernoEp3Screen() {
       episode={episode}
       surface={isNoteSurface ? 'note' : 'plain'}
       titleVariant={isNoteSurface ? 'text' : 'image'}
-      skipLabel="잠시 나가기"
+      skipLabel={exit.skipLabel}
       onPreviousPress={resolvePreviousPress()}
       // 다시 보기의 투표 결과 장면에서는 "다음화면" 이 회차를 끝낸다.
       onNextPress={flow.isReplay && flow.isBallotOpen ? finishEpisode : flow.goNext}

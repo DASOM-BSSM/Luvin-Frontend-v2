@@ -644,6 +644,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/seasons/episodes/{number}/likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["toggleEpisodeMessageLike"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/seasons/episodes/{number}/generations": {
         parameters: {
             query?: never;
@@ -1510,6 +1526,7 @@ export interface components {
         AppleLoginRequest: {
             identityToken?: string;
             fullName?: string;
+            authorizationCode?: string;
         };
         AnalysisSummaryResponse: {
             title?: string;
@@ -1609,6 +1626,21 @@ export interface components {
         ApiResponseAiRerollView: {
             success?: boolean;
             data?: components["schemas"]["AiRerollView"];
+            message?: string;
+            code?: string;
+        };
+        EpisodeMessageLikeHttpRequest: {
+            /** Format: uuid */
+            messageId: string;
+        };
+        AiMessageLikeView: {
+            /** Format: uuid */
+            messageId?: string;
+            liked?: boolean;
+        };
+        ApiResponseAiMessageLikeView: {
+            success?: boolean;
+            data?: components["schemas"]["AiMessageLikeView"];
             message?: string;
             code?: string;
         };
@@ -1947,29 +1979,22 @@ export interface components {
             code?: string;
         };
         AiHighlightView: {
-            /** Format: uuid */
-            messageId?: string;
-            /** Format: uuid */
-            speakerId?: string;
-            /** @enum {string} */
-            speakerRole?: "representative" | "candidate";
-            text?: string;
+            message?: string;
             reason?: string;
-            observedBehavior?: string;
         };
-        AiReportTraitView: {
-            title?: string;
-            description?: string;
-            evidenceMessageIds?: string[];
+        AiReportHighlightsView: {
+            episode2?: components["schemas"]["AiHighlightView"];
+            episode4?: components["schemas"]["AiHighlightView"];
         };
         AiReportView: {
             /** Format: uuid */
             finalPartnerId?: string;
-            narrative?: string;
-            highlights?: components["schemas"]["AiHighlightView"][];
+            tendency?: string;
+            feedback?: string;
+            strengths?: string[];
+            weaknesses?: string[];
+            highlights?: components["schemas"]["AiReportHighlightsView"];
             renderMode?: string;
-            representativeStrengths?: components["schemas"]["AiReportTraitView"][];
-            representativeWeaknesses?: components["schemas"]["AiReportTraitView"][];
         };
         ApiResponseAiReportView: {
             success?: boolean;
@@ -2008,6 +2033,7 @@ export interface components {
             /** Format: int32 */
             nextAfterSequence?: number;
             feedback?: components["schemas"]["AiEpisodeFeedbackView"];
+            likedMessageIds?: string[];
         };
         AiMessageView: {
             /** Format: uuid */
@@ -3345,6 +3371,34 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAiRerollView"];
+                };
+            };
+        };
+    };
+    toggleEpisodeMessageLike: {
+        parameters: {
+            query?: {
+                season_id?: string;
+            };
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EpisodeMessageLikeHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiMessageLikeView"];
                 };
             };
         };

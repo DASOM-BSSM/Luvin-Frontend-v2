@@ -92,11 +92,18 @@ export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
 /** `GET /api/ai/seasons/episodes/{number}`. */
 export async function getEpisodeMessages(
   episodeNumber: number,
-  params?: { afterSequence?: number; limit?: number },
+  params?: { afterSequence?: number; limit?: number; seasonId?: string },
 ): Promise<AiEpisodeMessagesView> {
   const { data } = await httpClient.get<ApiEnvelope<AiEpisodeMessagesView>>(
     `/api/ai/seasons/episodes/${episodeNumber}`,
-    { params: { after_sequence: params?.afterSequence, limit: params?.limit } },
+    {
+      params: {
+        after_sequence: params?.afterSequence,
+        limit: params?.limit,
+        // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+        season_id: params?.seasonId,
+      },
+    },
   );
   return data.data;
 }
@@ -137,9 +144,11 @@ export async function requestReroll(episodeNumber: number, partnerId: string): P
  * 아직 다시 굽기를 한 적이 없을 때 어떤 응답이 오는지는 스펙에 없다 — 부르는 쪽
  * (use-inferno-rebake)이 404/409 와 빈 data 를 "없음"으로 흡수한다.
  */
-export async function getRerollStatus(episodeNumber: number): Promise<AiRerollView | null> {
+export async function getRerollStatus(episodeNumber: number, seasonId?: string): Promise<AiRerollView | null> {
   const { data } = await httpClient.get<ApiEnvelope<AiRerollView | null>>(
     `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
+    // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+    { params: { season_id: seasonId } },
   );
   return data.data ?? null;
 }
@@ -197,7 +206,10 @@ export async function submitEpisode3Result(success: boolean, partnerId?: string)
  * 상대를 직접 추론하던 우회 로직(map-ai-season-report.ts의 옛 `mapFinalMatchFromEp4`)을
  * 대체한다.
  */
-export async function getSeasonReport(): Promise<AiReportView> {
-  const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report');
+export async function getSeasonReport(seasonId?: string): Promise<AiReportView> {
+  // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+  const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report', {
+    params: { season_id: seasonId },
+  });
   return data.data;
 }
