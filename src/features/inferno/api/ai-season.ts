@@ -7,12 +7,14 @@ import type {
   AiEpisodeFeedbackView,
   AiEpisodeMessagesView,
   AiEpisodeProgressView,
+  AiMessageLikeView,
   AiReportView,
   AiRerollView,
   AiSeasonStatusView,
   AiSeasonSummaryView,
   AiSelectionView,
   EpisodeFeedbackHttpRequest,
+  EpisodeMessageLikeHttpRequest,
   StartNextSeasonRequest,
 } from '@/src/features/inferno/api/ai-season-types';
 
@@ -152,6 +154,21 @@ export async function submitEpisodeFeedback(
 ): Promise<AiEpisodeFeedbackView> {
   const { data } = await httpClient.post<ApiEnvelope<AiEpisodeFeedbackView>>(
     `/api/ai/seasons/episodes/${episodeNumber}/feedback`,
+    request,
+  );
+  return data.data;
+}
+
+/**
+ * `POST /api/ai/seasons/episodes/{number}/likes`. ep2·ep4 1:1 대화 한 줄의 하트를 켜고 끈다(토글).
+ * 안 눌려 있으면 켜고, 눌려 있으면 끈다. 응답은 바뀐 뒤 상태다.
+ */
+export async function toggleEpisodeMessageLike(
+  episodeNumber: number,
+  request: EpisodeMessageLikeHttpRequest,
+): Promise<AiMessageLikeView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiMessageLikeView>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/likes`,
     request,
   );
   return data.data;

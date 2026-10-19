@@ -13,6 +13,7 @@ import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loa
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp2Flow from '@/src/features/inferno/hooks/use-inferno-ep2-flow';
 import useInfernoRebake from '@/src/features/inferno/hooks/use-inferno-rebake';
+import useToggleEpisodeMessageLike from '@/src/features/inferno/hooks/use-toggle-episode-message-like';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
@@ -52,6 +53,8 @@ export default function InfernoEp2Screen() {
   const generationLoader = useGenerationLoader(isLoading);
   // 이미 본 회차를 다시 보는지. 다시 보기면 다시 굽기(투표)를 막는다(ep4 와 같다).
   const replay = useEpisodeReplay(EPISODE_ORDER);
+  // 1:1 대화에서 말풍선을 눌러 하트를 켜고 끈다(서버 토글).
+  const toggleLike = useToggleEpisodeMessageLike();
   const rebake = useInfernoRebake(EPISODE_ORDER, conversation?.versionId, conversation?.rebake != null);
   // 새 대화가 와도 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(위 generationLoader 와 같다).
   const rebakeLoader = useGenerationLoader(rebake.isWaiting);
@@ -66,6 +69,11 @@ export default function InfernoEp2Screen() {
     flow.handleModalClose();
     completeEpisode(EPISODE_ORDER);
     void leaveInferno();
+  }
+
+  // 말풍선을 누르면 그 줄의 하트를 켜고 끈다.
+  function handleMessageLikePress(messageId: string) {
+    toggleLike.mutate({ episodeNumber: EPISODE_ORDER, messageId });
   }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
@@ -164,6 +172,8 @@ export default function InfernoEp2Screen() {
           onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
           // 다시 굽기로 고른 상대와 대화하는 동안은 "선택됨" 모양으로 흐려진다(ep4 와 같다).
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
+          likedMessageIds={conversation.likedMessageIds}
+          onMessageLikePress={handleMessageLikePress}
         />
       ) : null}
 
