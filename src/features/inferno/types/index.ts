@@ -180,6 +180,11 @@ export interface InfernoConversation {
    * 기억한다 — 나갔다 들어와도 다시 쓸 수 없다. 로컬 대본엔 없다.
    */
   isFeedbackSubmitted?: boolean;
+  /**
+   * 1:1 대화에서 하트를 누른 줄(메시지 id) 목록. 서버(회차 조회의 `likedMessageIds`)가 기억해서
+   * 나갔다 들어오거나 다시 볼 때도 하트가 그대로 있다. 로컬 대본엔 없다.
+   */
+  likedMessageIds?: string[];
   /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
   rebake?: InfernoRebake;
 }

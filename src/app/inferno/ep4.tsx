@@ -13,7 +13,7 @@ import useGenerationLoader from '@/src/features/inferno/hooks/use-generation-loa
 import useInfernoConversation from '@/src/features/inferno/hooks/use-inferno-conversation';
 import useInfernoEp4Flow from '@/src/features/inferno/hooks/use-inferno-ep4-flow';
 import useInfernoRebake from '@/src/features/inferno/hooks/use-inferno-rebake';
-import usePersonalChatLikes from '@/src/features/inferno/hooks/use-personal-chat-likes';
+import useToggleEpisodeMessageLike from '@/src/features/inferno/hooks/use-toggle-episode-message-like';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { findPersonalChatPartner } from '@/src/features/inferno/utils/personal-chat';
@@ -50,8 +50,8 @@ export default function InfernoEp4Screen() {
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
   // 이미 본 회차를 다시 보는지. 다시 보기면 다시 굽기(투표)를 막고 결과(최종 1:1 대화)만 보여준다.
   const replay = useEpisodeReplay(EPISODE_ORDER);
-  // 1:1 대화에서 말풍선을 눌러 켠 하트.
-  const likes = usePersonalChatLikes(EPISODE_ORDER);
+  // 1:1 대화에서 말풍선을 눌러 하트를 켜고 끈다(서버 토글).
+  const toggleLike = useToggleEpisodeMessageLike();
   const rebake = useInfernoRebake(EPISODE_ORDER, conversation?.versionId, conversation?.rebake != null);
   // 새 대화가 와도 로더가 퇴장을 마칠 때까지는 대기 화면을 유지한다(위 generationLoader 와 같다).
   const rebakeLoader = useGenerationLoader(rebake.isWaiting);
@@ -59,6 +59,11 @@ export default function InfernoEp4Screen() {
     isReady: rebake.isReady && !rebakeLoader.isShowing,
     hasFailed: rebake.hasFailed,
   });
+
+  // 말풍선을 누르면 그 줄의 하트를 켜고 끈다.
+  function handleMessageLikePress(messageId: string) {
+    toggleLike.mutate({ episodeNumber: EPISODE_ORDER, messageId });
+  }
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
@@ -171,8 +176,8 @@ export default function InfernoEp4Screen() {
           onPageDone={flow.handleLineDone}
           onRebakePress={flow.phase === 'personal' && canRebake ? flow.handleRebakeOpen : undefined}
           isRebakeSelected={flow.phase === 'rebakeChat' || rebake.isUsed}
-          likedMessageIds={likes.likedMessageIds}
-          onMessageLikePress={likes.toggle}
+          likedMessageIds={conversation.likedMessageIds}
+          onMessageLikePress={handleMessageLikePress}
           onFeedbackPress={handleFeedbackPress}
           isFeedbackUsed={flow.isFeedbackUsed}
         />

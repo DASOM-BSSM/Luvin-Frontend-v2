@@ -79,6 +79,20 @@ export interface AiEpisodeMessagesView {
   nextAfterSequence?: number;
   /** 이 회차에 남긴 "나의 빵에게" 피드백. 아직 안 썼으면 없다. */
   feedback?: AiEpisodeFeedbackView | null;
+  /** 이 회차 1:1 대화에서 하트를 누른 줄(`AiMessageView.messageId`) 목록. */
+  likedMessageIds?: string[];
+}
+
+/** `POST /api/ai/seasons/episodes/{number}/likes` 요청 본문. */
+export interface EpisodeMessageLikeHttpRequest {
+  /** 하트를 켜거나 끌 1:1 대화 한 줄. `AiMessageView.messageId` 그대로. */
+  messageId: string;
+}
+
+/** 하트를 켜고 끈 뒤의 상태. */
+export interface AiMessageLikeView {
+  messageId: string;
+  liked: boolean;
 }
 
 /** `POST /api/ai/seasons/episodes/{number}/feedback` 요청 본문. */
