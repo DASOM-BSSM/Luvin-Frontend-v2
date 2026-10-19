@@ -304,6 +304,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/episodes/{episodeId}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/episodes/{episodeId}/conversations": {
         parameters: {
             query?: never;
@@ -638,6 +654,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requestGeneration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{number}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitEpisodeFeedback"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1220,22 +1252,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/episodes/{episodeId}/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["saveFeedback"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1409,6 +1425,19 @@ export interface components {
         };
         GameResultRequest: {
             success?: boolean;
+        };
+        FeedbackRequest: {
+            /** Format: int64 */
+            messageId: number;
+            feedbackType?: string;
+            content?: string;
+        };
+        FeedbackResponse: {
+            /** Format: int64 */
+            feedbackId?: number;
+            /** Format: int64 */
+            messageId?: number;
+            message?: string;
         };
         AddMemberRequest: {
             /** Format: int64 */
@@ -1596,6 +1625,24 @@ export interface components {
         ApiResponseAiEpisodeProgressView: {
             success?: boolean;
             data?: components["schemas"]["AiEpisodeProgressView"];
+            message?: string;
+            code?: string;
+        };
+        EpisodeFeedbackHttpRequest: {
+            /** Format: uuid */
+            messageId: string;
+            content?: string;
+        };
+        AiEpisodeFeedbackView: {
+            /** Format: uuid */
+            messageId?: string;
+            content?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ApiResponseAiEpisodeFeedbackView: {
+            success?: boolean;
+            data?: components["schemas"]["AiEpisodeFeedbackView"];
             message?: string;
             code?: string;
         };
@@ -1948,6 +1995,7 @@ export interface components {
             message?: string;
             /** Format: date-time */
             createdAt?: string;
+            renderMode?: string;
         };
         AiEpisodeMessagesView: {
             /** Format: int32 */
@@ -1959,6 +2007,7 @@ export interface components {
             hasMore?: boolean;
             /** Format: int32 */
             nextAfterSequence?: number;
+            feedback?: components["schemas"]["AiEpisodeFeedbackView"];
         };
         AiMessageView: {
             /** Format: uuid */
@@ -1994,20 +2043,6 @@ export interface components {
             roomId?: number;
             /** Format: int64 */
             userId?: number;
-            message?: string;
-        };
-        FeedbackRequest: {
-            /** Format: int64 */
-            messageId: number;
-            /** @enum {string} */
-            feedbackType: "AGREE" | "DISAGREE";
-            content: string;
-        };
-        FeedbackResponse: {
-            /** Format: int64 */
-            feedbackId?: number;
-            /** Format: int64 */
-            messageId?: number;
             message?: string;
         };
     };
@@ -2679,6 +2714,32 @@ export interface operations {
             };
         };
     };
+    saveFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                episodeId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FeedbackResponse"];
+                };
+            };
+        };
+    };
     getConversations: {
         parameters: {
             query?: never;
@@ -3240,7 +3301,9 @@ export interface operations {
     };
     getRerollStatus: {
         parameters: {
-            query?: never;
+            query?: {
+                season_id?: string;
+            };
             header?: never;
             path: {
                 number: number;
@@ -3304,6 +3367,34 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAiEpisodeProgressView"];
+                };
+            };
+        };
+    };
+    submitEpisodeFeedback: {
+        parameters: {
+            query?: {
+                season_id?: string;
+            };
+            header?: never;
+            path: {
+                number: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EpisodeFeedbackHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiEpisodeFeedbackView"];
                 };
             };
         };
@@ -3922,7 +4013,9 @@ export interface operations {
     };
     getReport_2: {
         parameters: {
-            query?: never;
+            query?: {
+                season_id?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3983,6 +4076,7 @@ export interface operations {
     getEpisodeMessages: {
         parameters: {
             query?: {
+                season_id?: string;
                 after_sequence?: number;
                 limit?: number;
             };
@@ -4047,32 +4141,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseKickResponse"];
-                };
-            };
-        };
-    };
-    saveFeedback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FeedbackRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["FeedbackResponse"];
                 };
             };
         };
