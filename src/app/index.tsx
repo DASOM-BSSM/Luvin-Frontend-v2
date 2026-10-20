@@ -5,25 +5,33 @@ import { Pressable, ScrollView, View } from 'react-native';
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
 import LuvinLogo from '@/src/assets/images/LuvinLogo';
 import BottomNav from '@/src/components/bottom-nav';
+import ConfirmModal from '@/src/components/ui/confirm-modal';
 import Screen from '@/src/components/ui/screen';
 import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
+import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import CreateQuestionCard from '@/src/features/home/components/create-question-card';
 import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
+import EpisodeCardSkeleton from '@/src/features/home/components/episode-card-skeleton';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
+import NextSeasonNoticeModal from '@/src/features/inferno/components/next-season-notice-modal';
 import {
   INFERNO_EPISODE_HREFS,
   infernoIntroHref,
 } from '@/src/features/inferno/constants/routes';
+import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import useCreateSeason from '@/src/features/inferno/hooks/use-create-season';
+import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
 import type { DiaryPreview } from '@/src/features/home/types';
 import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
@@ -38,15 +46,23 @@ export default function HomeScreen() {
   const { profile } = useBreadProfile();
   const hasBread = profile !== null;
   const [isNoticeVisible, setIsNoticeVisible] = useState(false);
-  const completedOrders = useInfernoStore((state) => state.completedOrders);
+  const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
+  // 기기 기록 + 서버 시즌 상태. 기기 기록만 보면 다시 로그인했을 때 처음부터로 돌아갔다(LUV-56).
+  const { completedOrders, isSyncing: isProgressSyncing } = useInfernoProgress();
+  const isNextSeasonNoticePending = useInfernoStore((state) => state.isNextSeasonNoticePending);
+  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
+  const clearNextSeasonNotice = useInfernoStore((state) => state.clearNextSeasonNotice);
   const surveyResultQuery = useMySurveyResult();
   const createSeasonMutation = useCreateSeason();
 
   // 로그인 안 된 채로 홈에 들어오면(딥링크 등) 온보딩으로 돌려보낸다. hydrate 가 끝나기
   // 전에는 아직 모르는 상태이므로 판단하지 않는다.
+  //
+  // 홈은 다른 화면 아래에 깔린 채로도 이 effect 가 돈다(예: 마이페이지에서 로그아웃). 그때 맨 위
+  // 화면만 바꾸면 아래 화면이 남아 스택이 꼬이므로 전부 비우고 온보딩으로 보낸다(LUV-56).
   useEffect(() => {
     if (!isHydrating && !isAuthenticated) {
-      router.replace('/onboarding');
+      resetToOnboarding();
     }
   }, [isHydrating, isAuthenticated]);
 
@@ -89,8 +105,50 @@ export default function HomeScreen() {
     }
 
     createSeasonMutation.mutate(surveyResultId, {
-      onSuccess: () => router.push(href),
+      onSuccess: (season) => handleSeasonReady(season.status, href),
+      onError: handleCreateSeasonError,
     });
+  }
+
+  // 시즌을 이미 끝냈으면 서버가 그 끝난 시즌을 그대로 돌려준다(from-survey 는 있는 시즌을
+  // 돌려주는 API — 새 시즌을 만드는 API 는 백엔드에 요청해 둔 상태). 끝난 시즌으로 다시
+  // 들어가지 않고, 다음 시즌은 토큰이 필요하다고 안내한다.
+  function handleSeasonReady(status: string, href: Href) {
+    if (status === COMPLETED_SEASON_STATUS) {
+      requestNextSeasonNotice();
+      return;
+    }
+
+    router.push(href);
+  }
+
+  // 다음 시즌 안내의 "미니게임으로 토큰 모으기". 토큰을 버는 미니게임 모음으로 보낸다.
+  function handleNextSeasonMiniGamePress() {
+    clearNextSeasonNotice();
+    router.push('/luvin-hell');
+  }
+
+  // 다음 시즌이 열렸으면 새 시즌의 첫 회차(가이드 ep0)로 보낸다.
+  function handleNextSeasonStarted() {
+    clearNextSeasonNotice();
+    router.push(INFERNO_EPISODE_HREFS[0] ?? '/inferno');
+  }
+
+  // 성별이 없으면 서버가 시즌 생성을 막는다(409 PROFILE_REQUIRED). 로그로만 남기지 않고
+  // 성별을 설정할 수 있는 화면으로 바로 갈 수 있게 묻는다.
+  function handleCreateSeasonError(error: unknown) {
+    if (isProfileRequiredError(error)) {
+      setIsProfileRequiredVisible(true);
+    }
+  }
+
+  function handleProfileRequiredCancel() {
+    setIsProfileRequiredVisible(false);
+  }
+
+  function handleProfileRequiredConfirm() {
+    setIsProfileRequiredVisible(false);
+    router.push('/my-page/edit');
   }
 
   function handleInfernoStartPress() {
@@ -156,7 +214,9 @@ export default function HomeScreen() {
             actionLabel={hasBread ? '러빈지옥 바로가기→' : undefined}
             onActionPress={hasBread ? handleOvenNavigate : undefined}
           />
-          {weeklyEpisode ? (
+          {isProgressSyncing ? (
+            <EpisodeCardSkeleton />
+          ) : weeklyEpisode ? (
             <EpisodeThumbnailCard
               episode={weeklyEpisode}
               onPress={canOpenWeeklyEpisode ? handleWeeklyEpisodePress : undefined}
@@ -189,7 +249,20 @@ export default function HomeScreen() {
       <InfernoNoticeModal
         visible={isNoticeVisible}
         onClose={handleNoticeClose}
-        onSurveyPress={handleNoticeSurveyPress}
+        onActionPress={handleNoticeSurveyPress}
+      />
+      <NextSeasonNoticeModal
+        visible={isNextSeasonNoticePending}
+        onClose={clearNextSeasonNotice}
+        onCollectTokensPress={handleNextSeasonMiniGamePress}
+        onSeasonStarted={handleNextSeasonStarted}
+      />
+      <ConfirmModal
+        visible={isProfileRequiredVisible}
+        message={ERROR_MESSAGES.profileRequired}
+        confirmLabel="설정하기"
+        onConfirm={handleProfileRequiredConfirm}
+        onCancel={handleProfileRequiredCancel}
       />
     </Screen>
   );

@@ -6,6 +6,8 @@ import { getEpisodeMessages, requestEpisodeGeneration } from '@/src/features/inf
 import type { AiEpisodeMessagesView } from '@/src/features/inferno/api/ai-season-types';
 import { aiSeasonKeys } from '@/src/features/inferno/api/query-keys';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import useGenerationTimeout from '@/src/features/inferno/hooks/use-generation-timeout';
+import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
 import { isEpisodeFullyGenerated } from '@/src/features/inferno/utils/map-ai-episode';
 
 /** AI 생성이 아직 안 끝났을 때 다시 확인하는 간격. */
@@ -18,9 +20,13 @@ const GENERATION_POLL_MS = 3000;
  * 여기서 흡수해서 "아직 없음"(null)으로 정규화한다 — 그 외 에러(네트워크/서버 오류 등)는
  * 그대로 던져서 기존 에러 처리가 그대로 동작하게 둔다.
  */
-async function fetchEpisodeMessagesOrNull(episodeNumber: number): Promise<AiEpisodeMessagesView | null> {
+export async function fetchEpisodeMessagesOrNull(
+  episodeNumber: number,
+  /** 지난 시즌을 다시 볼 때만 넘긴다(use-viewed-season). */
+  seasonId?: string,
+): Promise<AiEpisodeMessagesView | null> {
   try {
-    const data = await getEpisodeMessages(episodeNumber);
+    const data = await getEpisodeMessages(episodeNumber, { seasonId });
     if (__DEV__) {
       console.log(
         `[ep${episodeNumber}] messages=${data.messages.length} sceneKinds=${JSON.stringify(
@@ -53,18 +59,26 @@ const FAILED_JOB_STATUS = 'FAILED';
  * 실패하면(실제로 ep2에서 확인됨 — `errorCode: 'GENERATION_FAILED'`) `hasGenerationFailed`를
  * 켜고 폴링을 멈춘다 — 실패한 job을 기다리며 "만들고 있어요"에 영영 갇히는 걸 막는다.
  * 화면은 이때 안내와 함께 `retryGeneration`으로 다시 시도할 수 있게 해야 한다(§11).
+ *
+ * 서버가 실패를 알려주지도 않고 3분 넘게 결과를 안 주면(작업이 QUEUED 에서 멈춤) 그것도
+ * 실패로 본다(use-generation-timeout) — 줄넘기 로더만 끝없이 도는 걸 막는다.
+ *
+ * 지난 시즌을 다시 볼 때(use-viewed-season)는 그 시즌 대화를 한 번 읽기만 한다. 생성 요청·폴링·
+ * 시간 초과를 모두 하지 않는다 — 생성 요청은 늘 최신 시즌에 들어가서, 지난 시즌 화면에서 보내면 지금
+ * 시즌 회차가 만들어진다.
  */
 export default function useAiEpisodeMessages(episodeNumber: number, enabled = true) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { pastSeasonId, isPastSeason } = useViewedSeason();
   const hasRequestedGeneration = useRef(false);
   const [hasGenerationFailed, setHasGenerationFailed] = useState(false);
 
   const query = useQuery({
-    queryKey: aiSeasonKeys.episode(episodeNumber),
-    queryFn: () => fetchEpisodeMessagesOrNull(episodeNumber),
+    queryKey: aiSeasonKeys.episode(episodeNumber, pastSeasonId),
+    queryFn: () => fetchEpisodeMessagesOrNull(episodeNumber, pastSeasonId),
     enabled: isAuthenticated && enabled,
     refetchInterval: (currentQuery) => {
-      if (hasGenerationFailed) {
+      if (hasGenerationFailed || isPastSeason) {
         return false;
       }
 
@@ -75,6 +89,19 @@ export default function useAiEpisodeMessages(episodeNumber: number, enabled = tr
       return isReady ? false : GENERATION_POLL_MS;
     },
   });
+
+  const isEpisodeReady = query.data != null && isEpisodeFullyGenerated(episodeNumber, query.data.messages);
+  useGenerationTimeout(
+    query.isSuccess && !isEpisodeReady && !hasGenerationFailed && !isPastSeason,
+    handleGenerationTimeout,
+  );
+
+  function handleGenerationTimeout() {
+    if (__DEV__) {
+      console.log(`[ep${episodeNumber}] 생성 대기 시간 초과 -> 실패로 처리`);
+    }
+    setHasGenerationFailed(true);
+  }
 
   function triggerGeneration() {
     hasRequestedGeneration.current = true;
@@ -112,10 +139,10 @@ export default function useAiEpisodeMessages(episodeNumber: number, enabled = tr
       );
     }
 
-    if (query.isSuccess && !isReady && !hasRequestedGeneration.current) {
+    if (query.isSuccess && !isReady && !hasRequestedGeneration.current && !isPastSeason) {
       triggerGeneration();
     }
-  }, [query.data, query.isSuccess, episodeNumber]);
+  }, [query.data, query.isSuccess, episodeNumber, isPastSeason]);
 
   /** "다시 시도". 실패 표시를 내리고 생성을 다시 요청한다. */
   function retryGeneration() {

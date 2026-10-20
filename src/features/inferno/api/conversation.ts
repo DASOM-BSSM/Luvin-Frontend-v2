@@ -406,14 +406,3 @@ export function submitInfernoVote(order: number, participantId: string): void {
   void order;
   void participantId;
 }
-
-/**
- * "나의 빵에게" 피드백을 보낸다.
- *
- * submitInfernoVote 와 같은 이유로 아직 속이 비어 있다. 서버가 생기면 여기만 채우면 된다.
- */
-export function submitInfernoFeedback(order: number, messageId: string, feedback: string): void {
-  void order;
-  void messageId;
-  void feedback;
-}

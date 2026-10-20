@@ -1,8 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
+import LandscapeOnly from '@/src/components/landscape-only';
 import InfernoIntroCard from '@/src/features/inferno/components/inferno-intro-card';
-import { INFERNO_EPISODE_HREFS } from '@/src/features/inferno/constants/routes';
+import { infernoEpisodeHref } from '@/src/features/inferno/constants/routes';
+import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 
 /** 회차를 넘기지 않고 들어왔을 때 보여줄 회차. 기존 `/inferno` 링크는 ep0 로 남는다. */
@@ -24,6 +26,8 @@ const DEFAULT_ORDER = 0;
  */
 export default function InfernoScreen() {
   const { order } = useLocalSearchParams<{ order?: string }>();
+  // 지난 시즌 다시 보기면 시즌을 본문으로 그대로 넘긴다(constants/routes 의 infernoIntroHref).
+  const { pastSeasonId } = useViewedSeason();
 
   // 파라미터는 문자열이고 사용자가 딥링크로 아무 값이나 넣을 수 있다. 숫자가 아니면 ep0 로 본다(§13).
   const parsedOrder = Number.parseInt(order ?? '', 10);
@@ -37,7 +41,7 @@ export default function InfernoScreen() {
   }
 
   function handleScreenPress() {
-    const href = INFERNO_EPISODE_HREFS[episodeOrder];
+    const href = infernoEpisodeHref(episodeOrder, pastSeasonId);
 
     // 본문이 아직 없는 회차라면 시작 화면에 머문다.
     if (!href) {
@@ -47,16 +51,19 @@ export default function InfernoScreen() {
     router.push(href);
   }
 
+  // 세로로 돌아가는 순간에는 감춘다(LandscapeOnly 주석 참고).
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel="러빈지옥 시작하기"
-      className="flex-1 bg-default-white"
-      onPress={handleScreenPress}
-    >
-      <View className="flex-1 px-[29px] py-[22px]">
-        <InfernoIntroCard episode={episode} />
-      </View>
-    </Pressable>
+    <LandscapeOnly>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="러빈지옥 시작하기"
+        className="flex-1 bg-default-white"
+        onPress={handleScreenPress}
+      >
+        <View className="flex-1 px-[29px] py-[22px]">
+          <InfernoIntroCard episode={episode} />
+        </View>
+      </Pressable>
+    </LandscapeOnly>
   );
 }

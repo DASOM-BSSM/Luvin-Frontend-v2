@@ -10,6 +10,7 @@ import ConfirmModal from '@/src/components/ui/confirm-modal';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import useLogout from '@/src/features/auth/hooks/use-logout';
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
@@ -83,8 +84,10 @@ export default function MyPageEditScreen() {
     updateProfileMutation.mutate({ nickname, gender }, { onSuccess: handleBackPress });
   }
 
+  // 스택을 비우고 온보딩만 남긴다 — replace 만 하면 아래 화면이 남아 다시 로그인했을 때 홈이
+  // 두 개 쌓였다(reset-to-onboarding 주석 참고).
   function handleLogoutSettled() {
-    router.replace('/onboarding');
+    resetToOnboarding();
   }
 
   // 로그아웃/탈퇴 모두 시스템 Alert 대신 시안(Figma 로그아웃·계정 탈퇴 `모달`)대로 그린
@@ -107,7 +110,7 @@ export default function MyPageEditScreen() {
   }
 
   function handleWithdrawSuccess() {
-    router.replace('/onboarding');
+    resetToOnboarding();
   }
 
   function handleWithdrawConfirm() {

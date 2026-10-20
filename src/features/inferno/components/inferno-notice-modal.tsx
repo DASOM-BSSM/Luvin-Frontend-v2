@@ -12,10 +12,16 @@ const ACTION_LABEL = '나만의 반죽을 만들어요';
 
 interface InfernoNoticeModalProps {
   visible: boolean;
+  /** 안내 문구. 넘기지 않으면 반죽 안내(Figma 6602:3956). */
+  message?: string;
+  /** 버튼 문구. 넘기지 않으면 "나만의 반죽을 만들어요"(Figma 6602:3957). */
+  actionLabel?: string;
   /** 바깥을 누르거나 뒤로가기를 했을 때. */
   onClose: () => void;
-  /** "나만의 반죽을 만들어요" 를 눌렀을 때. */
-  onSurveyPress: () => void;
+  /** 버튼을 눌렀을 때. */
+  onActionPress: () => void;
+  /** 버튼을 막는다. 버튼이 서버 요청을 보내는 동안 다시 누르지 못하게 할 때 쓴다(§11). */
+  isActionDisabled?: boolean;
 }
 
 /**
@@ -27,11 +33,17 @@ interface InfernoNoticeModalProps {
  * 실기기에서 폰트가 깨진다(src/constants/typography.ts 주석 참고).
  *
  * NOTE: 시안에 닫기 버튼이 없어서 바깥을 누르면 닫히게 했다. 안드로이드 뒤로가기도 같다.
+ *
+ * 같은 NOTICE 모양을 "다음 시즌" 안내(constants/season 의 NEXT_SEASON_NOTICE)에도 쓴다 — 그 안내는
+ * 시안이 따로 없어서 문구와 버튼만 바꿔 넣는다(사용자 결정).
  */
 export default function InfernoNoticeModal({
   visible,
+  message = MESSAGE,
+  actionLabel = ACTION_LABEL,
   onClose,
-  onSurveyPress,
+  onActionPress,
+  isActionDisabled = false,
 }: InfernoNoticeModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -49,10 +61,10 @@ export default function InfernoNoticeModal({
                 NOTICE
               </Text>
               <Text variant="body-m" className="w-full text-center text-default-black">
-                {MESSAGE}
+                {message}
               </Text>
             </View>
-            <Button label={ACTION_LABEL} variant="notice" onPress={onSurveyPress} />
+            <Button label={actionLabel} variant="notice" disabled={isActionDisabled} onPress={onActionPress} />
           </View>
         </Pressable>
       </Pressable>

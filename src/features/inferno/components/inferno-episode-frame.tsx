@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 
+import LandscapeOnly from '@/src/components/landscape-only';
 import InfernoBottomBar from '@/src/features/inferno/components/inferno-bottom-bar';
 import InfernoDotBackground from '@/src/features/inferno/components/inferno-dot-background';
 import InfernoNoteCard from '@/src/features/inferno/components/inferno-note-card';
@@ -48,26 +49,29 @@ export default function InfernoEpisodeFrame({
 }: InfernoEpisodeFrameProps) {
   const isNote = surface === 'note';
 
+  // 세로로 돌아가는 순간에는 통째로 감춘다(LandscapeOnly 주석 참고).
   return (
-    <View className="flex-1 bg-default-white">
-      {isNote ? <InfernoDotBackground /> : null}
-      <InfernoTopBar
-        titleVariant={titleVariant}
-        onPreviousPress={onPreviousPress}
-        onNextPress={onNextPress}
-      />
-      {isNote ? (
-        <View className="flex-1 px-[46px]">
-          <InfernoNoteCard>{children}</InfernoNoteCard>
-        </View>
-      ) : (
-        <View className="flex-1">{children}</View>
-      )}
-      <InfernoBottomBar
-        label={formatIntroLabel(episode.order, episode.title)}
-        skipLabel={skipLabel}
-        onSkipPress={onSkipPress}
-      />
-    </View>
+    <LandscapeOnly>
+      <View className="flex-1 bg-default-white">
+        {isNote ? <InfernoDotBackground /> : null}
+        <InfernoTopBar
+          titleVariant={titleVariant}
+          onPreviousPress={onPreviousPress}
+          onNextPress={onNextPress}
+        />
+        {isNote ? (
+          <View className="flex-1 px-[46px]">
+            <InfernoNoteCard>{children}</InfernoNoteCard>
+          </View>
+        ) : (
+          <View className="flex-1">{children}</View>
+        )}
+        <InfernoBottomBar
+          label={formatIntroLabel(episode.order, episode.title)}
+          skipLabel={skipLabel}
+          onSkipPress={onSkipPress}
+        />
+      </View>
+    </LandscapeOnly>
   );
 }

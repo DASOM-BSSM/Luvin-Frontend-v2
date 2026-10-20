@@ -11,3 +11,13 @@ export const EPISODE_VOTE_PROMPTS: Partial<Record<number, InfernoVotePrompt>> = 
   1: { modalMessage: '더 알아가고 싶은 반죽을 골라주세요', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
   3: { modalMessage: '게임에 성공해서 원하는 상대와 대화해요!', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
 };
+
+/**
+ * "다시 굽기" 쪽지·투표지 문구. Figma `다시굽기`(5467:5418 확인 쪽지, 5467:5840 투표지).
+ * 예전 로컬 대본(conversation.ts 의 EP4_CONVERSATION.rebake)에 있던 값과 같다. ep2 도 같은 문구를 쓴다.
+ */
+export const REBAKE_COPY = {
+  confirmMessage: '다시 굽기를 진행하시겠어요?',
+  confirmActionLabel: '다시 굽기 상대 고르기',
+  voteMessage: '당신과 다시 구워지고 싶어요',
+};

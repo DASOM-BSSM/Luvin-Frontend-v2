@@ -6,6 +6,7 @@ import { clearAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
@@ -33,9 +34,13 @@ export default function useLogout() {
       // (FRONTEND_CHANGES.md §8). useInfernoStore(완료한 회차 목록, MMKV)도 계정 구분 없이
       // 저장되므로 같이 지운다 — 안 그러면 다음 계정 홈 화면이 이전 계정이 완료한 회차 수만큼
       // 건너뛴 "다음 에피소드"를 보여준다(실기기에서 재현된 버그).
+      //
+      // LUV-56: 러빈지옥 진행 기록은 이제 계정별로 저장돼서 지우지 않고 내려놓기만 한다 — 같은
+      // 계정으로 다시 로그인하면 진행도와 "잠시 나가기" 자리가 그대로 이어진다.
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
-      useInfernoStore.getState().resetProgress();
+      useInfernoStore.getState().switchUser(null);
+      usePartnerLetterStore.getState().switchUser(null);
       queryClient.clear();
     },
   });
