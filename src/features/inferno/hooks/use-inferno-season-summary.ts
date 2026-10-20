@@ -57,6 +57,11 @@ async function fetchSeasonReportOrNull(seasonId?: string): Promise<AiReportView 
 interface UseInfernoSeasonSummaryResult {
   summary: InfernoSeasonSummary | undefined;
   isLoading: boolean;
+  /**
+   * AI가 리포트를 만드는 중(아직 리포트가 없고 실패도 아님). 처음 불러오는 중은 포함하지 않는다 —
+   * ep5 굽기 장면은 이 값으로만 시작한다(use-ep5-bake). 지난 시즌은 늘 false.
+   */
+  isGenerating: boolean;
   isError: boolean;
   /** AI 생성 요청 자체가 실패로 응답한 상태(use-ai-episode-messages 주석 참고). */
   hasGenerationFailed: boolean;
@@ -157,6 +162,7 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
     return {
       summary: getInfernoSeasonSummary(order),
       isLoading: false,
+      isGenerating: false,
       isError: false,
       hasGenerationFailed: false,
       retryGeneration: () => {},
@@ -182,14 +188,15 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
         }
       : undefined;
 
+  const isGenerating = !isPastSeason && seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed;
+
   return {
     summary,
     // 지난 시즌에 리포트가 없으면 기다려도 생기지 않는다 — 로딩이 아니라 "리포트가 아직 없어요" 다.
     isLoading: isPastSeason
       ? seasonReportQuery.isLoading
-      : seasonQuery.isLoading ||
-        seasonReportQuery.isLoading ||
-        (seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed),
+      : seasonQuery.isLoading || seasonReportQuery.isLoading || isGenerating,
+    isGenerating,
     isError: isPastSeason ? seasonReportQuery.isError : seasonQuery.isError || seasonReportQuery.isError,
     hasGenerationFailed,
     retryGeneration,

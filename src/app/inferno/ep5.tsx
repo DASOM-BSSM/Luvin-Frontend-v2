@@ -4,13 +4,20 @@ import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
-import InfernoFinalMatchScene from '@/src/features/inferno/components/inferno-final-match-scene';
+import InfernoFinalMatchReveal from '@/src/features/inferno/components/inferno-final-match-reveal';
 import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
+import {
+  BAKE_WAIT_MESSAGE,
+  BAKE_WAIT_SLOW_AFTER_MS,
+  BAKE_WAIT_SLOW_MESSAGE,
+} from '@/src/features/inferno/constants/bake';
 import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useEpisodeCheckpoint from '@/src/features/inferno/hooks/use-episode-checkpoint';
+import useEp5Bake from '@/src/features/inferno/hooks/use-ep5-bake';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
 import useInfernoSeasonSummary from '@/src/features/inferno/hooks/use-inferno-season-summary';
+import useWaitingTooLong from '@/src/features/inferno/hooks/use-waiting-too-long';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import type { InfernoSeasonSummary } from '@/src/features/inferno/types';
@@ -44,6 +51,7 @@ export default function InfernoEp5Screen() {
   const {
     summary,
     isLoading: isSummaryLoading,
+    isGenerating,
     isError: isSummaryError,
     hasGenerationFailed,
     retryGeneration,
@@ -52,6 +60,9 @@ export default function InfernoEp5Screen() {
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
   // 지난 시즌은 "시즌 마무리" 페이지 없이 하이라이트까지만 보여준다(use-inferno-ep5-flow 주석).
   const flow = useInfernoEp5Flow(checkpoint.initialStep, exit.isPastSeason);
+  // 리포트가 막 도착하면 RESULT 자리에서 "반죽 → 연기 → 구운 빵" 등장 연출을 튼다. 리포트를 기다린 적이
+  // 있을 때만 틀고, 지난 시즌·이어보기에서는 틀지 않는다(use-ep5-bake).
+  const bake = useEp5Bake(isGenerating, !exit.isPastSeason && checkpoint.initialStep === 0);
 
   // "잠시 나가기" 는 스킵과 다르다. 회차를 본 것으로 치지 않고, 보던 자리만 기억해 둔다.
   function handleExitPress() {
@@ -62,6 +73,12 @@ export default function InfernoEp5Screen() {
   const isLoading = isSummaryLoading || breadProfile.isLoading;
   const isError = isSummaryError || breadProfile.isError;
   const myProfile = breadProfile.profile;
+
+  // 리포트를 기다리는 동안 띄우는 문구. 20초를 넘기면 "생각보다 오래 걸리고 있어요" 로 바꾼다(사용자 지시).
+  // 실패·에러·설문 없음 안내가 먼저다 — 아래 안내 문구의 우선순위와 같다.
+  const isWaitingForReport =
+    !summary && isLoading && !hasGenerationFailed && !isError && !breadProfile.isSurveyMissing;
+  const isWaitingLong = useWaitingTooLong(isWaitingForReport, BAKE_WAIT_SLOW_AFTER_MS);
 
   // AI가 아직 리포트를 안 만들었거나 실패했거나, 내 반죽(서버 설문 결과)이 아직 없으면
   // 빈 화면 대신 안내를 보여준다(§11, ep1~4 와 같은 이유).
@@ -77,7 +94,9 @@ export default function InfernoEp5Screen() {
                 : breadProfile.isSurveyMissing
                   ? '설문을 먼저 완료해주세요'
                   : isLoading
-                    ? 'AI가 리포트를 만들고 있어요...'
+                    ? isWaitingLong
+                      ? BAKE_WAIT_SLOW_MESSAGE
+                      : BAKE_WAIT_MESSAGE
                     : '리포트가 아직 없어요'}
           </Text>
           {hasGenerationFailed ? (
@@ -123,10 +142,12 @@ export default function InfernoEp5Screen() {
     switch (flow.pageIndex) {
       case 0:
         return (
-          <InfernoFinalMatchScene
+          <InfernoFinalMatchReveal
             mine={myProfile}
             partner={summary.finalMatch.profile}
             summaryLine={summary.finalMatch.summaryLine}
+            isPlaying={bake.isShowing}
+            onComplete={bake.handleComplete}
           />
         );
       case 1:
@@ -149,7 +170,8 @@ export default function InfernoEp5Screen() {
       surface="note"
       skipLabel={exit.skipLabel}
       onPreviousPress={flow.goPrevious}
-      onNextPress={flow.goNext}
+      // 등장 연출이 끝나기 전에는 다음 페이지로 넘기지 않는다.
+      onNextPress={bake.isShowing ? undefined : flow.goNext}
       onSkipPress={handleExitPress}
     >
       {renderPage(summary, myProfile)}
