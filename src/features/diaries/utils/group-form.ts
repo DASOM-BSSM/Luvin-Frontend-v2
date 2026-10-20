@@ -24,3 +24,13 @@ export interface CreateGroupFormValues {
 export function canSubmitCreateGroupForm({ name, memberCount, ownerNickname }: CreateGroupFormValues): boolean {
   return name.trim() !== '' && ownerNickname.trim() !== '' && isValidMemberCount(memberCount);
 }
+
+export interface JoinGroupFormValues {
+  inviteCode: string;
+  nickname: string;
+}
+
+/** 참여하기 버튼을 눌러도 되는지 — 초대코드와 닉네임을 모두 채워야 한다. */
+export function canSubmitJoinGroupForm({ inviteCode, nickname }: JoinGroupFormValues): boolean {
+  return inviteCode.trim() !== '' && nickname.trim() !== '';
+}

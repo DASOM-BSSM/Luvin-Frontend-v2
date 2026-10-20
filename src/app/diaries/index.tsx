@@ -19,6 +19,10 @@ export default function DiariesHomeScreen() {
     router.push('/diaries/groups/create');
   }
 
+  function handleJoinGroupPress() {
+    router.push('/diaries/groups/join');
+  }
+
   return (
     <Screen>
       <ScrollView
@@ -26,7 +30,10 @@ export default function DiariesHomeScreen() {
         contentContainerClassName="flex-col gap-[40px] px-[30px] pb-[24px] pt-[36px]"
         showsVerticalScrollIndicator={false}
       >
-        <DiariesHeader onCreateGroupPress={handleCreateGroupPress} />
+        <DiariesHeader
+          onCreateGroupPress={handleCreateGroupPress}
+          onJoinGroupPress={handleJoinGroupPress}
+        />
 
         <View className="w-full flex-col items-center gap-[40px]">
           <BalanceGameSection />
