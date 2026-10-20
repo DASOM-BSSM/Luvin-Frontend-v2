@@ -1,10 +1,25 @@
-import type { AiHighlightView, AiReportView, AiSeasonStatusView } from '@/src/features/inferno/api/ai-season-types';
+import type { AiReportView, AiSeasonStatusView } from '@/src/features/inferno/api/ai-season-types';
 import type { InfernoFinalMatchResult, InfernoHighlight, InfernoSeasonReport } from '@/src/features/inferno/types';
 import { deriveCharacterPersona } from '@/src/features/inferno/utils/character-persona';
 
-/** `GET /api/ai/seasons/report`의 `narrative`를 화면이 쓰는 모양으로 바꾼다(§ types.ts 주석 참고). */
+/**
+ * `GET /api/ai/seasons/report`의 `narrative`를 화면이 쓰는 모양으로 바꾼다(§ types.ts 주석 참고).
+ *
+ * 새 형식에는 `narrative` 가 없고 `tendency`(성향)와 `feedback`(조언)이 따로 온다(AiReportView 주석).
+ * 행동 분석 화면은 문단 하나를 보여주므로 둘을 이어 붙인다. 둘 다 없으면 빈 문단이다.
+ */
 export function mapAiReport(report: AiReportView): InfernoSeasonReport {
-  return { narrative: report.narrative };
+  if (report.narrative) {
+    return { narrative: report.narrative };
+  }
+
+  return { narrative: [report.tendency, report.feedback].filter(Boolean).join('\n\n') };
+}
+
+/** `episode2` → 2. 회차 번호가 없는 키는 맨 뒤로 보낸다. */
+function episodeNumberOfKey(key: string): number {
+  const number = Number.parseInt(key.replace(/\D/g, ''), 10);
+  return Number.isNaN(number) ? Number.MAX_SAFE_INTEGER : number;
 }
 
 /**
@@ -14,9 +29,23 @@ export function mapAiReport(report: AiReportView): InfernoSeasonReport {
  * 인상 깊었던 한 줄 `text`와 그 메시지를 가리키는 `messageId`)다. "제목+요약" 카드가 아니라
  * 대화에서 뽑은 인용구 한 줄이라는 뜻이라, 억지로 title/summary로 쪼개지 않고 `text` 그대로
  * 인용구 하나로 보여준다.
+ *
+ * 새 형식은 배열이 아니라 회차별 객체다(`{ episode2: { message, reason }, … }`, AiReportView 주석).
+ * 배열로 보고 `.map` 을 부르면 화면이 죽어서(실기기 Render Error) 모양을 보고 나눈다. 객체면 회차 순서로
+ * 늘어놓고 `message` 를 인용구로 쓴다.
  */
-export function mapAiHighlights(highlights: AiHighlightView[]): InfernoHighlight[] {
-  return highlights.map((highlight) => ({ text: highlight.text }));
+export function mapAiHighlights(highlights: AiReportView['highlights'] | undefined): InfernoHighlight[] {
+  if (!highlights) {
+    return [];
+  }
+
+  if (Array.isArray(highlights)) {
+    return highlights.map((highlight) => ({ text: highlight.text }));
+  }
+
+  return Object.entries(highlights)
+    .sort(([a], [b]) => episodeNumberOfKey(a) - episodeNumberOfKey(b))
+    .flatMap(([, highlight]) => (highlight?.message ? [{ text: highlight.message }] : []));
 }
 
 /**
@@ -26,7 +55,7 @@ export function mapAiHighlights(highlights: AiHighlightView[]): InfernoHighlight
  */
 export function mapFinalMatchFromReport(
   report: AiReportView,
-  season: AiSeasonStatusView,
+  season: Pick<AiSeasonStatusView, 'characters'>,
 ): InfernoFinalMatchResult | undefined {
   const character = season.characters.find((candidate) => candidate.characterId === report.finalPartnerId);
   if (!character) {

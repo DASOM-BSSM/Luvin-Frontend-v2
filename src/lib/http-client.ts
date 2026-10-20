@@ -1,10 +1,11 @@
 import axios from 'axios';
-import { router } from 'expo-router';
 
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { clearAccessToken, getAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
@@ -46,9 +47,12 @@ httpClient.interceptors.response.use(
       useAuthStore.getState().clearSession();
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
-      useInfernoStore.getState().resetProgress();
+      // 진행 기록은 계정별로 남겨 두고 내려놓기만 한다(LUV-56). 다시 로그인하면 이어진다.
+      useInfernoStore.getState().switchUser(null);
+      usePartnerLetterStore.getState().switchUser(null);
       queryClient.clear();
-      router.replace('/onboarding');
+      // 쌓인 화면을 비우고 온보딩만 남긴다(reset-to-onboarding 주석 참고).
+      resetToOnboarding();
     }
     return Promise.reject(error);
   },

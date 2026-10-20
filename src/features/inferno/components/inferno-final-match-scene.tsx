@@ -1,20 +1,81 @@
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 
 import HeartIcon from '@/src/assets/icons/HeartIcon';
 import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import Text from '@/src/components/ui/text';
 import theme from '@/src/constants/theme';
 import { okMallangBTitleStyle } from '@/src/constants/typography';
+import InfernoBakeFade from '@/src/features/inferno/components/inferno-bake-fade';
+import InfernoBakeFigure from '@/src/features/inferno/components/inferno-bake-figure';
+import InfernoBakeGlow from '@/src/features/inferno/components/inferno-bake-glow';
+import InfernoBakeSmoke from '@/src/features/inferno/components/inferno-bake-smoke';
+import { BAKE } from '@/src/features/inferno/constants/bake';
 import { findDoughFigure } from '@/src/features/inferno/constants/dough-figures';
-import type { InfernoFinalMatchResult } from '@/src/features/inferno/types';
-import type { BreadProfile } from '@/src/features/home/types';
+import type { InfernoFinalMatchProfile } from '@/src/features/inferno/types';
 
 const HEART_SIZE = 28;
 
+/** 다시 보기에서 고른 반죽 기록이 없을 때(기록을 남기기 전에 한 투표) 보여주는 문구. */
+const NO_PARTNER_MESSAGE = '기록된 투표가 없어요';
+
 interface InfernoFinalMatchSceneProps {
-  result: InfernoFinalMatchResult;
-  /** "내 분신" — 실제 러빈지옥 진입 조건과 같아서(§ ep5.tsx 가드) null 이 아니다. */
-  myProfile: BreadProfile;
+  /** 맨 위 분홍 글자. ep5 는 "RESULT", 다시 보기 투표 결과(ep1·ep3)는 "VOTE". */
+  title?: string;
+  /** 내 분신. 왼쪽에 선다. */
+  mine: InfernoFinalMatchProfile;
+  /** 상대 반죽. 오른쪽에 선다. 다시 보기에서 기록이 없으면 undefined. */
+  partner?: InfernoFinalMatchProfile;
+  /** 이름 아래 한 줄 요약. ep5 만 쓴다. */
+  summaryLine?: string;
+  /**
+   * ep5 의 "반죽 → 빵" 등장 연출 시계(InfernoFinalMatchReveal). 넘기면 두 마리가 반죽에서 구운 빵으로
+   * 바뀌고, 연출이 끝나면(시계가 끝 시각이면) 구운 빵 RESULT 가 된다. 넘기지 않으면 반죽 그대로인 정지 화면이다.
+   */
+  reveal?: SharedValue<number>;
+}
+
+interface RevealLayerProps {
+  reveal?: SharedValue<number>;
+  children: ReactNode;
+}
+
+/** 연출 중에는 숨겼다가 빵이 된 뒤 나타나는 요소(제목·하트·이름). 연출이 없으면 그냥 그린다. */
+function RevealLayer({ reveal, children }: RevealLayerProps) {
+  return reveal ? <InfernoBakeFade time={reveal}>{children}</InfernoBakeFade> : <>{children}</>;
+}
+
+interface FigureProps {
+  profile: InfernoFinalMatchProfile;
+  side: -1 | 1;
+  reveal?: SharedValue<number>;
+}
+
+function Figure({ profile, side, reveal }: FigureProps) {
+  // 연출과 정지 화면이 같은 칸(chatSizeClass)을 쓴다 — 크기 기준은 이 한 곳이다.
+  const sizeClass = findDoughFigure(profile.type).chatSizeClass;
+
+  if (reveal) {
+    return (
+      <InfernoBakeFigure
+        type={profile.type}
+        sizeClass={sizeClass}
+        side={side}
+        hopDelaySec={side === 1 ? BAKE.partnerHopDelaySec : 0}
+        time={reveal}
+        accessibilityLabel={profile.name}
+      />
+    );
+  }
+  return (
+    <BreadCharacter
+      type={profile.type}
+      state="personDough"
+      className={sizeClass}
+      accessibilityLabel={profile.name}
+    />
+  );
 }
 
 /**
@@ -28,38 +89,55 @@ interface InfernoFinalMatchSceneProps {
  *
  * 다음 페이지 이동은 상단 바 "다음화면"(InfernoTopBar)이 이미 있어 페이지 안에 따로
  * 버튼을 두지 않는다.
+ *
+ * ep1·ep3 을 다시 볼 때 투표지 대신 같은 장면을 "VOTE" 제목으로 쓴다(사용자 요청) — 내 반죽과
+ * 내가 투표한 반죽(ep3 미니게임 실패면 랜덤으로 정해진 반죽)을 나란히 세운다.
+ *
+ * ep5 는 `reveal` 로 등장 연출을 이 자리에서 그대로 튼다(사용자 지시): 두 반죽이 바깥에서 다가와 연기
+ * 뒤에서 구운 빵이 되고(러빈지옥 동안은 반죽, 끝날 때는 빵), 그 뒤에 제목·하트·이름이 나타난다. 연출이
+ * 따로 떨어진 화면이 아니라 RESULT 의 같은 칸에서 일어나서, 넘어갈 때 빵 크기·위치가 튀지 않는다.
  */
-export default function InfernoFinalMatchScene({ result, myProfile }: InfernoFinalMatchSceneProps) {
+export default function InfernoFinalMatchScene({
+  title = 'RESULT',
+  mine,
+  partner,
+  summaryLine,
+  reveal,
+}: InfernoFinalMatchSceneProps) {
   return (
     <View className="flex-1 flex-col items-center justify-center gap-[16px]">
-      <Text className="text-center text-pink-500" style={okMallangBTitleStyle}>
-        RESULT
-      </Text>
+      <RevealLayer reveal={reveal}>
+        <Text className="text-center text-pink-500" style={okMallangBTitleStyle}>
+          {title}
+        </Text>
+      </RevealLayer>
 
       <View className="flex-row items-center gap-[16px]">
-        <BreadCharacter
-          type={myProfile.type}
-          state="personDough"
-          className={findDoughFigure(myProfile.type).chatSizeClass}
-          accessibilityLabel={myProfile.name}
-        />
-        <HeartIcon color={theme.heart.filled} size={HEART_SIZE} />
-        <BreadCharacter
-          type={result.profile.type}
-          state="personDough"
-          className={findDoughFigure(result.profile.type).chatSizeClass}
-          accessibilityLabel={result.profile.name}
-        />
+        {reveal ? <InfernoBakeGlow time={reveal} /> : null}
+        <Figure profile={mine} side={-1} reveal={reveal} />
+        {partner ? (
+          <>
+            <RevealLayer reveal={reveal}>
+              <HeartIcon color={theme.heart.filled} size={HEART_SIZE} />
+            </RevealLayer>
+            <Figure profile={partner} side={1} reveal={reveal} />
+          </>
+        ) : null}
+        {reveal ? <InfernoBakeSmoke time={reveal} /> : null}
       </View>
 
-      <View className="flex-col items-center gap-[4px]">
-        <Text variant="heading-h4" className="text-text-primary">
-          {result.profile.name}
-        </Text>
-        <Text variant="body-m" className="text-center text-text-primary">
-          {result.summaryLine}
-        </Text>
-      </View>
+      <RevealLayer reveal={reveal}>
+        <View className="flex-col items-center gap-[4px]">
+          <Text variant="heading-h4" className="text-text-primary">
+            {partner ? partner.name : NO_PARTNER_MESSAGE}
+          </Text>
+          {summaryLine ? (
+            <Text variant="body-m" className="text-center text-text-primary">
+              {summaryLine}
+            </Text>
+          ) : null}
+        </View>
+      </RevealLayer>
     </View>
   );
 }

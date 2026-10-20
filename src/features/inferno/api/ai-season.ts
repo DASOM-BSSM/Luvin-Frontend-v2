@@ -4,12 +4,18 @@ import { useAuthStore } from '@/src/features/auth/store/auth-store';
 
 import type {
   AiCharacterProfileRequest,
+  AiEpisodeFeedbackView,
   AiEpisodeMessagesView,
   AiEpisodeProgressView,
+  AiMessageLikeView,
   AiReportView,
   AiRerollView,
   AiSeasonStatusView,
+  AiSeasonSummaryView,
   AiSelectionView,
+  EpisodeFeedbackHttpRequest,
+  EpisodeMessageLikeHttpRequest,
+  StartNextSeasonRequest,
 } from '@/src/features/inferno/api/ai-season-types';
 
 /**
@@ -47,6 +53,25 @@ export async function createSeasonFromSurvey(surveyResultId: string): Promise<Ai
   return data.data;
 }
 
+/**
+ * `POST /api/ai/seasons/next`. 지금 시즌을 마치고 다음 시즌을 연다(ep5 "다음 시즌 시작하기").
+ * `from-survey`와 달리 이미 시즌이 있어도 그대로 돌려주지 않고 새 시즌을 만든다 — 그래서
+ * 재시도가 시즌을 두 번 만들지 않도록 `clientRequestId`를 같이 보낸다.
+ */
+export async function startNextSeason(request: StartNextSeasonRequest): Promise<AiSeasonStatusView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/next', request);
+  return data.data;
+}
+
+/**
+ * `GET /api/ai/seasons`. 지금까지 연 시즌 목록(지난 시즌 포함). 오븐 화면이 시즌마다 카드를
+ * 따로 보여줄 때 쓴다.
+ */
+export async function listSeasons(): Promise<AiSeasonSummaryView[]> {
+  const { data } = await httpClient.get<ApiEnvelope<AiSeasonSummaryView[]>>('/api/ai/seasons');
+  return data.data;
+}
+
 /** `GET /api/ai/seasons/me`. */
 export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
   const { data } = await httpClient.get<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/me');
@@ -67,11 +92,18 @@ export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
 /** `GET /api/ai/seasons/episodes/{number}`. */
 export async function getEpisodeMessages(
   episodeNumber: number,
-  params?: { afterSequence?: number; limit?: number },
+  params?: { afterSequence?: number; limit?: number; seasonId?: string },
 ): Promise<AiEpisodeMessagesView> {
   const { data } = await httpClient.get<ApiEnvelope<AiEpisodeMessagesView>>(
     `/api/ai/seasons/episodes/${episodeNumber}`,
-    { params: { after_sequence: params?.afterSequence, limit: params?.limit } },
+    {
+      params: {
+        after_sequence: params?.afterSequence,
+        limit: params?.limit,
+        // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+        season_id: params?.seasonId,
+      },
+    },
   );
   return data.data;
 }
@@ -107,6 +139,50 @@ export async function requestReroll(episodeNumber: number, partnerId: string): P
   return data.data;
 }
 
+/**
+ * `GET /api/ai/seasons/episodes/{number}/rerolls`. 이 회차의 "다시 굽기" 작업 상태.
+ * 아직 다시 굽기를 한 적이 없을 때 어떤 응답이 오는지는 스펙에 없다 — 부르는 쪽
+ * (use-inferno-rebake)이 404/409 와 빈 data 를 "없음"으로 흡수한다.
+ */
+export async function getRerollStatus(episodeNumber: number, seasonId?: string): Promise<AiRerollView | null> {
+  const { data } = await httpClient.get<ApiEnvelope<AiRerollView | null>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
+    // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+    { params: { season_id: seasonId } },
+  );
+  return data.data ?? null;
+}
+
+/**
+ * `POST /api/ai/seasons/episodes/{number}/feedback`. "나의 빵에게" 피드백(ep2·ep4 의 1:1 대화).
+ * `messageId`는 회차 조회(`GET .../episodes/{number}`)로 받은 메시지 id 를 그대로 보낸다.
+ */
+export async function submitEpisodeFeedback(
+  episodeNumber: number,
+  request: EpisodeFeedbackHttpRequest,
+): Promise<AiEpisodeFeedbackView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiEpisodeFeedbackView>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/feedback`,
+    request,
+  );
+  return data.data;
+}
+
+/**
+ * `POST /api/ai/seasons/episodes/{number}/likes`. ep2·ep4 1:1 대화 한 줄의 하트를 켜고 끈다(토글).
+ * 안 눌려 있으면 켜고, 눌려 있으면 끈다. 응답은 바뀐 뒤 상태다.
+ */
+export async function toggleEpisodeMessageLike(
+  episodeNumber: number,
+  request: EpisodeMessageLikeHttpRequest,
+): Promise<AiMessageLikeView> {
+  const { data } = await httpClient.post<ApiEnvelope<AiMessageLikeView>>(
+    `/api/ai/seasons/episodes/${episodeNumber}/likes`,
+    request,
+  );
+  return data.data;
+}
+
 /** `POST /api/ai/seasons/episodes/1/selection`. ep1 투표. */
 export async function submitEpisode1Selection(partnerId: string): Promise<AiSelectionView> {
   const { data } = await httpClient.post<ApiEnvelope<AiSelectionView>>('/api/ai/seasons/episodes/1/selection', {
@@ -130,7 +206,10 @@ export async function submitEpisode3Result(success: boolean, partnerId?: string)
  * 상대를 직접 추론하던 우회 로직(map-ai-season-report.ts의 옛 `mapFinalMatchFromEp4`)을
  * 대체한다.
  */
-export async function getSeasonReport(): Promise<AiReportView> {
-  const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report');
+export async function getSeasonReport(seasonId?: string): Promise<AiReportView> {
+  // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
+  const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report', {
+    params: { season_id: seasonId },
+  });
   return data.data;
 }

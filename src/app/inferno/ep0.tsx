@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 
+import { leaveInferno } from '@/src/features/inferno/lib/leave-inferno';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import { EP0_SCENES } from '@/src/features/inferno/constants/scenes';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
@@ -43,7 +43,7 @@ export default function InfernoEp0Screen() {
   // 끝까지 보든 건너뛰든 이 회차는 본 것으로 친다. ep0 은 안내라서 굳이 붙잡아 둘 이유가 없다.
   function finishEpisode() {
     completeEpisode(EPISODE_ORDER);
-    router.dismissTo('/');
+    void leaveInferno();
   }
 
   function handleNextPress() {

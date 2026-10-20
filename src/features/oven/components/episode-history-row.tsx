@@ -14,6 +14,8 @@ interface EpisodeHistoryRowProps {
    * 투명이고, 눌리는 동안에만 pink/200 쪽으로 애니메이션된다.
    */
   highlighted?: boolean;
+  /** 누르면 그 회차로 들어간다. 넘기지 않으면 눌림 표시만 하고 아무 데도 가지 않는다. */
+  onPress?: () => void;
 }
 
 const PRESS_ANIMATION_DURATION_MS = 150;
@@ -26,7 +28,7 @@ const PRESS_ANIMATION_DURATION_MS = 150;
  * 배경색은 className 이 아니라 Reanimated `style` 로 애니메이션한다 — 미니게임 씬의
  * LaneSlotView/RailWarningOverlay 와 같은 패턴(AGENTS.md §16 애니메이션 스코프 예외).
  */
-export default function EpisodeHistoryRow({ label, body, highlighted = false }: EpisodeHistoryRowProps) {
+export default function EpisodeHistoryRow({ label, body, highlighted = false, onPress }: EpisodeHistoryRowProps) {
   const restProgress = highlighted ? 1 : 0;
   const pressProgress = useSharedValue(restProgress);
 
@@ -45,9 +47,12 @@ export default function EpisodeHistoryRow({ label, body, highlighted = false }: 
   return (
     <Animated.View className="w-full rounded-[8px] border border-dashed border-default-gray" style={animatedStyle}>
       <Pressable
+        accessibilityRole={onPress ? 'button' : undefined}
+        accessibilityLabel={onPress ? `${label} ${body} 다시 보기` : undefined}
         className="w-full flex-col items-start gap-[4px] px-[20px] py-[12px]"
         onPressIn={handleRowPressIn}
         onPressOut={handleRowPressOut}
+        onPress={onPress}
       >
         <Text variant="body-xxs" className="text-text-primary">
           {label}

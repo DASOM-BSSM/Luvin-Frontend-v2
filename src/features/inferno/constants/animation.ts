@@ -123,5 +123,8 @@ export const CARDFLIP_PREVIEW_MS = 6000;
 /** 짝이 틀렸을 때 다시 덮기 전까지 보여주는 시간. */
 export const CARDFLIP_MISMATCH_HOLD_MS = 700;
 
-/** 목숨 개수. Figma `Frame 107`(6219:4039) 이 하트 4개다. */
-export const CARDFLIP_LIVES = 4;
+/**
+ * 목숨 개수. Figma `Frame 107`(6219:4039) 은 하트 4개인데, 사용자 요청으로 5개로 늘렸다.
+ * 바꾸면 typography.ts 의 `inferno-hud-side` 폭(하트 줄 폭)도 같이 맞춰야 한다.
+ */
+export const CARDFLIP_LIVES = 5;

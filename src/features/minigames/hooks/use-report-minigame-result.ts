@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import useMinigames from '@/src/features/minigames/hooks/use-minigames';
 import usePlayMinigame from '@/src/features/minigames/hooks/use-play-minigame';
@@ -18,19 +18,43 @@ import type { GamePhase } from '@/src/features/luvin-hell/types';
 export default function useReportMinigameResult(gameTitle: string, phase: GamePhase) {
   const minigamesQuery = useMinigames();
   const playMutation = usePlayMinigame();
+  // 이번 판을 이미 보고했는지. 판이 끝난 순간 목록이 아직 로딩 중이면 목록이 도착했을 때
+  // 보고해야 하므로(안 그러면 서버 지급이 통째로 빠진다) phase 만이 아니라 목록 도착에도
+  // 반응하되, 한 판에 두 번 보고하지 않도록 막는다.
+  const hasReportedRef = useRef(false);
 
   useEffect(() => {
     if (phase !== 'success' && phase !== 'fail') {
+      hasReportedRef.current = false;
+      return;
+    }
+    if (hasReportedRef.current) {
       return;
     }
 
     const game = minigamesQuery.data?.find((item) => item.title === gameTitle);
     if (!game) {
+      if (__DEV__ && minigamesQuery.data) {
+        // 목록은 왔는데 이름이 안 맞으면 서버 지급이 통째로 빠진다 — 토큰이 사라지는 원인 추적용.
+        console.warn(
+          `[useReportMinigameResult] '${gameTitle}' 를 서버 목록에서 못 찾음:`,
+          minigamesQuery.data.map((item) => item.title),
+        );
+      }
       return;
     }
 
-    playMutation.mutate({ gameId: game.gameId, outcome: phase === 'success' ? 'success' : 'fail' });
-    // phase 가 success/fail 로 바뀌는 순간에만 한 번 보고한다.
+    hasReportedRef.current = true;
+    playMutation.mutate(
+      { gameId: game.gameId, outcome: phase === 'success' ? 'success' : 'fail' },
+      {
+        onSuccess: (result) => {
+          if (__DEV__) {
+            console.log(`[useReportMinigameResult] gameId=${game.gameId} ${phase} -> reward.token=${result.reward?.token}`);
+          }
+        },
+      },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  }, [phase, minigamesQuery.data]);
 }

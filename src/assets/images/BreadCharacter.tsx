@@ -1,4 +1,4 @@
-import { Image } from 'expo-image';
+import { Image, type ImageProps } from 'expo-image';
 import { cssInterop } from 'nativewind';
 
 const InteropImage = cssInterop(Image, { className: 'style' });
@@ -70,6 +70,9 @@ interface BreadCharacterProps {
   state: BreadState;
   className?: string;
   accessibilityLabel?: string;
+  contentPosition?: ImageProps['contentPosition'];
+  recyclingKey?: ImageProps['recyclingKey'];
+  transition?: ImageProps['transition'];
 }
 
 /** 빵 캐릭터 이미지. */
@@ -78,6 +81,9 @@ export default function BreadCharacter({
   state,
   className = 'h-[45px] w-[76px]',
   accessibilityLabel,
+  contentPosition,
+  recyclingKey,
+  transition,
 }: BreadCharacterProps) {
   return (
     <InteropImage
@@ -85,6 +91,9 @@ export default function BreadCharacter({
       source={BREAD_SOURCES[state][type]}
       contentFit="contain"
       accessibilityLabel={accessibilityLabel}
+      contentPosition={contentPosition}
+      recyclingKey={recyclingKey}
+      transition={transition}
     />
   );
 }

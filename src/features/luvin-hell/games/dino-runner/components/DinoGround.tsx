@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 
 import { sceneColors } from '@/src/features/luvin-hell/constants/scene-colors';
+import { GROUND_STACK_HEIGHT } from '@/src/features/luvin-hell/games/dino-runner/engine/constants';
 
 interface GroundPatch {
   left: number;
@@ -25,13 +26,9 @@ const GROUND_PATCHES: readonly GroundPatch[] = [
 ];
 
 /**
- * 전체 땅 스택(밝은 잔디+어두운 잔디+흙바닥)의 높이. Figma 미니게임1 기준 잔디 상단(y=443)에서
- * 프레임 하단(y=555)까지의 실측치 — `밝은 잔디 7 + 어두운 잔디 18` 다음에 오는 흙바닥은 이
- * 값에서 앞의 둘을 뺀 나머지를 채우는 flex-1 이라, 개별 밴드 높이 합(7+18+83=108)과
- * 4px 차이가 나는 게 정상이다(엔진 `GROUND_Y`가 밝은/어두운 잔디 경계와 일치하도록 맞춘 값).
+ * 전체 땅 스택(밝은 잔디+어두운 잔디+흙바닥)의 높이는 엔진 `GROUND_STACK_HEIGHT`를 그대로 쓴다 —
+ * 엔진 `GROUND_Y`(잔디 윗면)와 그림이 항상 같은 값에서 나오도록 한 곳에서만 정의한다.
  */
-const GROUND_STACK_HEIGHT = 112;
-
 /**
  * 공룡빵게임 배경의 땅: 밝은 잔디 / 어두운 잔디 / 흙바닥(+흙바닥 위 패치 8개), 위에서
  * 아래 순서로 4겹. `DinoRunnerScene`과 `about.tsx` 미리보기가 공유한다.

@@ -8,6 +8,8 @@ import type { AiReportView } from "@/src/features/inferno/api/ai-season-types";
 import { aiSeasonKeys } from "@/src/features/inferno/api/query-keys";
 import { getInfernoSeasonSummary } from "@/src/features/inferno/api/season-summary";
 import useAiSeasonStatus from "@/src/features/inferno/hooks/use-ai-season-status";
+import useGenerationTimeout from "@/src/features/inferno/hooks/use-generation-timeout";
+import useViewedSeason from "@/src/features/inferno/hooks/use-viewed-season";
 import type { InfernoSeasonSummary } from "@/src/features/inferno/types";
 import { mapAiHighlights, mapAiReport, mapFinalMatchFromReport } from "@/src/features/inferno/utils/map-ai-season-report";
 
@@ -32,9 +34,9 @@ function isNotGeneratedYetError(error: unknown): boolean {
   return axios.isAxiosError(error) && (error.response?.status === 409 || error.response?.status === 404);
 }
 
-async function fetchSeasonReportOrNull(): Promise<AiReportView | null> {
+async function fetchSeasonReportOrNull(seasonId?: string): Promise<AiReportView | null> {
   try {
-    const data = await getSeasonReport();
+    const data = await getSeasonReport(seasonId);
     if (__DEV__) {
       console.log(
         `[ep5] ai-season report 준비됨 finalPartnerId=${data.finalPartnerId} narrative=${data.narrative?.slice(0, 40)}... highlights=${JSON.stringify(data.highlights)}`,
@@ -55,6 +57,11 @@ async function fetchSeasonReportOrNull(): Promise<AiReportView | null> {
 interface UseInfernoSeasonSummaryResult {
   summary: InfernoSeasonSummary | undefined;
   isLoading: boolean;
+  /**
+   * AI가 리포트를 만드는 중(아직 리포트가 없고 실패도 아님). 처음 불러오는 중은 포함하지 않는다 —
+   * ep5 굽기 장면은 이 값으로만 시작한다(use-ep5-bake). 지난 시즌은 늘 false.
+   */
+  isGenerating: boolean;
   isError: boolean;
   /** AI 생성 요청 자체가 실패로 응답한 상태(use-ai-episode-messages 주석 참고). */
   hasGenerationFailed: boolean;
@@ -70,6 +77,10 @@ interface UseInfernoSeasonSummaryResult {
  * (map-ai-season-report.ts 주석 참고) — `finalPartnerId`는 "다시 굽기" 이후 상대가 바뀐
  * 경우까지 정확히 반영된다(예전엔 ep4 대화에서 직접 추론하는 우회 로직을 썼는데, 다시
  * 굽기 후에는 틀린 상대가 나오는 한계가 있어서 이 엔드포인트로 교체했다).
+ *
+ * 지난 시즌을 다시 볼 때(use-viewed-season)는 그 시즌 리포트를 한 번 읽기만 한다 — 생성 요청·폴링·시간
+ * 초과를 하지 않는다(use-ai-episode-messages 와 같은 이유). 최종 상대는 리포트의 `finalPartnerId` 로
+ * 바로 정한다. 지난 시즌 참가자 목록을 주는 API 가 없는데, 상대의 빵·이름은 id 만으로 정해진다.
  */
 export default function useInfernoSeasonSummary(order: number): UseInfernoSeasonSummaryResult {
   const isAiConnected = order === 5;
@@ -78,14 +89,28 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
   const [hasGenerationFailed, setHasGenerationFailed] = useState(false);
 
   const seasonQuery = useAiSeasonStatus();
+  const { pastSeasonId, isPastSeason } = useViewedSeason();
   const seasonReportQuery = useQuery({
-    queryKey: aiSeasonKeys.report,
-    queryFn: fetchSeasonReportOrNull,
+    queryKey: pastSeasonId ? aiSeasonKeys.pastReport(pastSeasonId) : aiSeasonKeys.report,
+    queryFn: () => fetchSeasonReportOrNull(pastSeasonId),
     enabled: isAuthenticated && isAiConnected,
-    refetchInterval: (query) => (hasGenerationFailed || query.state.data != null ? false : REPORT_POLL_MS),
+    refetchInterval: (query) =>
+      hasGenerationFailed || isPastSeason || query.state.data != null ? false : REPORT_POLL_MS,
   });
 
   const isReportReady = seasonReportQuery.data != null;
+  // 3분 넘게 리포트가 안 오면 실패로 보고 "다시 시도" 를 띄운다(use-generation-timeout).
+  useGenerationTimeout(
+    isAiConnected && seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed && !isPastSeason,
+    handleGenerationTimeout,
+  );
+
+  function handleGenerationTimeout() {
+    if (__DEV__) {
+      console.log("[ep5] 생성 대기 시간 초과 -> 실패로 처리");
+    }
+    setHasGenerationFailed(true);
+  }
 
   function triggerGeneration() {
     hasRequestedGeneration.current = true;
@@ -115,7 +140,7 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
   }
 
   useEffect(() => {
-    if (!isAiConnected || isReportReady || hasRequestedGeneration.current) {
+    if (!isAiConnected || isReportReady || hasRequestedGeneration.current || isPastSeason) {
       return;
     }
 
@@ -125,7 +150,7 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
       }
       triggerGeneration();
     }
-  }, [isAiConnected, isReportReady, seasonReportQuery.isSuccess]);
+  }, [isAiConnected, isReportReady, seasonReportQuery.isSuccess, isPastSeason]);
 
   /** "다시 시도". 실패 표시를 내리고 생성을 다시 요청한다. */
   function retryGeneration() {
@@ -137,16 +162,21 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
     return {
       summary: getInfernoSeasonSummary(order),
       isLoading: false,
+      isGenerating: false,
       isError: false,
       hasGenerationFailed: false,
       retryGeneration: () => {},
     };
   }
 
+  // 지난 시즌은 참가자 목록 대신 리포트의 최종 상대 id 하나로 참가자를 세운다(위 주석).
+  const season = isPastSeason
+    ? seasonReportQuery.data
+      ? { characters: [{ characterId: seasonReportQuery.data.finalPartnerId, role: "CANDIDATE", gender: "" }] }
+      : undefined
+    : seasonQuery.data;
   const finalMatch =
-    seasonQuery.data && seasonReportQuery.data
-      ? mapFinalMatchFromReport(seasonReportQuery.data, seasonQuery.data)
-      : undefined;
+    season && seasonReportQuery.data ? mapFinalMatchFromReport(seasonReportQuery.data, season) : undefined;
 
   const summary: InfernoSeasonSummary | undefined =
     finalMatch && seasonReportQuery.data
@@ -158,13 +188,16 @@ export default function useInfernoSeasonSummary(order: number): UseInfernoSeason
         }
       : undefined;
 
+  const isGenerating = !isPastSeason && seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed;
+
   return {
     summary,
-    isLoading:
-      seasonQuery.isLoading ||
-      seasonReportQuery.isLoading ||
-      (seasonReportQuery.isSuccess && !isReportReady && !hasGenerationFailed),
-    isError: seasonQuery.isError || seasonReportQuery.isError,
+    // 지난 시즌에 리포트가 없으면 기다려도 생기지 않는다 — 로딩이 아니라 "리포트가 아직 없어요" 다.
+    isLoading: isPastSeason
+      ? seasonReportQuery.isLoading
+      : seasonQuery.isLoading || seasonReportQuery.isLoading || isGenerating,
+    isGenerating,
+    isError: isPastSeason ? seasonReportQuery.isError : seasonQuery.isError || seasonReportQuery.isError,
     hasGenerationFailed,
     retryGeneration,
   };

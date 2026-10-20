@@ -1,26 +1,25 @@
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
 import ProfileAvatarPhoto from '@/src/assets/images/ProfileAvatarPhoto';
 import BottomNav from '@/src/components/bottom-nav';
 import Button from '@/src/components/ui/button';
+import ConfirmModal from '@/src/components/ui/confirm-modal';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import useLogout from '@/src/features/auth/hooks/use-logout';
-import { useBreadStore } from '@/src/features/bread/store/bread-store';
-import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 import type { Gender } from '@/src/features/my-page/types';
-import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
+import useDeleteAccount from '@/src/features/user/hooks/use-delete-account';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 import useUpdateProfile from '@/src/features/user/hooks/use-update-profile';
-import queryClient from '@/src/lib/query-client';
 
 /**
  * 내 정보 자세히 보기/수정. Figma "내 정보 수정-미수"(6300:8004).
@@ -34,6 +33,8 @@ export default function MyPageEditScreen() {
   const nickname = useProfileSettingsStore((state) => state.nickname);
   const setNickname = useProfileSettingsStore((state) => state.setNickname);
   const logoutMutation = useLogout();
+  const deleteAccountMutation = useDeleteAccount();
+  const [openConfirm, setOpenConfirm] = useState<'logout' | 'withdraw' | undefined>(undefined);
   const myProfileQuery = useMyProfile();
   const updateProfileMutation = useUpdateProfile();
   useTokenBalance();
@@ -83,45 +84,38 @@ export default function MyPageEditScreen() {
     updateProfileMutation.mutate({ nickname, gender }, { onSuccess: handleBackPress });
   }
 
+  // 스택을 비우고 온보딩만 남긴다 — replace 만 하면 아래 화면이 남아 다시 로그인했을 때 홈이
+  // 두 개 쌓였다(reset-to-onboarding 주석 참고).
   function handleLogoutSettled() {
-    router.replace('/onboarding');
+    resetToOnboarding();
   }
 
-  function handleLogoutConfirm() {
-    logoutMutation.mutate(undefined, { onSettled: handleLogoutSettled });
-  }
-
+  // 로그아웃/탈퇴 모두 시스템 Alert 대신 시안(Figma 로그아웃·계정 탈퇴 `모달`)대로 그린
+  // ConfirmModal 을 거쳐서만 실행한다.
   function handleLogoutPress() {
-    Alert.alert('로그아웃', '정말 로그아웃 하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', style: 'destructive', onPress: handleLogoutConfirm },
-    ]);
+    setOpenConfirm('logout');
   }
 
   function handleWithdrawPress() {
-    Alert.alert('계정 탈퇴', '정말 계정을 탈퇴하시겠어요? 이 작업은 되돌릴 수 없어요.', [
-      { text: '취소', style: 'cancel' },
-      { text: '탈퇴', style: 'destructive', onPress: () => router.replace('/onboarding') },
-    ]);
+    setOpenConfirm('withdraw');
   }
 
-  // TEMP DEBUG(러빈지옥 로컬 진행 상태 초기화 — 백엔드가 계정의 AI 시즌을 리셋해준 뒤,
-  // 반죽 만드는 것부터 다시 테스트할 때 씀). 확인 끝나면 지울 것.
-  function handleDebugResetInfernoProgress() {
-    Alert.alert('[DEV] 러빈지옥 초기화', '완료 기록/이어보기 자리를 로컬에서 지워요. 계속할까요?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '초기화',
-        style: 'destructive',
-        onPress: () => {
-          useInfernoStore.getState().resetProgress();
-          useBreadStore.getState().clear();
-          useSurveyStore.getState().resetSurvey();
-          queryClient.clear();
-          router.replace('/');
-        },
-      },
-    ]);
+  function handleConfirmCancel() {
+    setOpenConfirm(undefined);
+  }
+
+  function handleLogoutConfirm() {
+    setOpenConfirm(undefined);
+    logoutMutation.mutate(undefined, { onSettled: handleLogoutSettled });
+  }
+
+  function handleWithdrawSuccess() {
+    resetToOnboarding();
+  }
+
+  function handleWithdrawConfirm() {
+    setOpenConfirm(undefined);
+    deleteAccountMutation.mutate(undefined, { onSuccess: handleWithdrawSuccess });
   }
 
   return (
@@ -219,29 +213,52 @@ export default function MyPageEditScreen() {
         </View>
 
         <View className="flex-row items-center gap-[12px]">
-          <Pressable accessibilityRole="button" onPress={handleLogoutPress}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={logoutMutation.isPending}
+            onPress={handleLogoutPress}
+          >
             <Text variant="body-s" className="text-state-error">
               로그아웃
             </Text>
           </Pressable>
-          <Pressable accessibilityRole="button" onPress={handleWithdrawPress}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={deleteAccountMutation.isPending}
+            onPress={handleWithdrawPress}
+          >
             <Text variant="body-s" className="text-text-muted">
               계정 탈퇴
             </Text>
           </Pressable>
-          {__DEV__ ? (
-            <Pressable accessibilityRole="button" onPress={handleDebugResetInfernoProgress}>
-              <Text variant="body-s" className="text-state-error">
-                [DEV] 러빈지옥 초기화
-              </Text>
-            </Pressable>
-          ) : null}
         </View>
+        {deleteAccountMutation.isError ? (
+          <Text variant="body-s" className="text-state-error">
+            계정 탈퇴에 실패했어요. 다시 시도해주세요
+          </Text>
+        ) : null}
       </ScrollView>
 
       <View className="pb-[10px]">
         <BottomNav active="none" />
       </View>
+
+      <ConfirmModal
+        visible={openConfirm === 'logout'}
+        message="정말 로그아웃 하시겠어요?"
+        confirmLabel="로그아웃"
+        isConfirmDisabled={logoutMutation.isPending}
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleConfirmCancel}
+      />
+      <ConfirmModal
+        visible={openConfirm === 'withdraw'}
+        message="정말 계정을 탈퇴하시겠어요?"
+        confirmLabel="탈퇴"
+        isConfirmDisabled={deleteAccountMutation.isPending}
+        onConfirm={handleWithdrawConfirm}
+        onCancel={handleConfirmCancel}
+      />
     </Screen>
   );
 }

@@ -5,6 +5,7 @@ import Dropdown, { type DropdownOption } from '@/src/components/ui/dropdown';
 import Text from '@/src/components/ui/text';
 import TextArea from '@/src/components/ui/text-area';
 import { okMallangBTitleStyle } from '@/src/constants/typography';
+import InfernoFeedbackSubmitButton from '@/src/features/inferno/components/inferno-feedback-submit-button';
 import type { InfernoFeedbackTopic } from '@/src/features/inferno/types';
 
 /** 쪽지 맨 위 분홍 글자. Figma 5482:1892. */
@@ -18,9 +19,8 @@ const REASON_TITLE = '나의 AI가 이렇게 대답한 이유는?';
 const REASON_EMPTY = '...';
 const WRITE_ACTION = '나의 반죽 피드백 하기';
 
-/** 피드백을 쓰는 단계의 문구. Figma 5482:1933, 5482:1935. */
+/** 피드백을 쓰는 단계의 문구. Figma 5482:1933. 버튼 문구(5482:1935)는 InfernoFeedbackSubmitButton 에 있다. */
 const WRITE_MESSAGE = '나의 반죽에게 피드백을 남겨주세요';
-const SUBMIT_ACTION = '피드백 하기';
 
 /** 어느 단계를 보여줄지. pick 은 대화를 고르는 화면, write 는 피드백을 쓰는 화면. */
 export type InfernoFeedbackStep = 'pick' | 'write';
@@ -38,6 +38,10 @@ interface InfernoFeedbackSceneProps {
   onWriteStartPress: () => void;
   onFeedbackChange: (value: string) => void;
   onSubmitPress: () => void;
+  /** 보내는 중인지. 버튼을 잠근다. */
+  isSubmitting?: boolean;
+  /** 보내기가 실패했을 때 버튼 아래 보여줄 문구. */
+  errorMessage?: string;
 }
 
 /**
@@ -50,6 +54,8 @@ interface InfernoFeedbackSceneProps {
  *
  * 이유 문구가 없는 줄을 고르면 "대화 찾기" 를 눌러도 오른쪽이 "..." 인 채로 남는다.
  * 시안에 문구가 한 줄분만 있어서 나머지를 지어내지 않은 결과다(types 의 reason 주석 참고).
+ * 서버가 아직 이유를 주지 않아서, 이유가 없어도 "대화 찾기" 만 눌렀으면 다음 버튼은 눌린다
+ * (사용자 결정). 이유 API 가 생기면 다시 이유가 있을 때만 열지 정할 것.
  */
 export default function InfernoFeedbackScene({
   step,
@@ -62,6 +68,8 @@ export default function InfernoFeedbackScene({
   onWriteStartPress,
   onFeedbackChange,
   onSubmitPress,
+  isSubmitting,
+  errorMessage,
 }: InfernoFeedbackSceneProps) {
   const options: DropdownOption[] = topics.map(({ messageId, message }) => ({
     id: messageId,
@@ -88,6 +96,7 @@ export default function InfernoFeedbackScene({
               options={options}
               selectedId={selectedMessageId}
               placeholder={PICK_PLACEHOLDER}
+              title={PICK_MESSAGE}
               onSelect={onSelectTopic}
             />
             <Button
@@ -98,7 +107,11 @@ export default function InfernoFeedbackScene({
             />
           </>
         ) : (
-          <Button label={SUBMIT_ACTION} variant="notice" onPress={onSubmitPress} />
+          <InfernoFeedbackSubmitButton
+            onPress={onSubmitPress}
+            isSubmitting={isSubmitting}
+            errorMessage={errorMessage}
+          />
         )}
       </View>
 
@@ -116,7 +129,7 @@ export default function InfernoFeedbackScene({
             <Button
               label={WRITE_ACTION}
               variant="noticeSoft"
-              disabled={!shownTopic?.reason}
+              disabled={!shownTopic}
               onPress={onWriteStartPress}
             />
           </>

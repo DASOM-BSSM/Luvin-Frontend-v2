@@ -1,10 +1,12 @@
 import type { BreadProfile } from '@/src/features/home/types';
 import type {
+  AiCharacterView,
   AiEpisodeMessagesView,
   AiMessageView,
   AiSeasonStatusView,
 } from '@/src/features/inferno/api/ai-season-types';
-import { EPISODE_VOTE_PROMPTS } from '@/src/features/inferno/constants/episode-copy';
+import { EPISODE_VOTE_PROMPTS, REBAKE_COPY } from '@/src/features/inferno/constants/episode-copy';
+import { REBAKE_EPISODES } from '@/src/features/inferno/constants/rebake';
 import type {
   InfernoChatMessage,
   InfernoChatPage,
@@ -12,8 +14,14 @@ import type {
   InfernoFeedbackTopic,
   InfernoMatchReveal,
   InfernoParticipant,
+  InfernoRebake,
 } from '@/src/features/inferno/types';
 import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno/utils/character-persona';
+import {
+  paginateByHeight,
+  type ChatPageBudget,
+  type ChatPageBudgets,
+} from '@/src/features/inferno/utils/paginate-chat';
 
 /**
  * AI 시즌 상태(participants) + 회차 메시지를 화면이 이미 알고 있는 `InfernoConversation`
@@ -26,16 +34,44 @@ import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno
  */
 const REPRESENTATIVE_ROLE = 'REPRESENTATIVE';
 
-/** 한 쪽(page)에 몇 마디씩 담을지. 서버가 쪽 경계를 안 줘서 임의로 정한 값 — 실제 대화 길이 보고 조정할 것. */
-const MESSAGES_PER_PAGE = 3;
+/** 대표가 아닌 참가자의 role. 메시지로 참가자를 만들 때(buildCharactersFromMessages) 붙인다. */
+const CANDIDATE_ROLE = 'CANDIDATE';
+
+/** 대화를 바꾸는 데 필요한 시즌 정보. 참가자 목록만 쓴다. */
+type ConversationSeason = Pick<AiSeasonStatusView, 'characters'>;
+
+/**
+ * 회차 메시지의 화자로 참가자 목록을 만든다. 지난 시즌을 다시 볼 때 쓴다(use-viewed-season) — 참가자는
+ * `GET /api/ai/seasons/me`(최신 시즌만 준다)에서 오는데, 지난 시즌의 참가자를 주는 API 는 아직 없다.
+ * 참가자의 빵·이름은 캐릭터 id 만으로 정해지므로(deriveCharacterPersona) 화자 id 만 있으면 된다.
+ *
+ * 대표(나)는 `fromRepresentative` 로 가린다. 평소에는 이 필드를 믿지 않고 role 로 판정하지만(isFromMe
+ * 주석), 지난 시즌은 role 을 받을 곳이 없다. 그 회차에서 한 번도 말하지 않은 참가자는 목록에 없다.
+ */
+export function buildCharactersFromMessages(messages: AiMessageView[]): AiCharacterView[] {
+  const characters = new Map<string, AiCharacterView>();
+
+  for (const message of messages) {
+    if (characters.has(message.speakerId)) {
+      continue;
+    }
+
+    characters.set(message.speakerId, {
+      characterId: message.speakerId,
+      role: message.fromRepresentative ? REPRESENTATIVE_ROLE : CANDIDATE_ROLE,
+      gender: '',
+    });
+  }
+
+  return [...characters.values()];
+}
 
 /**
  * 투표 대신 매칭 결과를 통보받는 회차(ep2·ep4, types.ts `InfernoMatchReveal` 주석 참고).
- * 둘 다 그룹대화 → 매칭 → 1:1대화 뼈대는 같아서 같은 분기를 탄다. ep4 의 "다시 굽기"는
- * 여기서 안 만든다 — reroll 완료 여부를 확인할 조회 엔드포인트가 아직 없어서(백엔드가
- * 추가 예정) `rebake` 필드를 그냥 비워 둔다(use-inferno-conversation 주석 참고).
+ * 둘 다 그룹대화 → 매칭 → 1:1대화 뼈대는 같아서 같은 분기를 탄다.
  */
 const MATCH_REVEAL_EPISODES = new Set([2, 4]);
+
 
 /**
  * `AiMessageView.sceneKind` 값. 매칭 회차의 전체대화/1:1대화를 가르는 데 쓴다.
@@ -48,7 +84,7 @@ const MATCH_REVEAL_EPISODES = new Set([2, 4]);
 const GROUP_SCENE_KINDS = new Set(['group', 'candidates_only']);
 const PERSONAL_SCENE_KIND = 'one_to_one';
 
-function buildParticipants(season: AiSeasonStatusView, myProfile: BreadProfile | null): InfernoParticipant[] {
+function buildParticipants(season: ConversationSeason, myProfile: BreadProfile | null): InfernoParticipant[] {
   return season.characters.map((character) => {
     if (character.role === REPRESENTATIVE_ROLE) {
       return {
@@ -83,26 +119,34 @@ function toChatMessage(message: AiMessageView, representativeId: string | undefi
   };
 }
 
+/**
+ * 메시지를 쪽(page)으로 나눈다. 서버가 쪽 경계를 주지 않는다.
+ *
+ * 예전에는 무조건 세 마디씩 잘랐는데, 한 마디가 길어 말풍선이 두세 줄로 늘어나면 한 쪽이
+ * 화면 높이를 넘어 위아래가 잘리고 여백 없이 붙어 보였다(사용자 지적). 지금은 화면 높이에서
+ * 위아래 여백을 뺀 만큼만 채우고, 넘칠 것 같은 마디부터 다음 쪽으로 넘긴다(paginate-chat).
+ */
 function chunkIntoPages(
   messages: AiMessageView[],
   question: string | undefined,
   representativeId: string | undefined,
+  budget: ChatPageBudget,
 ): InfernoChatPage[] {
   if (messages.length === 0) {
     return [];
   }
 
-  const pages: InfernoChatPage[] = [];
-  for (let start = 0; start < messages.length; start += MESSAGES_PER_PAGE) {
-    const chunk = messages.slice(start, start + MESSAGES_PER_PAGE);
-    pages.push({
-      id: `page-${start}`,
-      question: start === 0 ? question : undefined,
-      messages: chunk.map((message) => toChatMessage(message, representativeId)),
-    });
-  }
+  const ranges = paginateByHeight(
+    messages.map((message) => message.text),
+    budget,
+    question !== undefined,
+  );
 
-  return pages;
+  return ranges.map(([start, end]) => ({
+    id: `page-${start}`,
+    question: start === 0 ? question : undefined,
+    messages: messages.slice(start, end).map((message) => toChatMessage(message, representativeId)),
+  }));
 }
 
 /**
@@ -127,6 +171,28 @@ function buildMatchReveal(
     noticeMessage: `${me.name} → ${partner.name}`,
     actionLabel: `${getBreadTypeNoun(partner.type)}과 오븐 가기`,
   };
+}
+
+/**
+ * "다시 굽기" 투표지에 올릴 후보. 전체대화 참가자 중 나와 지금 매칭된 상대를 뺀 나머지다
+ * (types.ts `InfernoRebake` 주석 참고). 새 상대와의 대화(chatMessages)는 여기서 만들지 않는다 —
+ * 다시 굽기가 끝나면 서버가 회차 대화를 새 버전으로 바꿔서 personalChatPages 로 내려온다.
+ */
+function buildRebake(
+  personalMessages: AiMessageView[],
+  participants: InfernoParticipant[],
+  representativeId: string | undefined,
+): InfernoRebake | undefined {
+  const partnerId = personalMessages.find((message) => !isFromMe(message, representativeId))?.speakerId;
+  const candidateIds = participants
+    .filter((participant) => !participant.isMine && participant.id !== partnerId)
+    .map((participant) => participant.id);
+
+  if (!partnerId || candidateIds.length === 0) {
+    return undefined;
+  }
+
+  return { ...REBAKE_COPY, candidateIds };
 }
 
 /** 1:1 대화에서 내 분신이 한 말만 피드백 대상으로 삼는다(types.ts 주석 참고). */
@@ -158,9 +224,11 @@ export function isEpisodeFullyGenerated(episodeNumber: number, messages: AiMessa
 }
 
 export function mapAiEpisodeToConversation(
-  season: AiSeasonStatusView,
+  season: ConversationSeason,
   episode: AiEpisodeMessagesView,
   myProfile: BreadProfile | null,
+  /** 화면 크기에서 만든 쪽 예산(paginate-chat 의 buildChatPageBudgets). */
+  pageBudgets: ChatPageBudgets,
 ): InfernoConversation {
   const participants = buildParticipants(season, myProfile);
   const representativeId = season.characters.find((character) => character.role === REPRESENTATIVE_ROLE)
@@ -170,7 +238,7 @@ export function mapAiEpisodeToConversation(
     return {
       episodeOrder: episode.episodeNumber,
       participants,
-      pages: chunkIntoPages(episode.messages, episode.topic?.title, representativeId),
+      pages: chunkIntoPages(episode.messages, episode.topic?.title, representativeId, pageBudgets.group),
       vote: EPISODE_VOTE_PROMPTS[episode.episodeNumber],
     };
   }
@@ -180,10 +248,18 @@ export function mapAiEpisodeToConversation(
 
   return {
     episodeOrder: episode.episodeNumber,
+    versionId: episode.versionId,
     participants,
-    pages: chunkIntoPages(groupMessages, undefined, representativeId),
+    pages: chunkIntoPages(groupMessages, undefined, representativeId, pageBudgets.group),
     matchReveal: buildMatchReveal(personalMessages, participants, representativeId),
-    personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId),
+    personalChatPages: chunkIntoPages(personalMessages, undefined, representativeId, pageBudgets.personal),
     feedbackTopics: buildFeedbackTopics(personalMessages, representativeId),
+    isFeedbackSubmitted: episode.feedback != null,
+    likedMessageIds: episode.likedMessageIds ?? [],
+    // 예전엔 reroll 완료를 확인할 조회 엔드포인트가 없어서 비워 뒀는데, `GET .../episodes/{number}/rerolls`
+    // 가 생겨서 붙였다(use-inferno-rebake 주석 참고). 어느 회차에 있는지는 constants/rebake 참고.
+    rebake: REBAKE_EPISODES.includes(episode.episodeNumber)
+      ? buildRebake(personalMessages, participants, representativeId)
+      : undefined,
   };
 }

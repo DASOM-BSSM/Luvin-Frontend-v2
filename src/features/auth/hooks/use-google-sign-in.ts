@@ -6,6 +6,7 @@ import { setAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
+import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
@@ -47,10 +48,14 @@ export default function useGoogleSignIn() {
       // 위 셋을 지워도 안 지워지면, 홈 화면의 "다음 에피소드"(findNextInfernoEpisode)가 이전
       // 계정이 완료한 회차 수만큼 건너뛴 회차를 새 계정 것인 양 보여준다 — 실제 서버 시즌은
       // 1화도 안 끝났는데 홈 화면만 2화부터 시작하는 것처럼 보이는 버그로 재현됨.
+      //
+      // LUV-56: 러빈지옥 진행 기록은 이제 계정별로 저장돼서 지우지 않고 이 계정의 기록으로 바꾼다 —
+      // 같은 계정이면 이전 진행도가 그대로 이어지고, 다른 계정이면 그 계정 기록(없으면 빈 기록)이다.
       queryClient.clear();
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
-      useInfernoStore.getState().resetProgress();
+      useInfernoStore.getState().switchUser(result.user.userId);
+      usePartnerLetterStore.getState().switchUser(result.user.userId);
 
       await setAccessToken(result.accessToken);
       setSession(result.user);
