@@ -142,6 +142,41 @@ export const jumpRopeLayout = {
   },
 } as const;
 
+/**
+ * ep5 RESULT 등장 연출(반죽 → 연기 → 구운 빵)의 연기·빛 배치. 두 마리가 선 줄의 가운데를 원점으로 한
+ * 실제 화면 px 다. 반죽·빵 칸 크기는 여기 두지 않는다 — RESULT 와 연출이 같은 칸(dough-figures.ts 의
+ * chatSizeClass)을 써야 넘어갈 때 크기가 어긋나지 않는다(사용자 지시).
+ *
+ * Figma 시안이 없어 시뮬레이터에서 보며 정한 값이다(2026-10-20). 시안이 나오면 다시 잴 것.
+ */
+export const bakeRevealLayout = {
+  /** 두 마리 뒤의 은은한 빛(타원). */
+  glow: { width: 420, height: 200 },
+  /**
+   * 연기 한 덩이 = 가장자리가 흐린 원. x/y 는 줄 가운데에서 다 퍼졌을 때의 자리, size 는 지름,
+   * tone 은 연기 색 순번(inferno-bake-smoke 의 SMOKE_TONES). 두 마리(줄 폭 약 250)를 넉넉히 덮도록 깔았다.
+   */
+  smokePuffs: [
+    { x: -150, y: 18, size: 84, tone: 1 },
+    { x: -125, y: -12, size: 104, tone: 0 },
+    { x: -85, y: -32, size: 100, tone: 1 },
+    { x: -85, y: 24, size: 104, tone: 2 },
+    { x: -40, y: -8, size: 110, tone: 1 },
+    { x: 0, y: -34, size: 100, tone: 2 },
+    { x: 0, y: 22, size: 110, tone: 0 },
+    { x: 40, y: -8, size: 110, tone: 2 },
+    { x: 85, y: -32, size: 100, tone: 0 },
+    { x: 85, y: 24, size: 104, tone: 1 },
+    { x: 125, y: -12, size: 104, tone: 2 },
+    { x: 150, y: 18, size: 84, tone: 0 },
+    // 두 마리 몸통 위를 한 겹 더 덮는다. 바깥 줄만으로는 변신 순간 빵 윤곽이 비쳤다(시뮬레이터에서 확인).
+    { x: -105, y: 0, size: 112, tone: 2 },
+    { x: -60, y: 8, size: 104, tone: 0 },
+    { x: 60, y: 8, size: 104, tone: 1 },
+    { x: 105, y: 0, size: 112, tone: 0 },
+  ],
+} as const;
+
 /** Figma: `Heading/H1` ~ `Heading/H5` */
 export const heading = {
   h1: {
