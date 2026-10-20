@@ -40,6 +40,11 @@ interface InfernoEp3Flow {
   openModal?: InfernoEp3Modal;
   /** 아직 고르지 않았으면 undefined. */
   selectedId?: string;
+  /**
+   * 다시 보기에서 그 반죽이 미니게임 실패로 랜덤으로 정해졌는지. 결과 장면 제목을 "VOTE" 대신
+   * "RANDOM" 으로 바꾸는 데 쓴다(LUV-65). 다시 보기가 아니거나 기록이 없으면 false.
+   */
+  isRandomMatch: boolean;
   /** 결과를 서버에 보내는 중인지. 버튼을 잠그고 문구를 바꾸는 데 쓴다(ep1 과 같다). */
   isSubmitting: boolean;
   /** 투표지 제출이 실패했을 때 보여줄 문구. 성공하거나 아직 안 눌렀으면 undefined. */
@@ -146,7 +151,8 @@ export default function useInfernoEp3Flow(
     try {
       const result = await submitEpisode3Result(false);
       if (seasonId && result.partnerId) {
-        recordSelection(seasonId, 3, result.partnerId);
+        // 투표가 아니라 랜덤으로 정해졌다고 남긴다 — 다시 볼 때 제목이 "RANDOM" 이 된다(LUV-65).
+        recordSelection(seasonId, 3, result.partnerId, 'random');
       }
       return true;
     } catch {
@@ -244,6 +250,7 @@ export default function useInfernoEp3Flow(
     isReplay: replay.isReplay,
     openModal,
     selectedId: replay.isReplay ? replay.replaySelectedId : selectedId,
+    isRandomMatch: replay.isReplay && replay.replayMatchMethod === 'random',
     isSubmitting,
     submitError,
     goPrevious: resolveGoPrevious(),
