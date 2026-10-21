@@ -40,6 +40,11 @@ export default function DiariesHeader({
     onCreateGroupPress();
   }
 
+  function handleJoinPress() {
+    setIsMenuOpen(false);
+    onJoinGroupPress?.();
+  }
+
   // 일기 작성 메뉴/버튼을 눌렀을 때 모달 오픈
   function handleOpenModal() {
     setIsMenuOpen(false);
@@ -82,10 +87,6 @@ export default function DiariesHeader({
           // 일기 작성 성공 시 처리할 로직
         }}
       />
-    </>)
-  function handleJoinPress() {
-    setIsMenuOpen(false);
-    onJoinGroupPress?.();
-  }
-
+    </>
+  );
 }
