@@ -43,8 +43,7 @@ interface GroupActionMenuProps {
 /**
  * 헤더 + 버튼을 누르면 뜨는 그룹 메뉴. Figma 6135:2812 (폭 113).
  *
- * "그룹 참여하기"는 초대코드로 들어가는 화면(Figma 6199:3756)으로 간다. 초대코드 참여 API 는 아직
- * 없어서 그 화면은 입력까지만 된다(`src/app/diaries/groups/join.tsx` 참고).
+ * "그룹 참여하기"는 초대코드로 들어가는 화면(Figma 6199:3756, `POST /api/diary-rooms/join`)으로 간다.
  */
 export default function GroupActionMenu({ onCreatePress, onJoinPress }: GroupActionMenuProps) {
   return (

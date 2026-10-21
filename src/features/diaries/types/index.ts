@@ -113,6 +113,33 @@ export interface DiaryRoomKickResult {
   message: string;
 }
 
+/** `GET · POST /api/diary-rooms/{roomId}/invite-code` 응답. 8자리 영구 코드(재발급하면 이전 코드는 못 쓴다). */
+export interface DiaryRoomInviteCode {
+  roomId: RoomId;
+  /** 예: "K7Q2M9XA". 대소문자를 가리지 않는다. */
+  inviteCode: string;
+}
+
+/** `POST /api/diary-rooms/join` 요청. 응답은 `DiaryRoomMembership`. */
+export interface JoinRoomRequest {
+  inviteCode: string;
+}
+
+/** 댓글. `GET /api/diaries/{diaryId}/comments` 목록의 한 줄, 작성 · 수정 응답. */
+export interface DiaryComment {
+  id: number;
+  userId: UserId;
+  content: string;
+  /** 한국 시간 ISO-8601. */
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 댓글 작성 · 수정 요청. */
+export interface DiaryCommentWriteRequest {
+  content: string;
+}
+
 /** openapi `DailyQuestionOptionResponse`. */
 export interface DailyQuestionOption {
   optionId: number;
