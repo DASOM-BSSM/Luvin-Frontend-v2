@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
 import BottomNav from '@/src/components/bottom-nav';
+import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import BreadTraitList from '@/src/features/bread/components/bread-trait-list';
@@ -33,6 +34,11 @@ export default function BreadScreen() {
   const { profile, isLoading, isError } = useBreadProfile();
   const resultQuery = useMySurveyResult();
   const reasonTexts = resultQuery.data?.reasonTexts ?? [];
+
+  function handleSaveAndExitPress() {
+    // 설문 마지막 답변을 제출할 때 서버 저장이 완료된다. 여기서는 홈으로 돌아간다.
+    router.dismissTo('/');
+  }
 
   function handleBackPress() {
     // 탭으로 들어온 경우가 정상 경로고, 딥링크로 바로 열렸으면 돌아갈 곳이 없다.
@@ -97,6 +103,14 @@ export default function BreadScreen() {
               </Text>
               <RecommendedVideoCard video={RECOMMENDED_VIDEO} />
             </View>
+          ) : null}
+
+          {!isLoading && !isError && profile ? (
+            <Button
+              label="반죽 저장하고 나가기"
+              variant="secondary"
+              onPress={handleSaveAndExitPress}
+            />
           ) : null}
         </View>
       </ScrollView>
