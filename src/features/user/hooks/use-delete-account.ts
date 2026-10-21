@@ -29,7 +29,9 @@ export default function useDeleteAccount() {
   return useMutation({
     mutationFn: async () => {
       await deleteMyAccount();
-      await GoogleSignin.signOut();
+      // 서버에서는 이미 지워졌다. 구글 세션 정리가 실패해도(애플로 가입해 구글 세션이 없는 경우 등)
+      // 기기 정리(onSuccess)를 건너뛰면 안 되므로 실패를 삼킨다. 애플 연동 해제는 서버가 한다.
+      await GoogleSignin.signOut().catch(() => undefined);
       await clearAccessToken();
     },
     onSuccess: () => {

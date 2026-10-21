@@ -29,6 +29,9 @@ import { defaultColor, yellow } from '@/src/constants/colors';
  *   `notice` 는 가로 꽉 + px16 이라 나란히 놓는 보기 버튼에는 못 쓴다.
  * - `infoSave`        : 마이페이지 "내 정보 저장하기" 버튼 (6300:8070) — yellow/300, 테두리 없음,
  *   px10/py8, 라벨 14px, 가로 꽉. `secondary`(16px, 높이 42, px20)와 달라 분리했다.
+ * - `login`           : 온보딩 "Google로 로그인 하기"·"Apple로 로그인 하기" (6031:2839, 7635:3361) —
+ *   yellow/300, 테두리 없음, 높이 40, px10/py8, 라벨 16px, 가로 꽉. `primary`(yellow/400, 높이 38)와
+ *   `infoSave`(라벨 14px)와 달라 분리했다.
  *
  * 이름은 Figma 가 아니라 이쪽에서 붙인 것이라, 디자인에 정식 Button 이 생기면 맞출 것.
  *
@@ -47,7 +50,8 @@ export type ButtonVariant =
   | 'noticeFit'
   | 'noticeSoft'
   | 'filledSelected'
-  | 'infoSave';
+  | 'infoSave'
+  | 'login';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   outline: 'border border-default-black bg-default-bg px-[20px] py-[6px]',
@@ -62,6 +66,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   noticeSoft: 'w-full border border-yellow-300 bg-yellow-200 px-[16px] py-[6px]',
   filledSelected: 'border border-yellow-400 bg-yellow-300 px-[20px] py-[6px]',
   infoSave: 'w-full bg-yellow-300 px-[10px] py-[8px]',
+  login: 'h-[40px] w-full bg-yellow-300 px-[10px] py-[8px]',
 };
 
 /** 비활성일 때 덮어쓰는 바탕. Figma `status=deactivate` (5760:4346) 는 테두리 없이 회색이다. */
@@ -81,6 +86,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   noticeSoft: 'text-text-primary',
   filledSelected: 'text-default-black',
   infoSave: 'text-text-primary',
+  login: 'text-text-primary',
 };
 
 const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
@@ -96,6 +102,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   noticeSoft: 'body-m',
   filledSelected: 'body-xs',
   infoSave: 'body-s',
+  login: 'body-m',
 };
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {
