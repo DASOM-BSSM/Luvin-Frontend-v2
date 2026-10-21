@@ -9,18 +9,25 @@ import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import TextField from '@/src/components/ui/text-field';
 import GroupFormField from '@/src/features/diaries/components/group-form-field';
+import useJoinRoom from '@/src/features/diaries/hooks/use-join-room';
+import type { DiaryRoomMembership } from '@/src/features/diaries/types';
+import { getJoinRoomErrorMessage } from '@/src/features/diaries/utils/errors';
 import { canSubmitJoinGroupForm } from '@/src/features/diaries/utils/group-form';
 
 /**
  * 그룹 참여하기. Figma "그룹 참여하기"(6199:3756).
  *
- * NOTE: 초대코드로 참여하는 API 가 아직 없다 — 백엔드는 방장이 userId 로 멤버를 추가하는 초대
- * 방식만 있다(`docs/api/diaries.md`). 그래서 화면과 입력 검사까지만 만들고 버튼은 아직 아무 요청도
- * 보내지 않는다. 초대코드 참여 API 가 생기면 `handleJoinPress` 에서 부른다.
+ * 초대코드로 `POST /api/diary-rooms/join` 에 참여하고, 성공하면 그 그룹의 감정일기 메인으로 간다.
+ * 뒤로가기로 이 폼에 돌아오지 않도록 replace 로 이동한다.
+ *
+ * NOTE: "나의 닉네임"(방별 닉네임)은 시안에 있어 입력은 받지만 API 에 보낼 필드가 아직 없다 —
+ * 백엔드에 필드가 생기면 `joinRoomMutation.mutate` 에 함께 넣는다.
  */
 export default function JoinGroupScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [nickname, setNickname] = useState('');
+
+  const joinRoomMutation = useJoinRoom();
 
   const canSubmit = canSubmitJoinGroupForm({ inviteCode, nickname });
 
@@ -32,8 +39,13 @@ export default function JoinGroupScreen() {
     router.replace('/diaries');
   }
 
-  // 초대코드 참여 API 가 생기면 연결한다.
-  function handleJoinPress() {}
+  function handleJoinSuccess({ roomId }: DiaryRoomMembership) {
+    router.replace({ pathname: '/diaries/groups/[roomId]', params: { roomId } });
+  }
+
+  function handleJoinPress() {
+    joinRoomMutation.mutate(inviteCode.trim(), { onSuccess: handleJoinSuccess });
+  }
 
   return (
     <Screen>
@@ -77,13 +89,20 @@ export default function JoinGroupScreen() {
             </GroupFormField>
           </View>
 
-          <Button
-            label="그룹 참여하기"
-            variant="primary"
-            textVariant="body-s"
-            disabled={!canSubmit}
-            onPress={handleJoinPress}
-          />
+          <View className="w-full flex-col items-center gap-[8px]">
+            <Button
+              label="그룹 참여하기"
+              variant="primary"
+              textVariant="body-s"
+              disabled={!canSubmit || joinRoomMutation.isPending}
+              onPress={handleJoinPress}
+            />
+            {joinRoomMutation.isError ? (
+              <Text variant="body-xs" className="text-state-error">
+                {getJoinRoomErrorMessage(joinRoomMutation.error)}
+              </Text>
+            ) : null}
+          </View>
         </View>
       </ScrollView>
 

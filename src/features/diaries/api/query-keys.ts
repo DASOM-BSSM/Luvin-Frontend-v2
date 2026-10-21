@@ -12,6 +12,8 @@ export const diaryKeys = {
   /** 내 일기 목록(`GET /api/diaries?page=&size=`). */
   list: (page: number, size: number) => [...diaryKeys.lists(), { page, size }] as const,
   detail: (diaryId: DiaryId) => [...diaryKeys.all, 'detail', diaryId] as const,
+  /** 일기 하나에 달린 댓글 목록. */
+  comments: (diaryId: DiaryId) => [...diaryKeys.detail(diaryId), 'comments'] as const,
   /** 공유 일기(커뮤니티) 피드. */
   community: () => [...diaryKeys.all, 'community'] as const,
 };
@@ -22,6 +24,8 @@ export const roomKeys = {
   list: () => [...roomKeys.all, 'list'] as const,
   detail: (roomId: RoomId) => [...roomKeys.all, 'detail', roomId] as const,
   members: (roomId: RoomId) => [...roomKeys.detail(roomId), 'members'] as const,
+  /** 초대코드(방장 · 멤버만). */
+  inviteCode: (roomId: RoomId) => [...roomKeys.detail(roomId), 'invite-code'] as const,
   /** 공유방 안의 일기 피드. */
   diaries: (roomId: RoomId) => [...roomKeys.detail(roomId), 'diaries'] as const,
 };

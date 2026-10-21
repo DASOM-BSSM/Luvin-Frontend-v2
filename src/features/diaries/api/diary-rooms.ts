@@ -4,6 +4,7 @@ import type { ApiEnvelope } from '@/src/lib/api-envelope';
 import type {
   DiaryFeedItem,
   DiaryRoom,
+  DiaryRoomInviteCode,
   DiaryRoomKickResult,
   DiaryRoomMember,
   DiaryRoomMembership,
@@ -15,7 +16,8 @@ import type {
 /**
  * 공유방 API. 스펙: `docs/api/diaries.md` "공유방". 응답은 전부 `ApiEnvelope` 로 감싸져 온다.
  *
- * 공유방은 초대 방식이라 스스로 참여하는 API 가 없다 — 방장이 `addRoomMember` 로 넣어 준다.
+ * 참여는 초대코드로 한다 — 방장 · 멤버가 `getRoomInviteCode` 로 코드를 보고, 받은 사람이
+ * `joinRoomByInviteCode` 로 들어온다. 방장이 userId 로 직접 넣는 `addRoomMember` 도 남아 있다.
  */
 
 /** `POST /api/diary-rooms`. 만든 사람이 방장이 되고 멤버로도 들어간다. */
@@ -89,5 +91,32 @@ export async function getRoomDiaries(roomId: RoomId): Promise<DiaryFeedItem[]> {
   const { data } = await httpClient.get<ApiEnvelope<DiaryFeedItem[]>>(
     `/api/diary-rooms/${roomId}/diaries`,
   );
+  return data.data;
+}
+
+/** `GET /api/diary-rooms/{roomId}/invite-code` — 방장 · 멤버만(403). */
+export async function getRoomInviteCode(roomId: RoomId): Promise<DiaryRoomInviteCode> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryRoomInviteCode>>(
+    `/api/diary-rooms/${roomId}/invite-code`,
+  );
+  return data.data;
+}
+
+/** `POST /api/diary-rooms/{roomId}/invite-code` — 재발급. 방장만(403), 이전 코드는 바로 못 쓴다. */
+export async function reissueRoomInviteCode(roomId: RoomId): Promise<DiaryRoomInviteCode> {
+  const { data } = await httpClient.post<ApiEnvelope<DiaryRoomInviteCode>>(
+    `/api/diary-rooms/${roomId}/invite-code`,
+  );
+  return data.data;
+}
+
+/**
+ * `POST /api/diary-rooms/join` — 초대코드로 참여. 대소문자 상관없고, 이미 멤버여도 200.
+ * 틀린 코드면 404.
+ */
+export async function joinRoomByInviteCode(inviteCode: string): Promise<DiaryRoomMembership> {
+  const { data } = await httpClient.post<ApiEnvelope<DiaryRoomMembership>>('/api/diary-rooms/join', {
+    inviteCode,
+  });
   return data.data;
 }
