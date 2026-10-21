@@ -38,7 +38,6 @@ export default function WriteDiaryModal({
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
 
-    // 모달이 열릴 때 시간 및 쿨다운 초기화
     useEffect(() => {
         if (!visible) return;
 

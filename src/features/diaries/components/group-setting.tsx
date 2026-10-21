@@ -74,7 +74,6 @@ export default function GroupSettingsScreen({
                         <Text style={styles.headerTitle}>그룹 설정하기</Text>
                     </View>
 
-                    {/*메인 레이아웃*/}
                     <View style={styles.mainLayout}>
                         {/*그룹 이름*/}
                         <View style={styles.section}>
@@ -105,6 +104,7 @@ export default function GroupSettingsScreen({
                         </View>
 
                         {/*초대코드 */}
+                        {/*초대코드*/}
                         <View style={styles.section}>
                             <Text style={styles.label}>초대코드</Text>
                             <View style={styles.inputRow}>
@@ -162,6 +162,7 @@ export default function GroupSettingsScreen({
                         </View>
 
                         {/*정 저장하기 및 그룹 나가기*/}
+                        {/*설정 저장하기 및 그룹 나가기*/}
                         <View style={styles.buttonGroup}>
                             {isOwner && (
                                 <TouchableOpacity
@@ -184,6 +185,7 @@ export default function GroupSettingsScreen({
                     </View>
                 </ScrollView>
 
+                {/*하단 내비게이션 바*/}
                 <View style={styles.bottomNav}>
                     <TouchableOpacity style={styles.navIcon}>
                         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
