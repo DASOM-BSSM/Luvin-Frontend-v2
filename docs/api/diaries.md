@@ -118,7 +118,7 @@ Authorization: Bearer {accessToken}
 
 ## 공유방
 
-> 공유방은 **초대 방식**입니다. 스스로 참여하는 API는 없고, 방장이 멤버를 추가합니다.
+> 공유방은 **초대코드**로 참여합니다(아래 '초대코드'). 방장이 userId로 직접 추가하는 API도 남아 있습니다.
 
 ### 1. 공유방 생성
 `POST /api/diary-rooms`
@@ -205,6 +205,49 @@ Authorization: Bearer {accessToken}
 
 ---
 
+## 초대코드 (백엔드 feat/#60)
+
+### 1. 초대코드 조회
+`GET /api/diary-rooms/{roomId}/invite-code`
+- 방장·멤버만 (`403`), 8자리 영구 코드
+- **Response** `200` → `{ "roomId": 1, "inviteCode": "K7Q2M9XA" }`
+
+### 2. 초대코드로 참여
+`POST /api/diary-rooms/join`
+
+**Request**
+```json
+{ "inviteCode": "k7q2m9xa" }
+```
+- 대소문자 상관없음, 이미 멤버여도 `200`
+- 틀린 코드 `404` `"초대 코드가 올바르지 않습니다. 다시 확인해주세요."`
+- **Response** `200` → 멤버십 응답(MembershipResponse) (`isMember: true`)
+
+### 3. 초대코드 재발급
+`POST /api/diary-rooms/{roomId}/invite-code`
+- 방장만 (`403`), 이전 코드는 바로 못 씀
+- **Response** `200` → `{ "roomId", "inviteCode" }`
+
+---
+
+## 댓글
+
+> 예전 스펙 문서에서 빠져 있었고, 스테이징에는 이미 있습니다.
+
+| 메서드 | 경로 | 요청 |
+|---|---|---|
+| `POST` | `/api/diaries/{diaryId}/comments` | `{ "content": "..." }` |
+| `GET` | `/api/diaries/{diaryId}/comments` | – |
+| `PUT` | `/api/diaries/{diaryId}/comments/{commentId}` | `{ "content": "..." }` |
+| `DELETE` | `/api/diaries/{diaryId}/comments/{commentId}` | – |
+
+**댓글 응답**
+```json
+{ "id": 1, "userId": 2, "content": "...", "createdAt": "...", "updatedAt": "..." }
+```
+
+---
+
 ## 응답 객체
 
 ### 일기 응답 (DiaryResponse)
@@ -269,4 +312,4 @@ Authorization: Bearer {accessToken}
 - 멤버 목록의 `email`은 개인정보 이슈로 **빠질 수 있음**
 - 강퇴에서 `userId`를 빼먹거나 숫자가 아니면 현재 `500` → `400`으로 수정 예정
 - 없는 경로 요청 시 현재 `500` → `404`로 수정 예정
-- 공유방은 초대 방식으로 확정 — 스스로 참여하는 API는 만들지 않음
+- 공유방 참여는 초대코드 방식 (위 '초대코드' 참고)

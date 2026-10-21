@@ -7,6 +7,7 @@ import GroupActionMenu from '@/src/features/diaries/components/group-action-menu
 
 interface DiariesHeaderProps {
   onCreateGroupPress: () => void;
+  onJoinGroupPress: () => void;
 }
 
 /**
@@ -16,7 +17,7 @@ interface DiariesHeaderProps {
  * 표현할 수 없어서 메뉴만 absolute 로 띄운다(§16 의 예외) — 헤더 줄 상단에서 20px 아래, 오른쪽 끝 정렬.
  * 뒤따르는 본문보다 위에 그려지도록 헤더에 z-10 을 준다.
  */
-export default function DiariesHeader({ onCreateGroupPress }: DiariesHeaderProps) {
+export default function DiariesHeader({ onCreateGroupPress, onJoinGroupPress }: DiariesHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   function handlePlusPress() {
@@ -26,6 +27,11 @@ export default function DiariesHeader({ onCreateGroupPress }: DiariesHeaderProps
   function handleCreatePress() {
     setIsMenuOpen(false);
     onCreateGroupPress();
+  }
+
+  function handleJoinPress() {
+    setIsMenuOpen(false);
+    onJoinGroupPress();
   }
 
   return (
@@ -45,7 +51,7 @@ export default function DiariesHeader({ onCreateGroupPress }: DiariesHeaderProps
 
       {isMenuOpen ? (
         <View className="absolute right-0 top-[20px]">
-          <GroupActionMenu onCreatePress={handleCreatePress} />
+          <GroupActionMenu onCreatePress={handleCreatePress} onJoinPress={handleJoinPress} />
         </View>
       ) : null}
     </View>
