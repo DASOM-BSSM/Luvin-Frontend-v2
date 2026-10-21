@@ -375,7 +375,6 @@ const styles = StyleSheet.create({
         gap: 3,
         marginBottom: 131,
     },
-    /* 설정 저장하기 버튼 (padding: 8px 10px, bg: #FFF9E1, font 14px 300) */
     saveButton: {
         width: '100%',
         paddingHorizontal: 10,
