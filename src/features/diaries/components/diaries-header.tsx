@@ -54,7 +54,6 @@ export default function DiariesHeader({
 
         {isMenuOpen ? (
           <View className="absolute right-0 top-[20px]">
-            {/* GroupActionMenu 내부 작성 버튼 onClick에 handleOpenModal 전달 */}
             <GroupActionMenu
               onCreatePress={handleCreatePress}
               onWriteDiaryPress={handleOpenModal} // 일기 쓰기 메뉴 연동
@@ -71,7 +70,7 @@ export default function DiariesHeader({
         userName={userName}
         lastWrittenAt={lastWrittenAt}
         onSuccess={() => {
-          // 일기 작성 성공 시 처리할 로직 (예: 목록 새로고침)
+          // 일기 작성 성공 시 처리할 로직
         }}
       />
     </>
