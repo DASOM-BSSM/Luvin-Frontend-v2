@@ -7,6 +7,7 @@
     "scheme": "luvinfrontendv2",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.dasom.luvinapp"
     },
     "android": {
