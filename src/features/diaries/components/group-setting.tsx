@@ -62,7 +62,6 @@ export default function GroupSettingsScreen({
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
                 <ScrollView contentContainerStyle={styles.scrollContent}>
-                    {/* 헤더 */}
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.backButton} activeOpacity={0.7}>
                             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -75,9 +74,8 @@ export default function GroupSettingsScreen({
                         <Text style={styles.headerTitle}>그룹 설정하기</Text>
                     </View>
 
-                    {/* 메인 레이아웃 */}
                     <View style={styles.mainLayout}>
-                        {/* 1. 그룹 이름 */}
+                        {/*그룹 이름*/}
                         <View style={styles.section}>
                             <Text style={styles.label}>그룹 이름</Text>
                             <View style={styles.inputRow}>
@@ -105,7 +103,7 @@ export default function GroupSettingsScreen({
                             </View>
                         </View>
 
-                        {/* 2. 초대코드 */}
+                        {/*초대코드*/}
                         <View style={styles.section}>
                             <Text style={styles.label}>초대코드</Text>
                             <View style={styles.inputRow}>
@@ -126,7 +124,7 @@ export default function GroupSettingsScreen({
                             </View>
                         </View>
 
-                        {/* 3. 그룹 멤버 목록 */}
+                        {/*그룹 멤버 목록*/}
                         <View style={styles.section}>
                             <View style={styles.titleGroup}>
                                 <Text style={styles.label}>그룹 멤버 목록</Text>
@@ -162,7 +160,7 @@ export default function GroupSettingsScreen({
                             </View>
                         </View>
 
-                        {/* 4. 설정 저장하기 및 그룹 나가기 (피그마 제공 코드 반영) */}
+                        {/*설정 저장하기 및 그룹 나가기*/}
                         <View style={styles.buttonGroup}>
                             {isOwner && (
                                 <TouchableOpacity
@@ -185,7 +183,7 @@ export default function GroupSettingsScreen({
                     </View>
                 </ScrollView>
 
-                {/* 하단 내비게이션 바 */}
+                {/*하단 내비게이션 바*/}
                 <View style={styles.bottomNav}>
                     <TouchableOpacity style={styles.navIcon}>
                         <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -377,7 +375,6 @@ const styles = StyleSheet.create({
         gap: 3,
         marginBottom: 131,
     },
-    /* 설정 저장하기 버튼 (padding: 8px 10px, bg: #FFF9E1, font 14px 300) */
     saveButton: {
         width: '100%',
         paddingHorizontal: 10,
@@ -395,7 +392,6 @@ const styles = StyleSheet.create({
         color: '#1D1D1D',
         lineHeight: 22.4,
     },
-    /* 그룹 나가기 버튼 (color: #647F8B, font 12px 300) */
     leaveButton: {
         alignItems: 'center',
         paddingVertical: 4,
