@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
 import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
-import { useInfernoSelectionStore } from '@/src/features/inferno/store/selection-store';
+import { readSelectionRecord, useInfernoSelectionStore } from '@/src/features/inferno/store/selection-store';
 import { isEpisodeReplay } from '@/src/features/inferno/utils/episode-replay';
 
 /** useEpisodeReplay 가 돌려주는 값. 회차 흐름 훅들이 받는다. */
@@ -29,9 +29,10 @@ export default function useEpisodeReplay(order: number) {
   const { pastSeasonId, isPastSeason } = useViewedSeason();
   const [frozenIsReplay, setFrozenIsReplay] = useState<boolean | undefined>(isPastSeason ? true : undefined);
   const viewedSeasonId = pastSeasonId ?? season?.seasonId;
-  const recordedSelection = useInfernoSelectionStore((state) =>
+  const storedSelection = useInfernoSelectionStore((state) =>
     viewedSeasonId ? state.selections[viewedSeasonId]?.[order] : undefined,
   );
+  const recordedSelection = readSelectionRecord(storedSelection);
 
   useEffect(() => {
     if (frozenIsReplay === undefined && season) {
@@ -42,7 +43,9 @@ export default function useEpisodeReplay(order: number) {
   return {
     isReplay: frozenIsReplay === true,
     /** 다시 보기일 때 투표지에 선택해 둘 반죽. 기록이 없으면 undefined(아무것도 안 고른 채로 보인다). */
-    replaySelectedId: recordedSelection,
+    replaySelectedId: recordedSelection?.participantId,
+    /** 그 반죽이 어떻게 정해졌는지(투표 / ep3 미니게임 실패로 랜덤). 기록이 없으면 undefined. */
+    replayMatchMethod: recordedSelection?.method,
     seasonId: viewedSeasonId,
   };
 }

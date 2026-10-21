@@ -27,6 +27,9 @@ const DONE_MODAL_WIDTH = 'min-w-[344px]';
 /** 미니게임 실패 결과를 못 보냈을 때의 안내 버튼. 시안이 없어 임시 문구다. */
 const FAILURE_RETRY_LABEL = '다시 시도';
 const FAILURE_RETRYING_LABEL = '보내는 중...';
+/** 다시 보기 결과 장면 제목. 미니게임에서 져서 상대가 랜덤으로 정해졌으면 RANDOM(LUV-65). */
+const REPLAY_VOTE_TITLE = 'VOTE';
+const REPLAY_RANDOM_TITLE = 'RANDOM';
 
 export default function InfernoEp3Screen() {
   // 나가기·완료 기록. 지난 시즌을 다시 볼 때는 완료를 기록하지 않고 오븐으로 돌아간다(use-episode-exit).
@@ -113,10 +116,11 @@ export default function InfernoEp3Screen() {
         flow.isReplay ? (
           // 다시 보기: 투표지 대신 내 반죽과 내가 투표한 반죽(미니게임 실패였으면 랜덤으로 정해진 반죽)을 나란히 보여준다(사용자 요청,
           // ep5 최종 매칭 장면을 "VOTE" 제목으로). 회차를 끝내는 건 상단 바 "다음화면" 이다.
+          // 미니게임에서 져서 랜덤으로 정해졌으면 투표한 게 아니라서 "RANDOM" 제목을 쓴다(LUV-65).
           // 참가자 목록에는 늘 내 분신(REPRESENTATIVE)이 있다. 없으면 데이터가 어긋난 경우라 그리지 않는다.
           myParticipant ? (
             <InfernoFinalMatchScene
-              title="VOTE"
+              title={flow.isRandomMatch ? REPLAY_RANDOM_TITLE : REPLAY_VOTE_TITLE}
               mine={myParticipant}
               partner={conversation.participants.find(({ id }) => id === flow.selectedId)}
             />

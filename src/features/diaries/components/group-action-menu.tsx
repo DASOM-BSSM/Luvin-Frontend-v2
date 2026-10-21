@@ -38,6 +38,7 @@ function GroupActionMenuItem({ label, onPress }: GroupActionMenuItemProps) {
 interface GroupActionMenuProps {
   onCreatePress: () => void;
   onWriteDiaryPress?: () => void; // 👈 타입 추가
+  onJoinPress: () => void;
 }
 
 /**
@@ -46,14 +47,14 @@ interface GroupActionMenuProps {
 - Figma 에는 "그룹 참여하기"도 있지만, 공유방은 방장이 초대하는 방식으로 확정되어 스스로
 - 참여하는 API 를 만들지 않기로 해서(백엔드 확인) 뺐다.
  */
-export default function GroupActionMenu({ onCreatePress, onWriteDiaryPress }: GroupActionMenuProps) {
+
+/* "그룹 참여하기"는 초대코드로 들어가는 화면(Figma 6199:3756, `POST /api/diary-rooms/join`)으로 간다.
+*/
+export default function GroupActionMenu({ onCreatePress, onJoinPress }: GroupActionMenuProps) {
   return (
     <View accessibilityRole="menu" className="w-[113px] flex-col items-start rounded-[8px] bg-default-white p-[4px]">
       <GroupActionMenuItem label="그룹 만들기" onPress={onCreatePress} />
-      {/* 일기 쓰기 메뉴 추가 */}
-      {onWriteDiaryPress && (
-        <GroupActionMenuItem label="일기 쓰기" onPress={onWriteDiaryPress} />
-      )}
+      <GroupActionMenuItem label="그룹 참여하기" onPress={onJoinPress} />
     </View>
   );
 }
