@@ -2,7 +2,7 @@ import WriteDiaryModal from '@/src/features/diaries/components/write-diary-modal
 import useCreateDiary from '@/src/features/diaries/hooks/use-create-diary';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import type { RoomId } from '@/src/features/diaries/types';
-import { formatClockTime, toDiaryTitle } from '@/src/features/diaries/utils/feed';
+import { formatHourSlot, toDiaryTitle } from '@/src/features/diaries/utils/feed';
 
 interface CreateDiaryModalProps {
   visible: boolean;
@@ -30,7 +30,7 @@ export default function CreateDiaryModal({ visible, roomId, lastWrittenAt, onClo
     <WriteDiaryModal
       visible={visible}
       author={author}
-      time={formatClockTime(new Date())}
+      time={formatHourSlot(new Date())}
       submitLabel="일기 올리기"
       isSubmitting={createDiaryMutation.isPending}
       errorMessage={createDiaryMutation.isError ? '일기를 올리지 못했어요. 다시 시도해 주세요' : undefined}

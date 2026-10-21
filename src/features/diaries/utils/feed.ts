@@ -63,9 +63,12 @@ export function toGroupDiaryPreview(item: DiaryFeedItem): GroupDiaryPreview {
   };
 }
 
-/** 기기 시각을 "15:00" 같은 시:분으로. */
-export function formatClockTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+/**
+ * 지금 쓰는 일기가 들어갈 시간 칸 — "15:00" 처럼 정각으로 보여준다. 일기는 1시간에 한 번 쓰는
+ * 거라 분은 버린다(15:37 에 써도 "15:00").
+ */
+export function formatHourSlot(date: Date): string {
+  return `${String(date.getHours()).padStart(2, '0')}:00`;
 }
 
 /** 월요일을 0 으로 하는 요일 번호(0~6). */

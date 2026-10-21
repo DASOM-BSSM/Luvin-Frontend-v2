@@ -6,7 +6,7 @@ import MyDiaryPromptCard from '@/src/features/diaries/components/my-diary-prompt
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import useRoomDiaries from '@/src/features/diaries/hooks/use-room-diaries';
 import type { DiaryFeedItem, RoomId } from '@/src/features/diaries/types';
-import { formatClockTime, toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
+import { formatHourSlot, toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
 
 interface GroupDiaryListProps {
   roomId: RoomId;
@@ -70,7 +70,7 @@ export default function GroupDiaryList({ roomId, onWritePress, onDiaryPress }: G
 
   return (
     <View className="w-full flex-col items-start gap-[20px]">
-      <MyDiaryPromptCard author={me} time={formatClockTime(now)} onWritePress={onWritePress} />
+      <MyDiaryPromptCard author={me} time={formatHourSlot(now)} onWritePress={onWritePress} />
       {diaries.map((diary) => (
         <DiaryItem key={diary.diaryId} diary={diary} onPress={onDiaryPress} />
       ))}
