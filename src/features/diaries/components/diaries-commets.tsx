@@ -18,7 +18,6 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 const API_BASE_URL = 'http://10.0.2.2:8080/api/v1';
 
-// 점 3개 메뉴 아이콘 SVG (Vector.svg)
 const MoreOptionsIcon = () => (
     <Svg width="4" height="16" viewBox="0 0 4 16" fill="none">
         <Circle cx="2" cy="2" r="1.5" fill="#1D1D1D" />
@@ -27,7 +26,6 @@ const MoreOptionsIcon = () => (
     </Svg>
 );
 
-// 쓰레기통 아이콘 SVG (clarity_trash-solid.svg)
 const TrashIcon = () => (
     <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <Path
@@ -40,7 +38,6 @@ const TrashIcon = () => (
     </Svg>
 );
 
-// 연필 수정 아이콘 SVG (ant-design_edit-filled.svg)
 const EditIcon = () => (
     <Svg width="18" height="18" viewBox="0 0 18 18" fill="none">
         <Path
@@ -91,7 +88,7 @@ export default function DiaryDetailModal({
         userName: '엉뚱한 소금빵',
         userEmoji: '🥐',
         time: '15:00',
-        content: '저는여 이렇게 생각합니다\n이만어 | 만ㄹㅇㄴ미어리멍ㄹ미 ㅓ ㅇ림ㅇㄹ',
+        content: '안녕!!',
     });
     const [comments, setComments] = useState<Comment[]>([
         { id: '2', authorName: '쫀득한 프레첼', authorEmoji: '🥨', createdAt: '1시간 전', content: '어쩌라고' },
@@ -151,11 +148,8 @@ export default function DiaryDetailModal({
                         style={styles.keyboardContainer}
                     >
                         <View style={styles.contentWrapper}>
-
-                            {/* 팝업 메뉴 (일기 카드 위 우상단에 위치하며 카드와 9px 차이) */}
                             {isMenuOpen && (
                                 <View style={styles.actionMenuPopup}>
-                                    {/* 삭제 버튼 - 눌렀을 때만 회색(#D9D9D9) 변환 */}
                                     <Pressable
                                         style={({ pressed }) => [
                                             styles.menuItem,
@@ -167,7 +161,6 @@ export default function DiaryDetailModal({
                                         <Text style={styles.menuText}>삭제</Text>
                                     </Pressable>
 
-                                    {/* 수정 버튼 - 눌렀을 때만 회색(#D9D9D9) 변환 */}
                                     <Pressable
                                         style={({ pressed }) => [
                                             styles.menuItem,
@@ -181,7 +174,7 @@ export default function DiaryDetailModal({
                                 </View>
                             )}
 
-                            {/* 1. 일기 카드 */}
+                            {/*일기 카드*/}
                             <View style={styles.diaryCard}>
                                 <View style={styles.cardHeader}>
                                     <View style={styles.profileRow}>
@@ -189,7 +182,7 @@ export default function DiaryDetailModal({
                                         <Text style={styles.userName}>{diaryData?.userName || ''}</Text>
                                     </View>
 
-                                    {/* ⋮ 메뉴 토글 버튼 */}
+                                    {/*메뉴 메뉴*/}
                                     <TouchableOpacity
                                         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                                         onPress={() => setIsMenuOpen((prev) => !prev)}
@@ -206,7 +199,7 @@ export default function DiaryDetailModal({
                                 <View style={styles.reactionSlot} />
                             </View>
 
-                            {/* 2. 댓글 작성 인풋 */}
+                            {/*댓글 작성*/}
                             <View style={styles.commentInputRow}>
                                 <View style={styles.commentInputBox}>
                                     <TextInput
@@ -227,7 +220,7 @@ export default function DiaryDetailModal({
                                 </TouchableOpacity>
                             </View>
 
-                            {/* 3. 댓글 목록 */}
+                            {/*댓글 목록*/}
                             <View style={styles.commentListContainer}>
                                 <ScrollView
                                     nestedScrollEnabled
@@ -272,10 +265,9 @@ const styles = StyleSheet.create({
         marginTop: 262,
         position: 'relative',
     },
-    /* 일기 카드 오른쪽 위 팝업 (카드 상단과 9px 간격 차이) */
     actionMenuPopup: {
         position: 'absolute',
-        top: -79, // 메뉴 높이(70px) + 간격(9px) = -79px 띄움
+        top: -79,
         right: 0,
         width: 113,
         height: 70,
@@ -296,10 +288,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
-        backgroundColor: '#FFFFFF', // 디폴트는 회색이 아닌 흰색
+        backgroundColor: '#FFFFFF',
     },
     menuItemPressed: {
-        backgroundColor: '#D9D9D9', // 눌렀을 때만 회색으로 변환
+        backgroundColor: '#D9D9D9',
     },
     menuText: {
         fontFamily: 'Yde street',

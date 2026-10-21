@@ -21,7 +21,7 @@ interface WriteDiaryModalProps {
     onClose: () => void;
     userToken?: string;
     userName?: string;
-    lastWrittenAt?: string | null; // 최근 작성 일시 (1시간 제한 계산용)
+    lastWrittenAt?: string | null; // 최근 작성 일시
     onSuccess?: () => void;
 }
 
@@ -140,7 +140,6 @@ export default function WriteDiaryModal({
                         style={styles.keyboardContainer}
                     >
                         <View style={styles.contentWrapper}>
-                            {/* 피그마 고정 카드 (336x162) */}
                             <View style={styles.cardFrame}>
                                 <View style={styles.profileHeader}>
                                     <Text style={styles.emoji}>🥐</Text>
@@ -169,7 +168,6 @@ export default function WriteDiaryModal({
                                 <View style={styles.bottomSpacer} />
                             </View>
 
-                            {/* 피그마 Frame 486 일기 올리기 버튼 */}
                             <TouchableOpacity
                                 style={[
                                     styles.submitButton,
@@ -216,7 +214,7 @@ const styles = StyleSheet.create({
     contentWrapper: {
         width: 336,
         alignItems: 'center',
-        marginTop: 253, // 상단 간격 253px
+        marginTop: 253,
         marginBottom: 108,
     },
     cardFrame: {
@@ -250,7 +248,7 @@ const styles = StyleSheet.create({
     },
     centerInputContainer: {
         alignItems: 'center',
-        justifyContent: 'center', // justify.content -> justifyContent 로 수정
+        justifyContent: 'center',
         width: '100%',
     },
     timeText: {
