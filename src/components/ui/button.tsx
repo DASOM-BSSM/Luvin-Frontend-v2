@@ -27,6 +27,8 @@ import { defaultColor, yellow } from '@/src/constants/colors';
  * - `filledSelected`  : `filled` 의 고른 상태. 감정일기 홈 "오늘의 밸런스 게임" 보기 버튼
  *   (5746:4119, `hover=on` 2013:78) — yellow/300 바탕에 yellow/400 테두리. `notice` 와 색은 같지만
  *   `notice` 는 가로 꽉 + px16 이라 나란히 놓는 보기 버튼에는 못 쓴다.
+ * - `fieldAction`     : 입력칸 오른쪽 작은 버튼 — 그룹 설정하기의 "수정" · "복사"(6606:4064),
+ *   일기 상세의 "전송"(5950:6013). yellow/300, 테두리 없음, px10/py8, 라벨 12px.
  * - `infoSave`        : 마이페이지 "내 정보 저장하기" 버튼 (6300:8070) — yellow/300, 테두리 없음,
  *   px10/py8, 라벨 14px, 가로 꽉. `secondary`(16px, 높이 42, px20)와 달라 분리했다.
  *
@@ -47,6 +49,7 @@ export type ButtonVariant =
   | 'noticeFit'
   | 'noticeSoft'
   | 'filledSelected'
+  | 'fieldAction'
   | 'infoSave';
 
 const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
@@ -61,6 +64,7 @@ const VARIANT_CONTAINER: Record<ButtonVariant, string> = {
   noticeFit: 'self-stretch border border-yellow-400 bg-yellow-300 px-[16px] py-[6px]',
   noticeSoft: 'w-full border border-yellow-300 bg-yellow-200 px-[16px] py-[6px]',
   filledSelected: 'border border-yellow-400 bg-yellow-300 px-[20px] py-[6px]',
+  fieldAction: 'bg-yellow-300 px-[10px] py-[8px]',
   infoSave: 'w-full bg-yellow-300 px-[10px] py-[8px]',
 };
 
@@ -80,6 +84,7 @@ const VARIANT_LABEL: Record<ButtonVariant, string> = {
   noticeFit: 'text-text-primary',
   noticeSoft: 'text-text-primary',
   filledSelected: 'text-default-black',
+  fieldAction: 'text-text-primary',
   infoSave: 'text-text-primary',
 };
 
@@ -95,6 +100,7 @@ const VARIANT_TEXT: Record<ButtonVariant, TextVariant> = {
   noticeFit: 'body-m',
   noticeSoft: 'body-m',
   filledSelected: 'body-xs',
+  fieldAction: 'body-xs',
   infoSave: 'body-s',
 };
 

@@ -64,22 +64,88 @@ export function toGroupDiaryPreview(item: DiaryFeedItem): GroupDiaryPreview {
 }
 
 /**
- * 서버 시각(한국 시간 ISO-8601)의 날짜 부분이 오늘(기기 날짜)과 같은지. 서버 시각은 글자 그대로
- * "YYYY-MM-DD" 를 꺼내 비교하고, 오늘은 기기 시간대로 만든다 — 한국에서 쓰는 앱이라 둘이 같다고 본다.
+ * 지금 쓰는 일기가 들어갈 시간 칸 — "15:00" 처럼 정각으로 보여준다. 일기는 1시간에 한 번 쓰는
+ * 거라 분은 버린다(15:37 에 써도 "15:00").
  */
-export function isWrittenOn(isoDateTime: string, today: Date): boolean {
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  return isoDateTime.startsWith(`${yyyy}-${mm}-${dd}`);
-}
-
-/** 기기 시각을 "15:00" 같은 시:분으로. */
-export function formatClockTime(date: Date): string {
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+export function formatHourSlot(date: Date): string {
+  return `${String(date.getHours()).padStart(2, '0')}:00`;
 }
 
 /** 월요일을 0 으로 하는 요일 번호(0~6). */
 export function getWeekdayIndex(date: Date): number {
   return (date.getDay() + 6) % 7;
+}
+
+/** 서버 제목 길이 제한(1~100자). */
+const DIARY_TITLE_MAX_LENGTH = 100;
+
+/**
+ * 일기 제목. 시안(일기 올리기 6031:2645)에는 제목 칸이 없는데 API 는 `title` 이 필수라, 내용의 첫 줄을
+ * 100자까지 잘라 제목으로 쓴다. 백엔드가 제목을 선택값으로 바꾸면 이 함수는 없앤다.
+ */
+export function toDiaryTitle(content: string): string {
+  const firstLine = content.trim().split('\n')[0] ?? '';
+  return firstLine.slice(0, DIARY_TITLE_MAX_LENGTH);
+}
+
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
+
+/** 서버 시각(ISO-8601, 시간대 포함)을 "방금 전" · "N분 전" · "N시간 전" · "N일 전" 으로. */
+export function formatRelativeTime(isoDateTime: string, now: Date): string {
+  const elapsed = now.getTime() - Date.parse(isoDateTime);
+  if (Number.isNaN(elapsed) || elapsed < MINUTE_MS) return '방금 전';
+  if (elapsed < HOUR_MS) return `${Math.floor(elapsed / MINUTE_MS)}분 전`;
+  if (elapsed < DAY_MS) return `${Math.floor(elapsed / HOUR_MS)}시간 전`;
+  return `${Math.floor(elapsed / DAY_MS)}일 전`;
+}
+
+/** 일기는 1시간에 한 번만 올릴 수 있다(기획). */
+export const DIARY_WRITE_COOLDOWN_MS = HOUR_MS;
+
+/** 피드에서 내가 가장 최근에 쓴 일기 시각(ms). 안 썼으면 undefined. */
+export function getLastWrittenAt(feed: DiaryFeedItem[]): number | undefined {
+  const mine = feed.filter((item) => item.isMine).map((item) => Date.parse(item.createdAt));
+  return mine.length > 0 ? Math.max(...mine) : undefined;
+}
+
+/** 다시 쓸 수 있을 때까지 남은 초. 지금 쓸 수 있으면 0. */
+export function getCooldownSeconds(lastWrittenAt: number | undefined, now: number): number {
+  if (lastWrittenAt === undefined) return 0;
+  return Math.max(0, Math.ceil((lastWrittenAt + DIARY_WRITE_COOLDOWN_MS - now) / 1000));
+}
+
+/** 남은 초 → "12분 05초 후 가능". */
+export function formatCooldown(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const rest = String(seconds % 60).padStart(2, '0');
+  return `${minutes}분 ${rest}초 후 가능`;
+}
+
+/** 일기 반응으로 고를 수 있는 이모지. Figma "일기 반응 및 댓글"(5950:6274)의 6085:2602. */
+export const REACTION_EMOJIS = ['❤️', '😊', '😭', '😂', '🥺', '😍'] as const;
+
+/** 기기 날짜 → "YYYY-MM-DD" (react-native-calendars 의 dateString 형식). */
+export function toDateString(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
+/** "YYYY-MM-DD" 의 달을 delta 만큼 옮긴 그 달 1일. */
+export function shiftMonth(dateString: string, delta: number): string {
+  const [year, month] = dateString.split('-').map(Number);
+  return toDateString(new Date(year, month - 1 + delta, 1));
+}
+
+/** "YYYY-MM-DD" → "2026년 9월". */
+export function formatYearMonth(dateString: string): string {
+  const [year, month] = dateString.split('-').map(Number);
+  return `${year}년 ${month}월`;
+}
+
+/** 내가 일기를 쓴 날짜("YYYY-MM-DD") 모음. 서버 시각의 날짜 부분을 그대로 쓴다(한국 시간). */
+export function getMyDiaryDates(feed: DiaryFeedItem[]): Set<string> {
+  return new Set(feed.filter((item) => item.isMine).map((item) => item.createdAt.slice(0, 10)));
 }
