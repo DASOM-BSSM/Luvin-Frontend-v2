@@ -18,14 +18,16 @@ export type TextVariant =
   | 'body-xxs'
   | 'display-title'
   | 'display-score'
-  | 'display-logo';
+  | 'display-logo'
+  | 'display-section-title';
 
-type DisplayVariant = 'display-title' | 'display-score' | 'display-logo';
+type DisplayVariant = 'display-title' | 'display-score' | 'display-logo' | 'display-section-title';
 
 const DISPLAY_TOKEN = {
   'display-title': display.title,
   'display-score': display.score,
   'display-logo': display.logo,
+  'display-section-title': display.sectionTitle,
 } as const;
 
 function isDisplayVariant(variant: TextVariant): variant is DisplayVariant {

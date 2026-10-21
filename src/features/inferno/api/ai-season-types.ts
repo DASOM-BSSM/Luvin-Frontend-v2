@@ -173,9 +173,9 @@ export interface AiReportView {
   tendency?: string;
   /** 새 형식: 성향에 대한 조언. */
   feedback?: string;
-  /** 새 형식: 강점. 아직 보여줄 화면이 없다. */
+  /** 새 형식: 강점. ep5 리포트 2페이지의 "강점" 칩(Figma 6818:5117). */
   strengths?: string[];
-  /** 새 형식: 약점. 아직 보여줄 화면이 없다. */
+  /** 새 형식: 약점. ep5 리포트 2페이지의 "약점" 칩. */
   weaknesses?: string[];
   renderMode?: string;
 }

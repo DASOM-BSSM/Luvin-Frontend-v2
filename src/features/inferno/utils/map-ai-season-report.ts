@@ -6,20 +6,28 @@ import { deriveCharacterPersona } from '@/src/features/inferno/utils/character-p
  * `GET /api/ai/seasons/report`의 `narrative`를 화면이 쓰는 모양으로 바꾼다(§ types.ts 주석 참고).
  *
  * 새 형식에는 `narrative` 가 없고 `tendency`(성향)와 `feedback`(조언)이 따로 온다(AiReportView 주석).
- * 행동 분석 화면은 문단 하나를 보여주므로 둘을 이어 붙인다. 둘 다 없으면 빈 문단이다.
+ * 예전 행동 분석 화면은 문단 하나라 둘을 이어 붙였는데, Figma ep5-결과(6818:5117)가 나와서 굵은 한 줄
+ * (`tendency`) + 한 줄(`feedback`) + 강점/약점 칩으로 나눠 보여준다. 옛 형식 시즌(지난 시즌 다시 보기)은
+ * `narrative` 하나뿐이라 굵은 줄 자리에 그대로 넣고 나머지는 비운다.
  */
 export function mapAiReport(report: AiReportView): InfernoSeasonReport {
-  if (report.narrative) {
-    return { narrative: report.narrative };
-  }
-
-  return { narrative: [report.tendency, report.feedback].filter(Boolean).join('\n\n') };
+  return {
+    tendency: report.narrative ?? report.tendency ?? '',
+    feedback: report.feedback ?? '',
+    strengths: report.strengths ?? [],
+    weaknesses: report.weaknesses ?? [],
+  };
 }
 
-/** `episode2` → 2. 회차 번호가 없는 키는 맨 뒤로 보낸다. */
-function episodeNumberOfKey(key: string): number {
+/** `episode2` → 2. 회차 번호가 없는 키는 undefined. */
+function episodeNumberOfKey(key: string): number | undefined {
   const number = Number.parseInt(key.replace(/\D/g, ''), 10);
-  return Number.isNaN(number) ? Number.MAX_SAFE_INTEGER : number;
+  return Number.isNaN(number) ? undefined : number;
+}
+
+/** 회차 번호 순. 번호가 없는 키는 맨 뒤로 보낸다. */
+function compareEpisodeKeys(a: string, b: string): number {
+  return (episodeNumberOfKey(a) ?? Number.MAX_SAFE_INTEGER) - (episodeNumberOfKey(b) ?? Number.MAX_SAFE_INTEGER);
 }
 
 /**
@@ -32,7 +40,8 @@ function episodeNumberOfKey(key: string): number {
  *
  * 새 형식은 배열이 아니라 회차별 객체다(`{ episode2: { message, reason }, … }`, AiReportView 주석).
  * 배열로 보고 `.map` 을 부르면 화면이 죽어서(실기기 Render Error) 모양을 보고 나눈다. 객체면 회차 순서로
- * 늘어놓고 `message` 를 인용구로 쓴다.
+ * 늘어놓고 `message` 를 인용구로 쓴다. 회차 번호와 `reason` 도 함께 넘긴다 — Figma ep5-하이라이트
+ * (5760:4351)가 "Episode 02" + 인용구 + 고른 이유로 보여준다. 옛 형식은 둘 다 없다.
  */
 export function mapAiHighlights(highlights: AiReportView['highlights'] | undefined): InfernoHighlight[] {
   if (!highlights) {
@@ -44,8 +53,12 @@ export function mapAiHighlights(highlights: AiReportView['highlights'] | undefin
   }
 
   return Object.entries(highlights)
-    .sort(([a], [b]) => episodeNumberOfKey(a) - episodeNumberOfKey(b))
-    .flatMap(([, highlight]) => (highlight?.message ? [{ text: highlight.message }] : []));
+    .sort(([a], [b]) => compareEpisodeKeys(a, b))
+    .flatMap(([key, highlight]) =>
+      highlight?.message
+        ? [{ episodeOrder: episodeNumberOfKey(key), text: highlight.message, reason: highlight.reason }]
+        : [],
+    );
 }
 
 /**

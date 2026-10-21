@@ -1,7 +1,7 @@
 import { BAKE } from '@/src/features/inferno/constants/bake';
 
 /**
- * ep5 RESULT 등장 연출의 순간순간 모습. 전부 연출 시각(초)만 받아 값을 돌려주는 순수 함수다 — UI 스레드
+ * ep5 굽기 연출의 순간순간 모습. 전부 연출 시각(초)만 받아 값을 돌려주는 순수 함수다 — UI 스레드
  * 시계(use-bake-clock)가 매 프레임 부른다.
  *
  * 끝 시각(`BAKE.endSec`)에서는 모든 값이 제자리(이동 0, 크기 1, 연기·빛 0, 제목·하트 보임)로 돌아온다.
@@ -38,10 +38,26 @@ function wave(timeSec: number, periodSec: number): number {
   return (1 - Math.cos((2 * Math.PI * timeSec) / periodSec)) / 2;
 }
 
-/** 시계를 한 프레임 넘긴다. 끝 시각을 넘지 않는다. */
-export function advanceBakeTime(timeSec: number, deltaSec: number): number {
+/**
+ * 시계를 한 프레임 넘긴다. 끝 시각을 넘지 않는다.
+ *
+ * 리포트가 아직 안 왔으면(`isReleased` false) 기다리는 구간(holdStartSec~holdEndSec) 끝에 닿을 때 구간 처음으로
+ * 되돌린다 — 연기가 덮은 채 몽글거리는 장면이 리포트가 올 때까지 이어진다. 리포트가 오면 그 구간을 지나
+ * 빵이 되는 장면으로 넘어간다.
+ */
+export function advanceBakeTime(timeSec: number, deltaSec: number, isReleased: boolean): number {
   'worklet';
-  return Math.min(timeSec + deltaSec, BAKE.endSec);
+  const next = timeSec + deltaSec;
+  if (!isReleased && timeSec < BAKE.holdEndSec && next >= BAKE.holdEndSec) {
+    return next - (BAKE.holdEndSec - BAKE.holdStartSec);
+  }
+  return Math.min(next, BAKE.endSec);
+}
+
+/** 연기 뒤에서 반죽이 빵이 되고 상대가 들어서는 순간을 지났는지. */
+export function hasBakeSwapped(timeSec: number): boolean {
+  'worklet';
+  return timeSec >= BAKE.swapSec;
 }
 
 export function isBakeComplete(timeSec: number): boolean {
@@ -79,15 +95,21 @@ function getPopScale(timeSec: number): { scaleX: number; scaleY: number } {
 }
 
 /**
- * 반죽(→빵) 한 마리. `side` 는 왼쪽 -1, 오른쪽 1. 바깥에서 통통 뛰어 제자리로 다가오고, 다 오면 서로
- * 쪽으로 기울며 움츠렸다가, 연기 뒤에서 빵으로 바뀌어 튀어나온다. 발끝을 기준으로 커지고 줄어든다.
+ * 반죽(→빵) 한 마리. `side` 는 왼쪽 -1, 오른쪽 1. 바깥에서 통통 뛰어 제자리로 다가오고, 다 오면 반대쪽으로
+ * 기울며 움츠렸다가, 연기 뒤에서 빵으로 바뀌어 튀어나온다. 발끝을 기준으로 커지고 줄어든다.
+ *
+ * 기다리는 동안 나오는 건 내 반죽(왼쪽) 하나다. 상대는 연기 뒤에서 빵이 되는 순간(swapSec)부터 들어서므로
+ * 반죽 구간을 쓰지 않는다. 연기가 다 덮은 뒤(holdStartSec~)는 반죽이 연기 뒤에서 멈춰 있다 — 기다리는
+ * 구간이 되풀이돼도 반죽 모습이 튀지 않는다.
  */
-export function getFigurePose(timeSec: number, side: number, hopDelaySec: number): BakeFigurePose {
+export function getFigurePose(timeSec: number, side: number): BakeFigurePose {
   'worklet';
   if (timeSec >= BAKE.swapSec) {
     const pop = getPopScale(timeSec);
     return { x: 0, y: 0, rotateDeg: 0, ...pop, doughOpacity: 0, breadOpacity: 1 };
   }
+
+  const doughSec = Math.min(timeSec, BAKE.holdStartSec);
 
   let hops = 0;
   let y = 0;
@@ -95,8 +117,8 @@ export function getFigurePose(timeSec: number, side: number, hopDelaySec: number
   let scaleY = 1;
   let isHopping = false;
   for (let hop = 0; hop < BAKE.hopCount; hop += 1) {
-    const startSec = BAKE.hopStartSec + hop * BAKE.hopIntervalSec + hopDelaySec;
-    const progress = ramp(timeSec, startSec, startSec + BAKE.hopDurationSec);
+    const startSec = BAKE.hopStartSec + hop * BAKE.hopIntervalSec;
+    const progress = ramp(doughSec, startSec, startSec + BAKE.hopDurationSec);
     if (progress >= 1) {
       hops += 1;
     } else if (progress > 0) {
@@ -110,19 +132,19 @@ export function getFigurePose(timeSec: number, side: number, hopDelaySec: number
   }
 
   if (!isHopping) {
-    const breath = wave(Math.max(0, timeSec - hopDelaySec), BAKE.breathPeriodSec);
+    const breath = wave(doughSec, BAKE.breathPeriodSec);
     scaleX *= 1 + BAKE.breathStretchX * breath;
     scaleY *= 1 - BAKE.breathSquashY * breath;
   }
 
-  const lean = easeInOut(ramp(timeSec, BAKE.leanStartSec, BAKE.leanEndSec));
+  const lean = easeInOut(ramp(doughSec, BAKE.leanStartSec, BAKE.leanEndSec));
   scaleX *= 1 + 0.04 * lean;
   scaleY *= 1 - 0.06 * lean;
 
   return {
     x: side * BAKE.approachStartPx * (1 - hops / BAKE.hopCount),
     y,
-    // 왼쪽(-1)은 오른쪽으로, 오른쪽(1)은 왼쪽으로 기운다.
+    // 왼쪽(-1)은 오른쪽으로, 오른쪽(1)은 왼쪽으로 기운다. 내 반죽(왼쪽)은 상대가 들어설 쪽으로 기운다.
     rotateDeg: -side * BAKE.leanDeg * lean,
     scaleX,
     scaleY,
@@ -174,8 +196,14 @@ export function getPuffPose(timeSec: number, puffX: number, puffY: number, index
   };
 }
 
-/** RESULT 의 제목·하트·이름 투명도. 빵이 자리를 잡은 뒤에 나타난다. */
+/** 1페이지의 제목·하트·이름 투명도. 빵이 자리를 잡은 뒤에 나타난다. */
 export function getRevealOpacity(timeSec: number): number {
   'worklet';
   return ramp(timeSec, BAKE.revealStartSec, BAKE.revealEndSec);
+}
+
+/** 대기 문구 투명도. 기다리는 동안 보이다가, 리포트가 와서 기다리는 구간을 벗어나면 빵이 되기 전까지 사라진다. */
+export function getWaitMessageOpacity(timeSec: number): number {
+  'worklet';
+  return 1 - ramp(timeSec, BAKE.holdEndSec, BAKE.swapSec);
 }

@@ -1,8 +1,6 @@
-import { Pressable, View } from 'react-native';
-
-import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
+import InfernoEp5Notice from '@/src/features/inferno/components/inferno-ep5-notice';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchReveal from '@/src/features/inferno/components/inferno-final-match-reveal';
 import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
@@ -28,13 +26,13 @@ import type { BreadProfile } from '@/src/features/home/types';
 const EPISODE_ORDER = 5;
 
 /**
- * [DRAFT] 시즌 마무리. Figma 디자인이 아직 없는 상태에서 기능부터 먼저 만든 화면이다
- * (AGENTS.md §8 은 원래 디자인을 먼저 읽으라고 하지만, 이번엔 사용자 요청으로 예외).
- * 색상/자간/버튼 등은 전부 기존 토큰·컴포넌트를 그대로 조합한 임시 배치이니, 디자인이
- * 나오면 이 화면(과 아래 4개 씬 컴포넌트)을 다시 손봐야 한다는 걸 리뷰어가 알고 있을 것.
+ * 시즌 마무리. 공통 진입 화면(`/inferno?order=5`) 뒤의 네 페이지를 Figma에 맞췄다 — 리포트 1(최종 상대, 5748:4314) → 리포트 2(성향·강점·
+ * 약점, 6818:5117) → 하이라이트(5760:4351) → 시즌 마무리(6941:5215).
  *
- * ep3/ep4 와 같은 이유로 잠시 나가기 체크포인트를 두지 않는다 — 되돌릴 대화 상태가 없는
- * 단순 리포트라 다시 들어오면 1페이지부터 봐도 무방하다.
+ * 리포트를 기다리는 동안은 1페이지 자리에서 굽기 연출을 튼다(사용자 지시, 2026-10-20): 내 반죽이 연기
+ * 속에서 구워지다가, 리포트가 오면 상대와 함께 구운 빵으로 나와 그대로 1페이지가 된다(constants/bake.ts).
+ *
+ * 페이지 이동은 체크포인트에 저장한다. "잠시 나가기" 후 돌아오면 보던 페이지에서 이어진다.
  *
  * FRONTEND_CHANGES.md §4: `SAMPLE_BREAD_PROFILE` 폴백을 걷어냈다 — 서버 결과 없이 가짜
  * 반죽으로 화면을 보여주지 않는다. 내 반죽은 `useBreadProfile`(서버 설문 결과가 원천)로
@@ -60,7 +58,7 @@ export default function InfernoEp5Screen() {
   const checkpoint = useEpisodeCheckpoint(EPISODE_ORDER);
   // 지난 시즌은 "시즌 마무리" 페이지 없이 하이라이트까지만 보여준다(use-inferno-ep5-flow 주석).
   const flow = useInfernoEp5Flow(checkpoint.initialStep, exit.isPastSeason);
-  // 리포트가 막 도착하면 RESULT 자리에서 "반죽 → 연기 → 구운 빵" 등장 연출을 튼다. 리포트를 기다린 적이
+  // 리포트를 기다리는 동안 1페이지 자리에서 "반죽 → 연기 → 구운 빵" 굽기 연출을 튼다. 리포트를 기다린 적이
   // 있을 때만 틀고, 지난 시즌·이어보기에서는 틀지 않는다(use-ep5-bake).
   const bake = useEp5Bake(isGenerating, !exit.isPastSeason && checkpoint.initialStep === 0);
 
@@ -79,34 +77,55 @@ export default function InfernoEp5Screen() {
   const isWaitingForReport =
     !summary && isLoading && !hasGenerationFailed && !isError && !breadProfile.isSurveyMissing;
   const isWaitingLong = useWaitingTooLong(isWaitingForReport, BAKE_WAIT_SLOW_AFTER_MS);
+  const waitMessage = isWaitingLong ? BAKE_WAIT_SLOW_MESSAGE : BAKE_WAIT_MESSAGE;
+
+  // 굽기 연출 화면: 리포트를 만드는 중이거나, 리포트가 와서 빵으로 나오는 중. 생성 실패·에러면 아래 안내가
+  // 먼저다. 리포트는 왔는데 최종 상대를 못 세운 경우(summary 없음)도 기다려 봐야 오지 않으니 안내로 넘긴다.
+  const isBaking =
+    bake.isShowing && !hasGenerationFailed && !isError && (summary !== undefined || isGenerating);
+
+  // 1페이지와 같은 자리·같은 컴포넌트(InfernoFinalMatchReveal)라서, 연출이 끝나 아래 페이지 화면으로 넘어가도
+  // 같은 인스턴스가 이어진다 — 시계가 끝 시각에 머문 채 그대로 1페이지가 된다.
+  if (episode && myProfile && isBaking) {
+    return (
+      <InfernoEpisodeFrame
+        episode={episode}
+        surface="note"
+        skipLabel={exit.skipLabel}
+        onSkipPress={handleExitPress}
+      >
+        <InfernoFinalMatchReveal
+          mine={myProfile}
+          partner={summary?.finalMatch.profile}
+          summaryLine={summary?.finalMatch.summaryLine}
+          tendencyLabel={summary?.finalMatch.tendencyLabel}
+          waitMessage={waitMessage}
+          isPlaying
+          onComplete={bake.handleComplete}
+        />
+      </InfernoEpisodeFrame>
+    );
+  }
 
   // AI가 아직 리포트를 안 만들었거나 실패했거나, 내 반죽(서버 설문 결과)이 아직 없으면
   // 빈 화면 대신 안내를 보여준다(§11, ep1~4 와 같은 이유).
   if (!episode || !summary || !myProfile) {
     return (
       <InfernoEpisodeFrame episode={episode ?? { order: EPISODE_ORDER, title: '' }} surface="note" skipLabel={exit.skipLabel} onSkipPress={handleExitPress}>
-        <View className="flex-1 items-center justify-center gap-[12px] px-[30px]">
-          <Text variant="body-m" className="text-center text-default-black">
-            {hasGenerationFailed
+        <InfernoEp5Notice
+          message={
+            hasGenerationFailed
               ? '리포트를 만들지 못했어요'
               : isError
                 ? '정보를 불러오지 못했어요'
                 : breadProfile.isSurveyMissing
                   ? '설문을 먼저 완료해주세요'
                   : isLoading
-                    ? isWaitingLong
-                      ? BAKE_WAIT_SLOW_MESSAGE
-                      : BAKE_WAIT_MESSAGE
-                    : '리포트가 아직 없어요'}
-          </Text>
-          {hasGenerationFailed ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="다시 시도" onPress={retryGeneration}>
-              <Text variant="body-s" className="text-state-error">
-                다시 시도
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
+                    ? waitMessage
+                    : '리포트가 아직 없어요'
+          }
+          onRetry={hasGenerationFailed ? retryGeneration : undefined}
+        />
       </InfernoEpisodeFrame>
     );
   }
@@ -130,7 +149,7 @@ export default function InfernoEp5Screen() {
     exit.completeAndLeave();
   }
 
-  // "시즌 끝내기": 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
+  // "마무리하기"(예전 "시즌 끝내기"): 새로 시작하지 않고 ep1~4 와 같이 홈으로 돌아간다.
   function handleEndSeasonPress() {
     queuePartnerLetter();
     exit.completeAndLeave();
@@ -146,7 +165,8 @@ export default function InfernoEp5Screen() {
             mine={myProfile}
             partner={summary.finalMatch.profile}
             summaryLine={summary.finalMatch.summaryLine}
-            isPlaying={bake.isShowing}
+            tendencyLabel={summary.finalMatch.tendencyLabel}
+            isPlaying={false}
             onComplete={bake.handleComplete}
           />
         );
@@ -170,8 +190,7 @@ export default function InfernoEp5Screen() {
       surface="note"
       skipLabel={exit.skipLabel}
       onPreviousPress={flow.goPrevious}
-      // 등장 연출이 끝나기 전에는 다음 페이지로 넘기지 않는다.
-      onNextPress={bake.isShowing ? undefined : flow.goNext}
+      onNextPress={flow.goNext}
       onSkipPress={handleExitPress}
     >
       {renderPage(summary, myProfile)}
