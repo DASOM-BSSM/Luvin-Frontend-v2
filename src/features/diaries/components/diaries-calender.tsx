@@ -4,7 +4,6 @@ import { Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-// 일기 작성 O 아이콘 (핑크 스마일)
 const WrittenIcon = () => (
     <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <Circle cx="12" cy="12" r="10" stroke="#FF8EA3" strokeWidth="2" />
@@ -19,7 +18,6 @@ const WrittenIcon = () => (
     </Svg>
 );
 
-// 일기 작성 X 아이콘 (회색 스마일)
 const UnwrittenIcon = () => (
     <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
         <Circle cx="12" cy="12" r="10" stroke="#D9D9D9" />
@@ -65,7 +63,6 @@ export default function DiariesCalendarModal({
                 <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={onClose} />
 
                 <View style={styles.sheetContainer}>
-                    {/* 드래그 핸들바 */}
                     <View style={styles.handleWrapper}>
                         <View style={styles.handleBar} />
                     </View>
@@ -90,7 +87,6 @@ export default function DiariesCalendarModal({
                                         marginBottom: 12,
                                     },
                                     monthText: {
-                                        // [연도 및 월 텍스트 스펙]
                                         fontSize: 12,
                                         fontFamily: 'Yde street',
                                         fontWeight: '300',
@@ -104,7 +100,6 @@ export default function DiariesCalendarModal({
                                         marginBottom: 12,
                                     },
                                     dayHeader: {
-                                        // [요일 텍스트 스펙]
                                         fontSize: 10,
                                         fontFamily: 'Yde street',
                                         fontWeight: '300',
@@ -131,7 +126,6 @@ export default function DiariesCalendarModal({
                                             {hasWritten ? <WrittenIcon /> : <UnwrittenIcon />}
                                         </View>
 
-                                        {/* [날짜 텍스트 배지] */}
                                         <View style={[styles.dayNumberBadge, isSelected && styles.selectedBadge]}>
                                             <Text
                                                 style={[
