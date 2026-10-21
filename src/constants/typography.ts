@@ -255,6 +255,14 @@ const DISPLAY_LINE_HEIGHT_RATIO = 1.1;
  * 검정 두꺼운 테두리로 서로 다르다.
  */
 export const display = {
+  /** EP5 `REPORT`/`HIGHLIGHT` (5748:4322, 5760:4358): 22px, pink-500 fill, 얇은 pink-200 stroke. */
+  sectionTitle: {
+    fontFamily: fontFamily.okMallangB,
+    fontSize: 22,
+    lineHeight: 22 * lineHeightRatio,
+    fill: pink[500],
+    stroke: { color: pink[200], width: 1 },
+  },
   /** "Ready?" / "Game Over" 오버레이 타이틀. Figma: 6285:6955, 6263:6495 등 40px, pink-500 위 pink-200 stroke ~2px. */
   title: {
     fontFamily: fontFamily.okMallangB,
