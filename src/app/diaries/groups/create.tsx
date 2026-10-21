@@ -10,6 +10,7 @@ import Text from '@/src/components/ui/text';
 import TextField from '@/src/components/ui/text-field';
 import GroupFormField from '@/src/features/diaries/components/group-form-field';
 import useCreateRoom from '@/src/features/diaries/hooks/use-create-room';
+import type { DiaryRoom } from '@/src/features/diaries/types';
 import {
   GROUP_MEMBER_COUNT_MAX,
   GROUP_MEMBER_COUNT_MIN,
@@ -44,8 +45,14 @@ export default function CreateGroupScreen() {
     setMemberCount(sanitizeMemberCountInput(value));
   }
 
+  // 만들면 초대코드를 바로 볼 수 있게 그 그룹의 설정 화면으로 간다. 뒤로가기로 이 폼에 돌아오지
+  // 않도록 replace 로 이동한다.
+  function handleCreateSuccess({ id }: DiaryRoom) {
+    router.replace({ pathname: '/diaries/groups/[roomId]/settings', params: { roomId: id } });
+  }
+
   function handleCreatePress() {
-    createRoomMutation.mutate({ name: name.trim() }, { onSuccess: handleBackPress });
+    createRoomMutation.mutate({ name: name.trim() }, { onSuccess: handleCreateSuccess });
   }
 
   return (

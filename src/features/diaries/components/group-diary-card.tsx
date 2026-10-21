@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import EmotionAddIcon from '@/src/assets/icons/EmotionAddIcon';
@@ -10,6 +11,8 @@ interface GroupDiaryCardProps {
   diary: GroupDiaryPreview;
   onMorePress?: () => void;
   onReactionPress?: () => void;
+  /** 반응 버튼 왼쪽에 펼쳐 둘 이모지 고르기(일기 상세에서만). */
+  reactionPicker?: ReactNode;
   /** 반응 요청을 보내는 중이면 연타를 막는다(같은 이모지는 토글이라 연타하면 상태가 뒤집힌다). */
   reactionDisabled?: boolean;
 }
@@ -19,6 +22,7 @@ export default function GroupDiaryCard({
   diary,
   onMorePress,
   onReactionPress,
+  reactionPicker,
   reactionDisabled = false,
 }: GroupDiaryCardProps) {
   return (
@@ -58,11 +62,11 @@ export default function GroupDiaryCard({
       </View>
 
       {/*
-        반응 남기기 버튼. 누르면 이모지를 고르는 창이 떠야 하는데(디자인 이모지 + 키보드 이모지) 그
-        시안이 아직 없어서, 지금은 Figma 그대로 아이콘만 두고 화면에서 동작을 연결하지 않았다.
-        데이터 쪽은 `useReactToDiary` 로 준비되어 있다.
+        반응 남기기 버튼. 일기 상세(Figma 5950:6274)에서는 누르면 왼쪽에 이모지 고르기(`reactionPicker`)가
+        펼쳐진다. 홈 · 감정일기 메인 목록에서는 카드 전체를 눌러 상세로 들어간다.
       */}
-      <View className="w-full flex-row items-center justify-end">
+      <View className="w-full flex-row items-center justify-end gap-[4px]">
+        {reactionPicker}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="반응 남기기"

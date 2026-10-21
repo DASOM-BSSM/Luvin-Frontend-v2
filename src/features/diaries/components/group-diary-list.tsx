@@ -1,34 +1,47 @@
 import { Pressable, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
-import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import MyDiaryPromptCard from '@/src/features/diaries/components/my-diary-prompt-card';
+import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import useRoomDiaries from '@/src/features/diaries/hooks/use-room-diaries';
-import type { GroupDiaryAuthor, RoomId } from '@/src/features/diaries/types';
-import {
-  UNKNOWN_AUTHOR_NAME,
-  formatClockTime,
-  isWrittenOn,
-  toGroupDiaryPreview,
-} from '@/src/features/diaries/utils/feed';
-import useMyProfile from '@/src/features/user/hooks/use-my-profile';
+import type { DiaryFeedItem, RoomId } from '@/src/features/diaries/types';
+import { formatClockTime, toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
 
 interface GroupDiaryListProps {
   roomId: RoomId;
   onWritePress: () => void;
+  /** 일기 카드를 누르면 상세(반응 · 댓글)를 연다. */
+  onDiaryPress: (diary: DiaryFeedItem) => void;
 }
+
+interface DiaryItemProps {
+  diary: DiaryFeedItem;
+  onPress: (diary: DiaryFeedItem) => void;
+}
+
+const DiaryItem = ({ diary, onPress }: DiaryItemProps) => {
+  function handlePress() {
+    onPress(diary);
+  }
+
+  return (
+    <Pressable accessibilityRole="button" className="w-full" onPress={handlePress}>
+      <GroupDiaryCard diary={toGroupDiaryPreview(diary)} />
+    </Pressable>
+  );
+};
 
 /**
  * 감정일기 메인의 일기 목록(Figma 5950:5841). `GET /api/diary-rooms/{roomId}/diaries` 를 받아
- * 그룹 일기 카드로 그린다. 오늘 내가 아직 안 썼으면 맨 위에 "눌러서 작성" 카드를 둔다.
+ * 그룹 일기 카드로 그린다. 맨 위에는 항상 "눌러서 작성" 카드를 둔다 — 일기는 1시간에 한 번씩
+ * 쓸 수 있어서(기획), 남은 시간은 일기 올리기 모달의 버튼이 보여준다.
  *
  * 로딩 · 에러 상태는 시안이 없어 다른 화면과 같은 글자 안내로 둔다.
  */
-export default function GroupDiaryList({ roomId, onWritePress }: GroupDiaryListProps) {
+export default function GroupDiaryList({ roomId, onWritePress, onDiaryPress }: GroupDiaryListProps) {
   const diariesQuery = useRoomDiaries(roomId);
-  const { profile } = useBreadProfile();
-  const myProfileQuery = useMyProfile();
+  const me = useMyDiaryAuthor();
   const now = new Date();
 
   function handleRetryPress() {
@@ -54,20 +67,12 @@ export default function GroupDiaryList({ roomId, onWritePress }: GroupDiaryListP
   }
 
   const diaries = diariesQuery.data ?? [];
-  const hasWrittenToday = diaries.some((diary) => diary.isMine && isWrittenOn(diary.createdAt, now));
-  const me: GroupDiaryAuthor = {
-    type: profile?.type ?? null,
-    state: 'dough',
-    name: myProfileQuery.data?.nickname ?? profile?.name ?? UNKNOWN_AUTHOR_NAME,
-  };
 
   return (
     <View className="w-full flex-col items-start gap-[20px]">
-      {hasWrittenToday ? null : (
-        <MyDiaryPromptCard author={me} time={formatClockTime(now)} onWritePress={onWritePress} />
-      )}
+      <MyDiaryPromptCard author={me} time={formatClockTime(now)} onWritePress={onWritePress} />
       {diaries.map((diary) => (
-        <GroupDiaryCard key={diary.diaryId} diary={toGroupDiaryPreview(diary)} />
+        <DiaryItem key={diary.diaryId} diary={diary} onPress={onDiaryPress} />
       ))}
     </View>
   );

@@ -13,6 +13,8 @@ interface TextFieldProps {
   keyboardType?: KeyboardTypeOptions;
   maxLength?: number;
   accessibilityLabel?: string;
+  /** false 면 읽기 전용(그룹 설정하기의 잠긴 그룹 이름 · 초대코드). 기본 true. */
+  editable?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export default function TextField({
   keyboardType,
   maxLength,
   accessibilityLabel,
+  editable = true,
 }: TextFieldProps) {
   return (
     <InteropTextInput
@@ -41,6 +44,7 @@ export default function TextField({
       placeholderTextColor={textColor.muted}
       keyboardType={keyboardType}
       maxLength={maxLength}
+      editable={editable}
       accessibilityLabel={accessibilityLabel ?? placeholder}
       textAlignVertical="center"
       underlineColorAndroid="transparent"
