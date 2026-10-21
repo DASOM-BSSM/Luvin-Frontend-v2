@@ -34,6 +34,11 @@ export default function BottomNav({ active = 'home' }: BottomNavProps) {
     router.push('/oven');
   }
 
+  function handleDiaryTabPress() {
+    if (active === 'diary') return;
+    router.push('/diaries');
+  }
+
   function handleBreadTabPress() {
     if (active === 'bread') return;
     router.push('/bread');
@@ -47,8 +52,9 @@ export default function BottomNav({ active = 'home' }: BottomNavProps) {
       <Pressable accessibilityRole="button" onPress={handleOvenTabPress}>
         <OvenNavIcon color={iconColor('oven', active)} />
       </Pressable>
-      {/* 감정일기 탭은 아직 목적지 화면이 없다 — 제품 결정에 따라 탭은 그대로 두고 눌러도 아무 동작을 하지 않는다. */}
-      <SentimentNavIcon color={iconColor('diary', active)} />
+      <Pressable accessibilityRole="button" onPress={handleDiaryTabPress}>
+        <SentimentNavIcon color={iconColor('diary', active)} />
+      </Pressable>
       <Pressable accessibilityRole="button" onPress={handleBreadTabPress}>
         <BreadNavIcon color={iconColor('bread', active)} />
       </Pressable>
