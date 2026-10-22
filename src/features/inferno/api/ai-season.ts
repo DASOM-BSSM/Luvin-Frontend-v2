@@ -9,7 +9,6 @@ import type {
   AiEpisodeProgressView,
   AiMessageLikeView,
   AiReportView,
-  AiRerollView,
   AiSeasonStatusView,
   AiSeasonSummaryView,
   AiSelectionView,
@@ -130,29 +129,6 @@ export async function markMessagesSeen(episodeNumber: number, sequence: number):
   await httpClient.post(`/api/ai/seasons/episodes/${episodeNumber}/seen`, { sequence });
 }
 
-/** `POST /api/ai/seasons/episodes/{number}/rerolls`. "다시 굽기". */
-export async function requestReroll(episodeNumber: number, partnerId: string): Promise<AiRerollView> {
-  const { data } = await httpClient.post<ApiEnvelope<AiRerollView>>(
-    `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
-    { partnerId },
-  );
-  return data.data;
-}
-
-/**
- * `GET /api/ai/seasons/episodes/{number}/rerolls`. 이 회차의 "다시 굽기" 작업 상태.
- * 아직 다시 굽기를 한 적이 없을 때 어떤 응답이 오는지는 스펙에 없다 — 부르는 쪽
- * (use-inferno-rebake)이 404/409 와 빈 data 를 "없음"으로 흡수한다.
- */
-export async function getRerollStatus(episodeNumber: number, seasonId?: string): Promise<AiRerollView | null> {
-  const { data } = await httpClient.get<ApiEnvelope<AiRerollView | null>>(
-    `/api/ai/seasons/episodes/${episodeNumber}/rerolls`,
-    // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
-    { params: { season_id: seasonId } },
-  );
-  return data.data ?? null;
-}
-
 /**
  * `POST /api/ai/seasons/episodes/{number}/feedback`. "나의 빵에게" 피드백(ep2·ep4 의 1:1 대화).
  * `messageId`는 회차 조회(`GET .../episodes/{number}`)로 받은 메시지 id 를 그대로 보낸다.
@@ -200,12 +176,7 @@ export async function submitEpisode3Result(success: boolean, partnerId?: string)
   return data.data;
 }
 
-/**
- * `GET /api/ai/seasons/report`. ep5 시즌 리포트 — 백엔드 확인 완료: `finalPartnerId`가
- * "다시 굽기" 이후 바뀐 진짜 최종 상대까지 반영된 값이라, 이전에 ep4 대화에서 최종 매칭
- * 상대를 직접 추론하던 우회 로직(map-ai-season-report.ts의 옛 `mapFinalMatchFromEp4`)을
- * 대체한다.
- */
+/** [DRAFT] 기존 AI 시즌의 최종 리포트 조회. */
 export async function getSeasonReport(seasonId?: string): Promise<AiReportView> {
   // 지난 시즌 다시 보기(use-viewed-season). 생략하면 서버가 최신 시즌을 준다.
   const { data } = await httpClient.get<ApiEnvelope<AiReportView>>('/api/ai/seasons/report', {

@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import type { BreadProfile } from '@/src/features/home/types';
 import type {
   AiCharacterView,
@@ -5,8 +6,7 @@ import type {
   AiMessageView,
   AiSeasonStatusView,
 } from '@/src/features/inferno/api/ai-season-types';
-import { EPISODE_VOTE_PROMPTS, REBAKE_COPY } from '@/src/features/inferno/constants/episode-copy';
-import { REBAKE_EPISODES } from '@/src/features/inferno/constants/rebake';
+import { EPISODE_VOTE_PROMPTS } from '@/src/features/inferno/constants/episode-copy';
 import type {
   InfernoChatMessage,
   InfernoChatPage,
@@ -14,7 +14,6 @@ import type {
   InfernoFeedbackTopic,
   InfernoMatchReveal,
   InfernoParticipant,
-  InfernoRebake,
 } from '@/src/features/inferno/types';
 import { deriveCharacterPersona, getBreadTypeNoun } from '@/src/features/inferno/utils/character-persona';
 import {
@@ -173,28 +172,6 @@ function buildMatchReveal(
   };
 }
 
-/**
- * "다시 굽기" 투표지에 올릴 후보. 전체대화 참가자 중 나와 지금 매칭된 상대를 뺀 나머지다
- * (types.ts `InfernoRebake` 주석 참고). 새 상대와의 대화(chatMessages)는 여기서 만들지 않는다 —
- * 다시 굽기가 끝나면 서버가 회차 대화를 새 버전으로 바꿔서 personalChatPages 로 내려온다.
- */
-function buildRebake(
-  personalMessages: AiMessageView[],
-  participants: InfernoParticipant[],
-  representativeId: string | undefined,
-): InfernoRebake | undefined {
-  const partnerId = personalMessages.find((message) => !isFromMe(message, representativeId))?.speakerId;
-  const candidateIds = participants
-    .filter((participant) => !participant.isMine && participant.id !== partnerId)
-    .map((participant) => participant.id);
-
-  if (!partnerId || candidateIds.length === 0) {
-    return undefined;
-  }
-
-  return { ...REBAKE_COPY, candidateIds };
-}
-
 /** 1:1 대화에서 내 분신이 한 말만 피드백 대상으로 삼는다(types.ts 주석 참고). */
 function buildFeedbackTopics(
   personalMessages: AiMessageView[],
@@ -256,10 +233,6 @@ export function mapAiEpisodeToConversation(
     feedbackTopics: buildFeedbackTopics(personalMessages, representativeId),
     isFeedbackSubmitted: episode.feedback != null,
     likedMessageIds: episode.likedMessageIds ?? [],
-    // 예전엔 reroll 완료를 확인할 조회 엔드포인트가 없어서 비워 뒀는데, `GET .../episodes/{number}/rerolls`
-    // 가 생겨서 붙였다(use-inferno-rebake 주석 참고). 어느 회차에 있는지는 constants/rebake 참고.
-    rebake: REBAKE_EPISODES.includes(episode.episodeNumber)
-      ? buildRebake(personalMessages, participants, representativeId)
-      : undefined,
+
   };
 }

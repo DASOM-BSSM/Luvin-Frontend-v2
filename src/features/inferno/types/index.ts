@@ -113,35 +113,6 @@ export interface InfernoFeedbackTopic {
 }
 
 /**
- * 1:1 대화 중 "다시 굽기"로 상대를 바꾸는 곁가지. Figma `다시굽기`
- * (5467:5418 확인 모달, 5467:5840 투표지, 5467:5876 새 상대와의 대화).
- *
- * 투표로 새 상대를 고른다는 점은 ep1 투표(InfernoVotePrompt)와 같지만, 후보가 전체대화
- * 참가자 중 이미 매칭된 상대를 뺀 나머지라는 점과 투표 뒤 곧장 1:1 대화로 이어진다는 점이
- * 다르다. 대화 상대는 사용자가 고른 값이라 메시지 데이터가 실제 participant id 를 미리
- * 알 수 없으므로, `chatMessages` 는 상대 쪽 줄에 `EP4_REBAKE_PARTNER_ID` 같은 자리표시자
- * participantId 를 쓰고 화면이 고른 상대로 바꿔 끼운다.
- */
-export interface InfernoRebake {
-  /** 확인 쪽지 문구. 예: "다시 굽기를 진행하시겠어요?" */
-  confirmMessage: string;
-  /** 확인 쪽지 버튼 문구. 예: "다시 굽기 상대 고르기" */
-  confirmActionLabel: string;
-  /** 투표지 문구. 예: "당신과 다시 구워지고 싶어요" */
-  voteMessage: string;
-  /** 고를 수 있는 반죽들의 participant id. 이미 매칭된 상대는 빠져 있다. */
-  candidateIds: string[];
-  /**
-   * 새 상대와의 대화. 상대 쪽 줄의 participantId 는 자리표시자다(위 설명 참고).
-   *
-   * 로컬 대본(conversation.ts)만 채운다. 실제 API 에서는 다시 굽기가 끝나면 서버가 회차 대화를
-   * 새 버전으로 바꿔 두어서, 새 상대와의 대화가 `personalChatPages` 로 내려온다
-   * (use-inferno-rebake 주석 참고).
-   */
-  chatMessages?: InfernoChatMessage[];
-}
-
-/**
  * 에피소드 한 편의 대화 전체.
  *
  * API 가 붙으면 이 타입이 응답 본문이 된다. 그래서 JSON 으로 그대로 직렬화되는 값만 담는다.
@@ -151,10 +122,7 @@ export interface InfernoRebake {
  */
 export interface InfernoConversation {
   episodeOrder: number;
-  /**
-   * 서버가 이 대화에 붙인 버전. "다시 굽기"가 끝나면 서버가 회차 대화를 새 버전으로 바꾸므로,
-   * 이 값이 바뀌었는지로 새 대화가 도착했는지 안다(use-inferno-rebake). 로컬 대본엔 없다.
-   */
+  /** [DRAFT] 기존 서버 시즌의 조회·표시 계약. */
   versionId?: string;
   participants: InfernoParticipant[];
   pages: InfernoChatPage[];
@@ -185,8 +153,6 @@ export interface InfernoConversation {
    * 나갔다 들어오거나 다시 볼 때도 하트가 그대로 있다. 로컬 대본엔 없다.
    */
   likedMessageIds?: string[];
-  /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
-  rebake?: InfernoRebake;
 }
 
 /**
@@ -273,11 +239,7 @@ export interface InfernoHighlight {
 
 export interface InfernoSeasonSummary {
   episodeOrder: number;
-  /**
-   * 최종 매칭 상대 정보. `GET /api/ai/seasons/report`의 `finalPartnerId`에서 뽑는다
-   * (map-ai-season-report.ts 의 `mapFinalMatchFromReport`) — "다시 굽기"로 상대가 바뀐
-   * 경우까지 반영된 값이다(백엔드 확인 완료).
-   */
+  /** [DRAFT] 기존 서버 시즌의 조회·표시 계약. */
   finalMatch: InfernoFinalMatchResult;
   report: InfernoSeasonReport;
   highlights: InfernoHighlight[];
@@ -290,6 +252,8 @@ export interface InfernoSeasonSummary {
  * 쪽지 본문은 여기 없다 — 본문은 AI 가 만들어 주는 값이라 펼칠 때 받아 온다(api/partner-letter.ts).
  */
 export interface InfernoPartnerLetterSender {
+  /** [DRAFT] Solo-season mock letter; delivery lifecycle remains unchanged. */
+  draftMessage?: string;
   /** 쪽지 한 통을 가리키는 값. 같은 쪽지를 펼치는 동안 본문이 바뀌지 않게 쿼리 키로 쓴다. */
   id: string;
   partnerName: string;

@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -20,10 +21,6 @@ interface InfernoPersonalChatSceneProps {
   onFeedbackPress?: () => void;
   /** "나의 빵에게" 피드백을 이미 썼는지. 맞으면 폴더가 쓴 기회 모양(pink/300)이 된다. */
   isFeedbackUsed?: boolean;
-  /** "다시 굽기" 를 눌렀을 때. 넘기지 않으면 갈 곳이 없거나 이미 다시 굽기를 썼다는 뜻. */
-  onRebakePress?: () => void;
-  /** 다시 굽기로 고른 상대와의 대화인지. 맞으면 "다시 굽기" 가 선택된 모양으로 흐려진다. */
-  isRebakeSelected?: boolean;
   /** 하트를 누른 줄 id 목록. */
   likedMessageIds?: string[];
   /** 다 쳐진 말풍선을 눌렀을 때. 그 줄의 하트를 켜고 끈다. 넘기지 않으면 하트를 누를 수 없다. */
@@ -57,8 +54,6 @@ export default function InfernoPersonalChatScene({
   onPageDone,
   onFeedbackPress,
   isFeedbackUsed,
-  onRebakePress,
-  isRebakeSelected,
   likedMessageIds = [],
   onMessageLikePress,
 }: InfernoPersonalChatSceneProps) {
@@ -96,8 +91,8 @@ export default function InfernoPersonalChatScene({
         partner={partner}
         onFeedbackPress={onFeedbackPress}
         isFeedbackUsed={isFeedbackUsed}
-        onRebakePress={onRebakePress}
-        isRebakeSelected={isRebakeSelected}
+
+
       />
 
       <ScrollView

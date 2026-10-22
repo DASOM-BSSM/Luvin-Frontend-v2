@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 /**
  * `ai-season-controller` DTO. openapi 스키마를 그대로 옮긴 것 — UI 가 쓰는
  * `InfernoConversation` 등과는 별개다. 화면에 보여줄 모양으로 바꾸는 건
@@ -130,11 +131,7 @@ export interface AiEpisodeProgressView {
   errorCode?: string;
 }
 
-export interface AiRerollView {
-  jobId: string;
-  jobStatus: string;
-  errorCode?: string;
-}
+
 
 export interface AiSelectionView {
   selectionId: string;

@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import { View } from 'react-native';
 
 import FolderIcon from '@/src/assets/icons/FolderIcon';
@@ -17,11 +18,6 @@ const HEADING = '시작하기 전에! 헷갈리지 않게 미리 알고가요';
  * 폭이 서로 다른 건 시안에 그렇게 잡혀 있어서다(288 / 272).
  */
 const GUIDES = [
-  {
-    label: '다시 굽기',
-    widthClass: 'w-[288px]',
-    body: '“그때 다른 선택을 했다면?”\n시즌 중 딱 한번만 다시 구워볼 수 있어요',
-  },
   {
     label: '나의 빵에게',
     widthClass: 'w-[272px]',

@@ -66,7 +66,8 @@ export default function SeasonHistoryList() {
   const histories = myProfile
     ? buildSeasonHistories(seasons, status?.seasonId, currentLastOrder).map((history) => ({
         ...history,
-        episodes: toSeasonEpisodes(history.episodeOrders, myProfile),
+        // [DRAFT] Preserve the original labels for older five-episode server seasons.
+        episodes: toSeasonEpisodes(history.episodeOrders, myProfile, !history.isCurrent),
       }))
     : [];
   const hasEpisodes = histories.some((history) => history.episodes.length > 0);

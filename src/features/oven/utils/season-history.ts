@@ -1,6 +1,8 @@
+/** [DRAFT] Ten-episode block story integration. */
 import type { BreadProfile } from '@/src/features/home/types';
 import { formatEpisodeLabel } from '@/src/features/home/utils/format-episode';
 import type { AiSeasonSummaryView } from '@/src/features/inferno/api/ai-season-types';
+import { LEGACY_INFERNO_EPISODES } from '@/src/features/inferno/constants/episodes';
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import { getBreadFlavorName } from '@/src/features/inferno/utils/character-persona';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
@@ -20,8 +22,8 @@ export interface SeasonHistory {
   isCurrent: boolean;
 }
 
-/** 회차가 다섯 편(ep1~ep5)이라 끝난 시즌은 여기까지 펼친다. ep0(가이드)은 목록에 넣지 않는다. */
-export const LAST_EPISODE_ORDER = 5;
+/** 회차가 열 편(ep1~ep10)이라 끝난 시즌은 여기까지 펼친다. ep0(가이드)은 목록에 넣지 않는다. */
+export const LAST_EPISODE_ORDER = 10;
 
 /** Episode 01 부터 lastOrder 까지, 최신 회차가 맨 위. */
 function toEpisodeOrders(lastOrder: number): number[] {
@@ -36,7 +38,7 @@ function toEpisodeOrders(lastOrder: number): number[] {
  * 마지막 회차 + 1" 이라(inferno/utils/progress.ts 주석) 그대로 쓰면 시작도 안 한 회차가 목록에 나온다.
  */
 function pastSeasonLastOrder(season: AiSeasonSummaryView): number {
-  return season.status === COMPLETED_SEASON_STATUS ? LAST_EPISODE_ORDER : season.currentEpisode - 1;
+  return season.status === COMPLETED_SEASON_STATUS ? 5 : Math.min(5, season.currentEpisode - 1);
 }
 
 /**
@@ -95,12 +97,18 @@ function buildGreetingTitle(myProfile: BreadProfile): string {
  * 지난 시즌의 ep1 도 지금 반죽으로 인사말을 만든다. 반죽은 처음 한 번 만들면 끝이고 시즌마다 새로
  * 만들지 않아서(사용자 확인), 모든 시즌의 반죽이 같다.
  */
-function resolveEpisodeTitle(order: number, myProfile: BreadProfile): string | undefined {
+function resolveEpisodeTitle(
+  order: number,
+  myProfile: BreadProfile,
+  legacy: boolean,
+): string | undefined {
   if (order === GREETING_EPISODE_ORDER) {
     return buildGreetingTitle(myProfile);
   }
 
-  return findInfernoEpisode(order)?.title;
+  return legacy
+    ? LEGACY_INFERNO_EPISODES.find((episode) => episode.order === order)?.title
+    : findInfernoEpisode(order)?.title;
 }
 
 /**
@@ -109,9 +117,13 @@ function resolveEpisodeTitle(order: number, myProfile: BreadProfile): string | u
  * 그 서버 상태다 — 회차 번호는 서버 값을 쓰고, 제목은 위 `resolveEpisodeTitle`이 정한다.
  * 제목을 못 만드는 회차는 뺀다.
  */
-export function toSeasonEpisodes(orders: number[], myProfile: BreadProfile): SeasonEpisodeItem[] {
+export function toSeasonEpisodes(
+  orders: number[],
+  myProfile: BreadProfile,
+  legacy = false,
+): SeasonEpisodeItem[] {
   return orders.flatMap((order) => {
-    const title = resolveEpisodeTitle(order, myProfile);
+    const title = resolveEpisodeTitle(order, myProfile, legacy);
     return title ? [{ order, label: formatEpisodeLabel(order), body: title }] : [];
   });
 }
