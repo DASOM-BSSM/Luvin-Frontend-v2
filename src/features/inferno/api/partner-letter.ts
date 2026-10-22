@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import type { InfernoPartnerLetter, InfernoPartnerLetterSender } from '@/src/features/inferno/types';
 import { pickRandomItem } from '@/src/features/inferno/utils/partner-letter';
 
@@ -33,6 +34,6 @@ export async function fetchPartnerLetter(
 
   return {
     partnerName: sender.partnerName,
-    message: pickRandomItem(MOCK_LETTER_MESSAGES, Math.random()),
+    message: sender.draftMessage ?? pickRandomItem(MOCK_LETTER_MESSAGES, Math.random()),
   };
 }

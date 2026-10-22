@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import type { Href } from 'expo-router';
 
 /**
@@ -16,6 +17,12 @@ const INFERNO_EPISODE_PATHNAMES = {
   3: '/inferno/ep3',
   4: '/inferno/ep4',
   5: '/inferno/ep5',
+  6: '/inferno/ep6',
+  7: '/inferno/ep7',
+  8: '/inferno/ep8',
+  9: '/inferno/ep9',
+  10: '/inferno/ep10',
+
 } as const;
 
 export const INFERNO_EPISODE_HREFS: Record<number, Href | undefined> = INFERNO_EPISODE_PATHNAMES;

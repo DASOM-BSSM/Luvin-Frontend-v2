@@ -114,7 +114,8 @@ export default function HomeScreen() {
   // 돌려주는 API — 새 시즌을 만드는 API 는 백엔드에 요청해 둔 상태). 끝난 시즌으로 다시
   // 들어가지 않고, 다음 시즌은 토큰이 필요하다고 안내한다.
   function handleSeasonReady(status: string, href: Href) {
-    if (status === COMPLETED_SEASON_STATUS) {
+    // [DRAFT] The old server completion flag cannot skip the ten-episode mock season.
+    if (status === COMPLETED_SEASON_STATUS && completedOrders.includes(10)) {
       requestNextSeasonNotice();
       return;
     }

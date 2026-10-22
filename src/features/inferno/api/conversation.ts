@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import type { InfernoConversation } from '@/src/features/inferno/types';
 
 /**
@@ -7,14 +8,6 @@ import type { InfernoConversation } from '@/src/features/inferno/types';
  * 화면과 컴포넌트는 이 모듈을 직접 부르지 않고 use-inferno-conversation 훅을 거치므로,
  * 여기서 동기가 비동기로 바뀌어도 고칠 곳은 훅 하나뿐이다(§11).
  */
-
-/**
- * "다시 굽기" 대화(`InfernoRebake.chatMessages`)에서 상대 쪽 줄에 쓰는 자리표시자
- * participantId. 다시 굽기 상대는 투표로 골라 정해지는 값이라 데이터가 미리 실제
- * participant id 를 넣어 둘 수 없다. 화면(ep4.tsx)이 투표 결과로 고른 참가자를
- * 이 id 로 감싸 참가자 목록에 끼워 넣은 뒤 그대로 렌더링한다.
- */
-export const EP4_REBAKE_PARTNER_ID = 'rebakePartner';
 
 /**
  * ep1 대화. Figma `ep1-전체대화` (5425:886), `ep1-전체대화 끝` (6137:2782),
@@ -345,41 +338,7 @@ const EP4_CONVERSATION: InfernoConversation = {
       ],
     },
   ],
-  // 후보는 ep1 투표의 네 반죽 중 나(me)와 이미 매칭된 상대(donut)를 뺀 나머지다. 대화 문구는
-  // 상대가 누구든 같다(시안 5467:5876 이 프레첼로 예시를 보였을 뿐, 이름을 짚지 않는
-  // 내용이라 카스테라를 골라도 그대로 쓴다) — 이유는 EP4_REBAKE_PARTNER_ID 주석 참고.
-  rebake: {
-    confirmMessage: '다시 굽기를 진행하시겠어요?',
-    confirmActionLabel: '다시 굽기 상대 고르기',
-    voteMessage: '당신과 다시 구워지고 싶어요',
-    candidateIds: ['castella', 'pretzel'],
-    chatMessages: [
-      {
-        id: 'ep4-rebake-1',
-        participantId: 'me',
-        side: 'right',
-        text: '안녕하세요! 쫀쫀한 소금빵 반죽입니다',
-      },
-      {
-        id: 'ep4-rebake-2',
-        participantId: EP4_REBAKE_PARTNER_ID,
-        side: 'left',
-        text: '헐 안녕하세요 드디어 대화 해보네요',
-      },
-      {
-        id: 'ep4-rebake-3',
-        participantId: 'me',
-        side: 'right',
-        text: '저랑 대화 하고 싶으셨던 이유를 들어봐도 될까요?',
-      },
-      {
-        id: 'ep4-rebake-4',
-        participantId: EP4_REBAKE_PARTNER_ID,
-        side: 'left',
-        text: '그냥 이성이잖아요 ㅋㅋ',
-      },
-    ],
-  },
+
 };
 
 /** 회차별 대화. 회차가 늘면 여기에 추가한다. */

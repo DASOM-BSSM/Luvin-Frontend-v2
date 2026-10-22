@@ -1,4 +1,6 @@
+/** [DRAFT] Ten-episode block story integration. */
 import { create } from 'zustand';
+import { useSceneSeasonStore } from '@/src/features/inferno/store/scene-season-store';
 
 import {
   getStorageJson,
@@ -181,11 +183,13 @@ export const useInfernoStore = create<InfernoStore>((set, get) => ({
   },
 
   resetProgress: () => {
+    useSceneSeasonStore.getState().reset();
     const owner = get().ownerUserId;
     set({ completedOrders: persist(owner, []), checkpoints: persistCheckpoints(owner, {}) });
   },
 
   switchUser: (userId) => {
+    useSceneSeasonStore.getState().reset();
     // 계정별로 나누기 전 기록은 주인을 알 수 없어 다음 계정에 넘기지 않고 지운다(예전 동작과 같다).
     if (get().ownerUserId === undefined) {
       removeRecord(undefined);
