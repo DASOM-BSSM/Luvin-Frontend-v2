@@ -11,10 +11,13 @@ import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import useLogout from '@/src/features/auth/hooks/use-logout';
 import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
+import AgeSelectField from '@/src/features/my-page/components/age-select-field';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 import type { Gender } from '@/src/features/my-page/types';
+import { toKnownAge } from '@/src/features/my-page/utils/age';
+import { isStoryMock, saveStoryAge } from '@/src/features/inferno/api/story';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import useDeleteAccount from '@/src/features/user/hooks/use-delete-account';
@@ -37,6 +40,9 @@ export default function MyPageEditScreen() {
   const [openConfirm, setOpenConfirm] = useState<'logout' | 'withdraw' | undefined>(undefined);
   const myProfileQuery = useMyProfile();
   const updateProfileMutation = useUpdateProfile();
+  // [DRAFT] 나이는 이 화면에서 고친 값이 있으면 그 값, 없으면 서버 값을 보여준다.
+  const [ageDraft, setAgeDraft] = useState<number>();
+  const age = ageDraft ?? toKnownAge(myProfileQuery.data?.age);
   useTokenBalance();
 
   // 로컬 닉네임 초안이 아직 없으면(한 번도 이 화면에서 수정 안 했으면) 서버 값으로 채운다 —
@@ -80,8 +86,14 @@ export default function MyPageEditScreen() {
     setGender('male');
   }
 
+  function handleSaveInfoSuccess() {
+    // 목 모드에서는 목 서버에도 나이를 알린다(api/story.ts 의 saveStoryAge).
+    if (isStoryMock && age !== undefined) void saveStoryAge(age);
+    handleBackPress();
+  }
+
   function handleSaveInfoPress() {
-    updateProfileMutation.mutate({ nickname, gender }, { onSuccess: handleBackPress });
+    updateProfileMutation.mutate({ nickname, gender, age }, { onSuccess: handleSaveInfoSuccess });
   }
 
   // 스택을 비우고 온보딩만 남긴다 — replace 만 하면 아래 화면이 남아 다시 로그인했을 때 홈이
@@ -200,6 +212,18 @@ export default function MyPageEditScreen() {
                     onPress={handleMaleSelect}
                   />
                 </View>
+              </View>
+
+              <View className="w-full flex-col items-start gap-[12px]">
+                <View className="flex-col items-start gap-[4px]">
+                  <Text variant="heading-h5" className="text-text-primary">
+                    나이를 알려주세요
+                  </Text>
+                  <Text variant="body-xs" className="text-text-muted">
+                    러빈지옥의 무대를 정할 때 써요. 무대는 1화를 처음 시작할 때 한 번만 정해져요
+                  </Text>
+                </View>
+                <AgeSelectField value={age} onChange={setAgeDraft} />
               </View>
             </View>
 

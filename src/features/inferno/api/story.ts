@@ -10,6 +10,7 @@ import {
   mockSetSceneLike,
   mockSubmitChoice,
   mockSubmitSceneFeedback,
+  setMockAge,
 } from '@/src/features/inferno/api/mocks/story-mock';
 import type {
   AiChoiceOutcomeView,
@@ -28,6 +29,7 @@ import {
   type StoryMapOptions,
 } from '@/src/features/inferno/utils/map-story';
 import type { ApiEnvelope } from '@/src/lib/api-envelope';
+import { updateMyProfile } from '@/src/features/user/api/profile';
 import httpClient from '@/src/lib/http-client';
 
 export const isStoryMock = process.env.EXPO_PUBLIC_USE_MOCK === 'true';
@@ -100,4 +102,16 @@ export async function setSceneLike(
     request,
   );
   return data.data;
+}
+
+/**
+ * 나이 저장(`PUT /api/users/me { age }`). 409 `AGE_REQUIRED` 바텀시트와 마이페이지가 쓴다.
+ * 목 모드면 목 서버에도 알린다 — 목 서버가 1화에서 나이로 배경을 정한다.
+ */
+export async function saveStoryAge(age: number): Promise<void> {
+  if (isStoryMock) {
+    setMockAge(age);
+    return;
+  }
+  await updateMyProfile({ age });
 }

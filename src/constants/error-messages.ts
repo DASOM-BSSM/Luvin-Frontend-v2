@@ -22,4 +22,5 @@ export const ERROR_MESSAGES = {
   choiceFailed: '선택을 전하지 못했어요. 다시 시도해주세요',
   completeFailed: '회차를 마치지 못했어요. 다시 시도해주세요',
   ageRequired: '나이를 알려주면 이야기의 무대가 정해져요',
+  ageSaveFailed: '나이를 저장하지 못했어요. 다시 시도해주세요',
 };
