@@ -1,10 +1,10 @@
-/** [DRAFT] Deterministic rules, no random rejection. */
+/** [DRAFT] 목 서버 전용 수락·거절 규칙. 실제 판정은 서버가 한다 — 랜덤 없음. */
 import { PERSONAS } from '@/src/features/inferno/api/mocks/scene-cast';
 import type {
   ChoicePoint,
   ChoiceRecord,
   SceneSeasonState,
-} from '@/src/features/inferno/types/scene-block';
+} from '@/src/features/inferno/api/mocks/mock-scene-types';
 export function resolveChoice(
   state: SceneSeasonState,
   pointId: ChoicePoint,

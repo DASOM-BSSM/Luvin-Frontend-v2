@@ -9,12 +9,12 @@ import type {
   EpisodeContent,
   SceneBlock,
   SceneSeasonState,
-} from '@/src/features/inferno/types/scene-block';
+} from '@/src/features/inferno/api/mocks/mock-scene-types';
 
 type Line = [string, string];
 export function dialogue(
   id: string,
-  type: 'pair' | 'group' | 'interview',
+  type: 'pair' | 'group',
   lines: Line[],
 ): SceneBlock {
   return {
@@ -119,7 +119,8 @@ const SOLO: Record<number, Line[]> = {
   ],
   9: [
     ['me', '계획이 바뀔 땐 서로 미리 알려주면 좋겠어.'],
-    ['friend', '좋아. 참석이 어려워도 부담 없이 말하기로 하자.'],
+    // 8화에서 고른 상대가 9화 첫 장면에 나와야 한다. 친구를 골랐으면 그대로 친구다.
+    ['partner', '좋아. 참석이 어려워도 부담 없이 말하기로 하자.'],
   ],
   10: [
     ['me', '혼자 지내는 선택도 나를 이해하는 시간이 됐어.'],
@@ -352,19 +353,25 @@ export function buildEpisodeContent(order: number, state: SceneSeasonState): Epi
     if (recorded) blocks.push(...choiceResultBlocks(recorded));
   }
   if (order === 10) {
-    SCENE_CAST.filter((person) => !person.isMine).forEach((person) => {
+    // 진행자(host)는 인터뷰하지 않는다 — 질문은 화면 위 글자로만 띄운다.
+    SCENE_CAST.filter((person) => !person.isMine && person.id !== 'host').forEach((person) => {
       const rejection = state.choices.find((item) => item.breadId === person.id && !item.accepted);
-      blocks.push(
-        dialogue(`interview-${person.id}`, 'interview', [
-          [
-            person.id,
-            rejection?.reason ??
-              (person.id === 'friend'
-                ? '자기 마음을 돌보는 방법을 배운 친구예요.'
-                : '자기 속도를 말하고 내 이야기도 들어주던 빵으로 기억할게요.'),
-          ],
-        ]),
-      );
+      const interview = dialogue(`interview-${person.id}`, 'pair', [
+        [
+          person.id,
+          rejection?.reason ??
+            (person.id === 'friend'
+              ? '자기 마음을 돌보는 방법을 배운 친구예요.'
+              : '자기 속도를 말하고 내 이야기도 들어주던 빵으로 기억할게요.'),
+        ],
+      ]);
+      if (interview.type === 'pair')
+        blocks.push({
+          ...interview,
+          type: 'interview',
+          // [DRAFT] 임시 질문 문구. 거절한 상대에게는 그때의 이유를 묻는다.
+          question: rejection ? '그때 왜 그렇게 답했나요?' : '이번 시즌을 함께 보내며 어땠나요?',
+        });
     });
   }
   if (order === 9) {

@@ -5,12 +5,22 @@ import InfernoChoiceScene from '@/src/features/inferno/components/inferno-choice
 import InfernoGroupScene from '@/src/features/inferno/components/inferno-group-scene';
 import InfernoInterviewScene from '@/src/features/inferno/components/inferno-interview-scene';
 import InfernoMessengerScene from '@/src/features/inferno/components/inferno-messenger-scene';
+import InfernoNarrationLine from '@/src/features/inferno/components/inferno-narration-line';
 import InfernoTransitionScene from '@/src/features/inferno/components/inferno-transition-scene';
-import { SCENE_CAST } from '@/src/features/inferno/api/mocks/scene-cast';
-import type { ChoiceRecord, SceneBlock } from '@/src/features/inferno/types/scene-block';
+import { INTERVIEW_QUESTIONS } from '@/src/features/inferno/constants/episode-copy';
+import type {
+  ChoiceHistory,
+  ChoiceOutcome,
+  StoryBlock,
+  StoryParticipant,
+} from '@/src/features/inferno/types/story';
+import { hasRejected } from '@/src/features/inferno/utils/story-playlist';
+
 export default function InfernoBlockPlayer({
   block,
   line,
+  cast,
+  choices,
   recorded,
   readOnly,
   pending,
@@ -19,9 +29,13 @@ export default function InfernoBlockPlayer({
   onNext,
   onSelect,
 }: {
-  block: SceneBlock;
+  block: StoryBlock;
   line: number;
-  recorded?: ChoiceRecord;
+  /** 회차에 나오는 빵 전부. 선택 카드가 이름·그림을 찾는다. */
+  cast: StoryParticipant[];
+  /** 시즌 선택 기록. 인터뷰 질문을 고른다. */
+  choices: ChoiceHistory[];
+  recorded?: ChoiceOutcome;
   readOnly: boolean;
   pending: boolean;
   pendingId?: string | null;
@@ -35,7 +49,7 @@ export default function InfernoBlockPlayer({
     return (
       <InfernoChoiceScene
         choice={block.choice}
-        participants={SCENE_CAST}
+        participants={cast}
         recorded={recorded}
         readOnly={readOnly}
         pending={pending}
@@ -47,6 +61,7 @@ export default function InfernoBlockPlayer({
   if (!message) return <Text variant="body-m">대화가 없어요. 다음 화면으로 이동해주세요.</Text>;
   if (block.type === 'messenger')
     return <InfernoMessengerScene block={block} index={line} onDone={onDone} />;
+  if (message.kind === 'narration') return <InfernoNarrationLine text={message.text} onDone={onDone} />;
   if (block.type === 'group')
     return (
       <InfernoGroupScene
@@ -57,9 +72,22 @@ export default function InfernoBlockPlayer({
       />
     );
   if (block.type === 'interview') {
-    const participant = block.participants.find((person) => person.id === message.participantId);
+    const participant =
+      block.participants.find((person) => person.id === block.breadId) ??
+      block.participants.find((person) => person.id === message.participantId);
     if (participant)
-      return <InfernoInterviewScene participant={participant} message={message} onDone={onDone} />;
+      return (
+        <InfernoInterviewScene
+          question={
+            hasRejected(choices, block.breadId)
+              ? INTERVIEW_QUESTIONS.rejected
+              : INTERVIEW_QUESTIONS.default
+          }
+          participant={participant}
+          message={message}
+          onDone={onDone}
+        />
+      );
   }
   return (
     <InfernoChatScene

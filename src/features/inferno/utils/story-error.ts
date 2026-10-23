@@ -3,6 +3,8 @@
  */
 import axios from 'axios';
 
+import { ERROR_MESSAGES } from '@/src/constants/error-messages';
+
 export const STORY_ERROR_CODES = [
   'AGE_REQUIRED',
   'STORY_NOT_STARTED',
@@ -33,5 +35,31 @@ export class EpisodeGenerationTimeoutError extends Error {
   constructor() {
     super('Episode generation timed out');
     this.name = 'EpisodeGenerationTimeoutError';
+  }
+}
+
+/** 회차 본문을 못 받았을 때 보여줄 문구와 버튼. */
+export type EpisodeErrorAction = 'retry' | 'first' | 'previous' | 'report' | 'age' | 'none';
+
+export function describeEpisodeError(error: unknown): {
+  message: keyof typeof ERROR_MESSAGES;
+  action: EpisodeErrorAction;
+} {
+  if (error instanceof EpisodeGenerationTimeoutError)
+    return { message: 'episodeGenerationTimeout', action: 'retry' };
+  switch (getStoryErrorCode(error)) {
+    case 'AGE_REQUIRED':
+      return { message: 'ageRequired', action: 'age' };
+    case 'STORY_NOT_STARTED':
+      return { message: 'storyNotStarted', action: 'first' };
+    case 'PREVIOUS_EPISODE_NOT_COMPLETED':
+      return { message: 'previousEpisodeRequired', action: 'previous' };
+    case 'EPISODE_NOT_RELEASED':
+      return { message: 'episodeNotReleased', action: 'none' };
+    case 'SEASON_COMPLETED':
+      return { message: 'seasonCompleted', action: 'report' };
+    default:
+      // STORY_GENERATION_FAILED(502), status failed, 네트워크 오류. 다시 요청하면 서버가 다시 만든다.
+      return { message: 'episodeLoadFailed', action: 'retry' };
   }
 }

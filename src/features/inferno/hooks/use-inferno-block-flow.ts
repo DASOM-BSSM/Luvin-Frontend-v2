@@ -1,10 +1,10 @@
 /** [DRAFT] Cursor is session-only, matching the lifetime of choice history. */
 import { useState } from 'react';
-import type { SceneBlock } from '@/src/features/inferno/types/scene-block';
+import type { StoryBlock } from '@/src/features/inferno/types/story';
 const STRIDE = 1000;
 export default function useInfernoBlockFlow(
   initial: number,
-  blocks: SceneBlock[],
+  blocks: StoryBlock[],
   onComplete: () => void,
 ) {
   const [position, setPosition] = useState(initial);
@@ -29,6 +29,8 @@ export default function useInfernoBlockFlow(
     ready,
     next,
     selected: () => setPosition((blockIndex + 1) * STRIDE),
+    /** 서버가 409 CHOICE_REQUIRED 로 돌려보낼 때 선택 블록으로 되돌아간다. */
+    goToBlock: (index: number) => setPosition(index * STRIDE),
     markReady: () => setReadyPosition(position),
     previous:
       block?.type === 'choice_result'

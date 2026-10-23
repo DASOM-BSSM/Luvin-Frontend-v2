@@ -61,7 +61,8 @@ export async function submitEpisodeChoice(
           breadId,
         })
       ).data.data;
-  return mapChoiceOutcome(view, options);
+  // 원본 시즌은 `GET /me` 캐시를 그대로 갈아끼울 때 쓴다(변환은 하지 않는다).
+  return { ...mapChoiceOutcome(view, options), seasonView: view.season };
 }
 
 /** `POST .../episodes/{order}/complete`. 다음 회차가 열리고 회차 쪽지가 생긴다. */
@@ -70,7 +71,7 @@ export async function completeEpisode(order: number) {
     ? await mockCompleteEpisode(order)
     : (await httpClient.post<ApiEnvelope<AiStoryStateView>>(`${episodePath(order)}/complete`)).data
         .data;
-  return mapStoryState(view);
+  return { state: mapStoryState(view), seasonView: view };
 }
 
 /** `POST .../episodes/{order}/scene-feedback`. 1:1 장면의 내 빵 대사 하나에. text 200자 이내. */

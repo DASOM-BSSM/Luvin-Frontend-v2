@@ -1,4 +1,4 @@
-/** [DRAFT] Episode body contract; UI never decides narrative outcomes. */
+/** [DRAFT] 목 서버(story-mock.ts) 안에서만 쓰는 옛 블록 타입. 화면은 types/story.ts 를 쓴다. */
 import type { InfernoChatMessage, InfernoParticipant } from '@/src/features/inferno/types';
 export type ChoicePoint = 1 | 2 | 3 | 4;
 export type StoryRoute = 'romance' | 'solo' | null;
@@ -22,7 +22,9 @@ export interface ChoiceBlock {
 type Dialogue = { id: string; participants: InfernoParticipant[]; messages: InfernoChatMessage[] };
 export type SceneBlock =
   | { id: string; type: 'transition'; text: string }
-  | (Dialogue & { type: 'group' | 'pair' | 'interview' })
+  | (Dialogue & { type: 'group' | 'pair' })
+  // 인터뷰는 화면 위에 질문을 띄우고, 아래에 답하는 빵과 자막을 둔다.
+  | (Dialogue & { type: 'interview'; question: string })
   | (Dialogue & {
       type: 'messenger';
       roomName: string;

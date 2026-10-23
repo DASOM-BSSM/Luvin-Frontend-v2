@@ -12,3 +12,12 @@ export const EPISODE_VOTE_PROMPTS: Partial<Record<number, InfernoVotePrompt>> = 
   1: { modalMessage: '더 알아가고 싶은 반죽을 골라주세요', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
   3: { modalMessage: '게임에 성공해서 원하는 상대와 대화해요!', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
 };
+
+/**
+ * [DRAFT] 10화 인터뷰룸 질문. 서버는 질문을 주지 않아서 앱 상수로 둔다(사용자 결정).
+ * 시즌 중에 거절한 적이 있는 빵에게는 그때의 이유를 묻는다 — 거절 여부는 `story.choices` 로 본다.
+ */
+export const INTERVIEW_QUESTIONS = {
+  default: '이번 시즌을 함께 보내며 어땠나요?',
+  rejected: '그때 왜 그렇게 답했나요?',
+};

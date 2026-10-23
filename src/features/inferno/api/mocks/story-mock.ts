@@ -38,9 +38,9 @@ import type {
   ChoicePoint,
   SceneBlock,
   SceneSeasonState,
-} from '@/src/features/inferno/types/scene-block';
+} from '@/src/features/inferno/api/mocks/mock-scene-types';
 import type { SeasonSetting } from '@/src/features/inferno/types/story';
-import { applyChoice, resolveChoice } from '@/src/features/inferno/utils/resolve-choice';
+import { applyChoice, resolveChoice } from '@/src/features/inferno/api/mocks/mock-choice-rules';
 
 const MOCK_DELAY_MS = 300;
 const LAST_ORDER = 10;

@@ -1,5 +1,3 @@
-import type { InfernoFinalMatchProfile } from '@/src/features/inferno/types';
-import type { SceneSeasonState } from '@/src/features/inferno/types/scene-block';
 /** [DRAFT] Ten-episode block story integration. */
 /** `inferno`(AI 시즌) 쿼리 키 팩토리(§11). */
 export const aiSeasonKeys = {
@@ -31,12 +29,8 @@ export const partnerLetterKeys = {
   letter: (letterId: string) => ['partner-letter', letterId] as const,
 };
 
-/** [DRAFT] Session-scoped mock scene content. */
-export const episodeContentKeys = {
-  content: (
-    session: string,
-    order: number,
-    choices: SceneSeasonState['choices'],
-    mine?: InfernoFinalMatchProfile,
-  ) => ['inferno-blocks', session, order, choices, mine?.type, mine?.name] as const,
+/** [DRAFT] 새 10화 회차 본문. 시즌은 사용자마다 하나라 회차 번호만으로 구분한다. */
+export const storyKeys = {
+  all: ['ai-season', 'story'] as const,
+  content: (order: number) => ['ai-season', 'story', 'content', order] as const,
 };

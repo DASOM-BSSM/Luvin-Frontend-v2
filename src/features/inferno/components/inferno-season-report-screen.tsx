@@ -37,7 +37,6 @@ export default function InfernoSeasonReportScreen({
 }) {
   const exit = useEpisodeExit(10);
   const page = useSceneSeasonStore((state) => state.sessions[sessionKey]?.reportPage ?? 0);
-  const complete = useSceneSeasonStore((state) => state.complete);
   const save = useSceneSeasonStore((state) => state.saveReport);
   const flow = useInfernoEp5Flow(readOnly ? 0 : page, readOnly);
   const [baking, setBaking] = useState(!readOnly && page === 0 && !solo);
@@ -61,7 +60,6 @@ export default function InfernoSeasonReportScreen({
       );
       if (next) requestNextSeasonNotice();
       save(sessionKey, 0);
-      complete(sessionKey, 10);
     }
     exit.completeAndLeave();
   }

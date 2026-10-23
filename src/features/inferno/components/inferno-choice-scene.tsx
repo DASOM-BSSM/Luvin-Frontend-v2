@@ -2,8 +2,11 @@
 import { Pressable, ScrollView, View } from 'react-native';
 import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import Text from '@/src/components/ui/text';
-import type { InfernoParticipant } from '@/src/features/inferno/types';
-import type { ChoiceBlock, ChoiceRecord } from '@/src/features/inferno/types/scene-block';
+import type {
+  ChoiceOutcome,
+  StoryChoice,
+  StoryParticipant,
+} from '@/src/features/inferno/types/story';
 export default function InfernoChoiceScene({
   choice,
   participants,
@@ -13,9 +16,9 @@ export default function InfernoChoiceScene({
   pendingId,
   onSelect,
 }: {
-  choice: ChoiceBlock;
-  participants: InfernoParticipant[];
-  recorded?: ChoiceRecord;
+  choice: StoryChoice;
+  participants: StoryParticipant[];
+  recorded?: ChoiceOutcome;
   readOnly: boolean;
   pending: boolean;
   pendingId?: string | null;
