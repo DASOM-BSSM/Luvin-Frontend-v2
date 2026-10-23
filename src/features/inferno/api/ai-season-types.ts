@@ -1,4 +1,5 @@
 /** [DRAFT] Ten-episode block story integration. */
+import type { AiStoryStateView } from '@/src/features/inferno/api/story-types';
 /**
  * `ai-season-controller` DTO. openapi 스키마를 그대로 옮긴 것 — UI 가 쓰는
  * `InfernoConversation` 등과는 별개다. 화면에 보여줄 모양으로 바꾸는 건
@@ -34,6 +35,10 @@ export interface AiCharacterView {
    */
   role: string;
   gender: string;
+  /** [DRAFT] 새 10화 출연진 역할. 화면에 쓰지 않는다 — 판정은 서버가 한다. */
+  castRole?: string;
+  /** [DRAFT] 새 10화 출연진 이름. 쪽지 `partnerId` 를 이름으로 바꿀 때 쓴다. */
+  name?: string;
 }
 
 export interface AiSeasonStatusView {
@@ -46,6 +51,10 @@ export interface AiSeasonStatusView {
   sourceSurveyResultId?: string;
   /** 몇 번째 시즌인지(1부터). `POST /api/ai/seasons/next`로 다음 시즌을 열 때마다 늘어난다. */
   seasonNumber?: number;
+  /** [DRAFT] 항상 `blocks`(새 10화)로 본다 — legacy 시즌은 없앴다(사용자 결정). */
+  episodeFormat?: string;
+  /** [DRAFT] 새 10화 진행 상태. utils/map-story.ts 의 mapStoryState 로 바꿔서 쓴다. */
+  story?: AiStoryStateView;
 }
 
 /** `GET /api/ai/seasons` 의 한 줄. 지금까지 연 시즌들(지난 시즌 포함)의 요약이다. */

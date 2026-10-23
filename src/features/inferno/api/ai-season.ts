@@ -1,6 +1,9 @@
 import httpClient from '@/src/lib/http-client';
 import type { ApiEnvelope } from '@/src/lib/api-envelope';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import { mockSeasonStory } from '@/src/features/inferno/api/mocks/story-mock';
+import { isStoryMock } from '@/src/features/inferno/api/story';
+import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 
 import type {
   AiCharacterProfileRequest,
@@ -71,8 +74,21 @@ export async function listSeasons(): Promise<AiSeasonSummaryView[]> {
   return data.data;
 }
 
-/** `GET /api/ai/seasons/me`. */
+/** `GET /api/ai/seasons/me`. 목 모드(api/story.ts 의 isStoryMock)면 목 시즌을 돌려준다. */
 export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
+  if (isStoryMock) {
+    const mock = mockSeasonStory();
+    return {
+      seasonId: 'mock-season',
+      revision: 1,
+      currentEpisode: mock.story.currentOrder ?? 1,
+      status: mock.completed ? COMPLETED_SEASON_STATUS : 'ACTIVE',
+      characters: mock.characters,
+      episodeFormat: 'blocks',
+      story: mock.story,
+    };
+  }
+
   const { data } = await httpClient.get<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/me');
 
   if (__DEV__) {
