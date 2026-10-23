@@ -44,3 +44,15 @@ export function castOf(blocks: StoryBlock[]): StoryParticipant[] {
 export function hasRejected(choices: ChoiceHistory[], breadId: string): boolean {
   return choices.some((choice) => choice.breadId === breadId && !choice.accepted);
 }
+
+/** 상대가 있는 1:1 장면인지. 피드백·좋아요는 이런 pair 블록에서만 된다(보정 문서 6장). */
+export function isPairWithPartner(block: StoryBlock): boolean {
+  return block.type === 'pair' && block.participants.some((person) => !person.isMine);
+}
+
+/** 피드백·좋아요를 남길 수 있는 줄: 상대가 있는 pair 블록의 내 빵 대사(독백·내레이션 제외). */
+export function feedbackTargets(block: StoryBlock) {
+  if (!isPairWithPartner(block) || !('messages' in block)) return [];
+  const mine = new Set(block.participants.filter((person) => person.isMine).map((person) => person.id));
+  return block.messages.filter((message) => message.kind === 'chat' && mine.has(message.participantId));
+}

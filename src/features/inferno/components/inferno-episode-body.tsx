@@ -23,6 +23,8 @@ import { getStoryErrorCode } from '@/src/features/inferno/utils/story-error';
 /** 생성은 끝났는데 재생할 블록이 하나도 없을 때. 다시 시도 버튼으로 이어진다. */
 const EMPTY_EPISODE = new Error('Empty episode');
 /** 내 분신 정보가 아직 없을 때 리포트에 넘길 기본값. */
+const NO_IDS: string[] = [];
+const NO_FEEDBACKS: Record<string, string> = {};
 const FALLBACK_MINE = { type: DEFAULT_BREAD_TYPE, name: '' };
 
 export default function InfernoEpisodeBody({
@@ -101,7 +103,10 @@ export default function InfernoEpisodeBody({
       ) : (
         <InfernoBlockPlayer
           key={`${block.id}:${flow.line}`}
+          order={order}
           block={block}
+          likedMessageIds={content.data?.likedMessageIds ?? NO_IDS}
+          feedbacks={content.data?.feedbacks ?? NO_FEEDBACKS}
           line={flow.line}
           cast={cast}
           choices={choices}

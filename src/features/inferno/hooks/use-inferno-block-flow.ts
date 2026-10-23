@@ -1,7 +1,16 @@
 /** [DRAFT] Cursor is session-only, matching the lifetime of choice history. */
 import { useState } from 'react';
 import type { StoryBlock } from '@/src/features/inferno/types/story';
+import { isPairWithPartner } from '@/src/features/inferno/utils/story-playlist';
 const STRIDE = 1000;
+/**
+ * 블록 하나가 몇 걸음인지. 대화는 한 줄씩 넘기지만, 상대가 있는 1:1 장면은 기존 1:1 대화
+ * 화면(InfernoPairScene)이 한 쪽에 다 보여주므로 한 걸음이다.
+ */
+function stepsOf(block: StoryBlock | undefined): number {
+  if (!block || !('messages' in block)) return 1;
+  return isPairWithPartner(block) ? 1 : block.messages.length;
+}
 export default function useInfernoBlockFlow(
   initial: number,
   blocks: StoryBlock[],
@@ -18,7 +27,7 @@ export default function useInfernoBlockFlow(
     (block && 'messages' in block && block.messages.length === 0);
   function next() {
     if (!block) return;
-    if ('messages' in block && line + 1 < block.messages.length) setPosition(position + 1);
+    if (line + 1 < stepsOf(block)) setPosition(position + 1);
     else if (blockIndex + 1 < blocks.length) setPosition((blockIndex + 1) * STRIDE);
     else onComplete();
   }
@@ -39,11 +48,7 @@ export default function useInfernoBlockFlow(
           ? () => setPosition(position - 1)
           : blockIndex > 0
             ? () => {
-                const previous = blocks[blockIndex - 1];
-                const lastLine =
-                  previous && 'messages' in previous
-                    ? Math.max(0, previous.messages.length - 1)
-                    : 0;
+                const lastLine = Math.max(0, stepsOf(blocks[blockIndex - 1]) - 1);
                 setPosition((blockIndex - 1) * STRIDE + lastLine);
               }
             : undefined,

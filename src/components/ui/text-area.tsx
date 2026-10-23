@@ -13,6 +13,8 @@ interface TextAreaProps {
   /** 보이는 줄 수. 시안(5482:2063)은 여섯 줄이 들어가는 높이다. */
   numberOfLines?: number;
   accessibilityLabel?: string;
+  /** 입력할 수 있는 최대 글자 수. 없으면 제한하지 않는다. */
+  maxLength?: number;
 }
 
 /**
@@ -30,6 +32,7 @@ export default function TextArea({
   placeholder,
   numberOfLines = 6,
   accessibilityLabel,
+  maxLength,
 }: TextAreaProps) {
   return (
     <InteropTextInput
@@ -42,6 +45,7 @@ export default function TextArea({
       accessibilityLabel={accessibilityLabel}
       multiline
       numberOfLines={numberOfLines}
+      maxLength={maxLength}
     />
   );
 }

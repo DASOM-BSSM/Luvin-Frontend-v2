@@ -5,6 +5,7 @@ import InfernoChoiceScene from '@/src/features/inferno/components/inferno-choice
 import InfernoGroupScene from '@/src/features/inferno/components/inferno-group-scene';
 import InfernoInterviewScene from '@/src/features/inferno/components/inferno-interview-scene';
 import InfernoMessengerScene from '@/src/features/inferno/components/inferno-messenger-scene';
+import InfernoPairScene from '@/src/features/inferno/components/inferno-pair-scene';
 import InfernoNarrationLine from '@/src/features/inferno/components/inferno-narration-line';
 import InfernoTransitionScene from '@/src/features/inferno/components/inferno-transition-scene';
 import { INTERVIEW_QUESTIONS } from '@/src/features/inferno/constants/episode-copy';
@@ -14,11 +15,14 @@ import type {
   StoryBlock,
   StoryParticipant,
 } from '@/src/features/inferno/types/story';
-import { hasRejected } from '@/src/features/inferno/utils/story-playlist';
+import { hasRejected, isPairWithPartner } from '@/src/features/inferno/utils/story-playlist';
 
 export default function InfernoBlockPlayer({
+  order,
   block,
   line,
+  likedMessageIds,
+  feedbacks,
   cast,
   choices,
   recorded,
@@ -29,8 +33,12 @@ export default function InfernoBlockPlayer({
   onNext,
   onSelect,
 }: {
+  order: number;
   block: StoryBlock;
   line: number;
+  /** 1:1 장면 좋아요·피드백 복원용(본문 응답의 likedMessageIds·feedbacks). */
+  likedMessageIds: string[];
+  feedbacks: Record<string, string>;
   /** 회차에 나오는 빵 전부. 선택 카드가 이름·그림을 찾는다. */
   cast: StoryParticipant[];
   /** 시즌 선택 기록. 인터뷰 질문을 고른다. */
@@ -55,6 +63,16 @@ export default function InfernoBlockPlayer({
         pending={pending}
         pendingId={pendingId}
         onSelect={onSelect}
+      />
+    );
+  if (block.type === 'pair' && isPairWithPartner(block))
+    return (
+      <InfernoPairScene
+        order={order}
+        block={block}
+        likedMessageIds={likedMessageIds}
+        feedbacks={feedbacks}
+        onDone={onDone}
       />
     );
   const message = block.messages[line];
