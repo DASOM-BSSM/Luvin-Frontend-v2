@@ -272,22 +272,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/episodes/{episodeId}/rebakes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["saveRebakeConversations"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/episodes/{episodeId}/games/{gameId}/result": {
         parameters: {
             query?: never;
@@ -628,22 +612,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ai/seasons/episodes/{number}/rerolls": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRerollStatus"];
-        put?: never;
-        post: operations["requestReroll"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ai/seasons/episodes/{number}/likes": {
         parameters: {
             query?: never;
@@ -653,6 +621,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 2·4화 좋아요. 새 흐름에서는 쓰지 않는다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["toggleEpisodeMessageLike"];
         delete?: never;
         options?: never;
@@ -669,6 +641,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 회차 생성. 새 흐름은 GET /episodes/{order}/content를 쓴다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["requestGeneration"];
         delete?: never;
         options?: never;
@@ -685,6 +661,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 2·4화 피드백. 새 흐름에서는 쓰지 않는다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisodeFeedback"];
         delete?: never;
         options?: never;
@@ -701,6 +681,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 3화 미니게임 선택. 새 흐름에는 에피소드 안 미니게임이 없다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisode3Result"];
         delete?: never;
         options?: never;
@@ -717,6 +701,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 1화 선택. 새 흐름은 POST /episodes/{order}/choices를 쓴다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisode1Selection"];
         delete?: never;
         options?: never;
@@ -908,22 +896,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getVoteOptions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/episodes/{episodeId}/rebakes/{participantId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRebakeConversation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1219,6 +1191,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 메시지 페이지 조회. 새 흐름은 GET /episodes/{order}/content가 블록 목록을 한 번에 내려준다. 프론트 전환 후 삭제 예정.
+         */
         get: operations["getEpisodeMessages"];
         put?: never;
         post?: never;
@@ -1268,6 +1244,171 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/jobs/{jobId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * job 진행 이벤트 구독 (SSE)
+         * @description generation 요청 응답의 `jobId`로 연결한다. 헤더: `Authorization: Bearer <토큰>`, `Accept: text/event-stream`.
+         *     `Last-Event-ID` 없이 연결하면 그 job의 첫 이벤트부터 전부 받는다(이미 끝난 job이면 전부 받은 뒤 종료 이벤트로 닫힘).
+         *     재연결할 때만 마지막으로 받은 `id`를 `Last-Event-ID` 헤더(또는 `after_event_id` query)로 보낸다.
+         *
+         *     **이벤트** (data는 snake_case JSON, `segment`: `scene` | `candidates` | `one_to_one` | `report`)
+         *     - `segment_start` `{"segment":"scene"}`
+         *     - `delta` `{"segment":"scene","text":"{\"messages\":["}` — text는 검증 전 JSON 조각. 화면에 그대로 표시하지 않는다.
+         *     - `segment_end` `{"segment":"scene","message_count":45}` — 그 구간 검증 완료. 아직 조회 API에는 없다.
+         *     - `segment_error` `{"segment":"scene","error_code":"INVALID_OUTPUT"}` — 그 구간 버퍼를 버린다(`STREAM_FAILED`도 있음).
+         *     - `completed` `{"result_version_id":"<uuid>","revision":2}` — 이 이벤트를 받은 뒤 조회 API로 결과를 가져온다.
+         *       서버가 결과를 DB에 반영한 뒤 보내므로 바로 조회된다. 반영이 드물게 실패하면 조회가 409일 수 있으니 잠시 후 다시 조회한다.
+         *       job 상태로 보충 생성된 종료 이벤트면 `{"status":"succeeded","result_version_id":"<uuid>","error_code":null}`.
+         *     - `error` `{"error_code":"STALE_JOB"}` — job 실패.
+         *     - `stream_error` `{"error_code":"..."}` — 백엔드가 보내는 중계 실패.
+         *       `INVALID_LAST_EVENT_ID`(id 없이 재연결), `JOB_NOT_FOUND`(polling 확인),
+         *       `AI_UNAVAILABLE` / `STREAM_INTERRUPTED` / `INTERNAL_ERROR`(마지막 id로 재연결 또는 polling).
+         *     - 15초마다 `: keep-alive` 주석. `completed` / `error` / `stream_error` 뒤에는 서버가 연결을 닫으니 클라이언트도 닫는다.
+         *
+         *     **오류 응답** (SSE가 아니라 JSON)
+         *     - 401 토큰 없음/만료: `{"success":false,"data":null,"message":"인증이 필요합니다. 로그인 후 다시 시도해주세요.","code":null}`
+         *     - 404 내 job이 아님/없는 job
+         *     - 503 서버당 동시 스트림 한도 초과
+         */
+        get: operations["streamJobEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 회차 블록 목록
+         * @description 저장된 회차가 있으면 그대로, 없으면 생성을 시작하고 `status: generating`으로 응답한다(1~3초 간격으로 다시 요청).
+         *     `failed`면 다시 요청할 때 생성을 다시 시도한다. 1화 요청이 새 흐름의 시작이다(나이로 배경 결정, 1화에 stageIntro 포함).
+         *
+         *     **409 code**
+         *     - `AGE_REQUIRED`: 나이가 없다 — 나이 입력 후 다시 요청
+         *     - `STORY_NOT_STARTED`: 1화부터 요청해야 한다
+         *     - `PREVIOUS_EPISODE_NOT_COMPLETED`: 이전 회차를 먼저 완료해야 한다(선택 회차는 선택 후 완료)
+         *     - `EPISODE_NOT_RELEASED`: 아직 공개 전
+         *     - `SEASON_COMPLETED`: 끝난 시즌에서 생성하지 않은 회차
+         *     - `LEGACY_SEASON`: 기존 5화 구성으로 진행 중인 시즌(`GET /me`의 episodeFormat이 legacy) — 기존 API로 진행
+         */
+        get: operations["getContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 선택 처리 (3·5·6·8화)
+         * @description body `{ pointId, breadId | null }` — breadId가 null이면 혼자 있기. 수락·거절은 서버 코드 규칙으로 정한다.
+         *     응답은 선택 결과 장면(`choice_result`, 거절이면 대체 장면 포함)과 갱신된 시즌 상태다.
+         *     같은 선택을 다시 보내면 저장된 결과를 그대로 돌려준다.
+         *
+         *     **오류**: 400 회차와 pointId 불일치·후보가 아닌 breadId / 409 `CONTENT_NOT_READY`, `CHOICE_ALREADY_MADE`,
+         *     `STORY_NOT_STARTED`, `LEGACY_SEASON` / 502 `STORY_GENERATION_FAILED`(결과 장면 생성 실패, 다시 요청 가능)
+         */
+        post: operations["choose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 회차 완료
+         * @description 관계 기록을 갱신하고(정리 단계) 회차 쪽지를 만든다. 10화면 최종 리포트를 만들고 시즌을 완료한다.
+         *     이미 완료한 회차면 상태만 돌려준다.
+         *
+         *     **오류**: 409 `CONTENT_NOT_READY`, `CHOICE_REQUIRED`(선택 회차인데 선택 전), `STORY_NOT_STARTED`, `LEGACY_SEASON`
+         *     / 502 `STORY_GENERATION_FAILED`(아무것도 저장되지 않음, 다시 요청 가능)
+         */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/scene-likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 1:1 장면 좋아요
+         * @description 1:1 장면(상대가 있는 `pair` 블록)에서 내 빵의 대사 좋아요를 켜고 끈다(`liked`). 상대 대사·독백·내레이션은 400.
+         *     좋아요한 대사는 다음 회차 생성 입력(learnedProfile.likedMessages)으로 쓰인다.
+         */
+        post: operations["setLike"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/scene-feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 1:1 장면 피드백
+         * @description 1:1 장면(상대가 있는 `pair` 블록)에서 내 빵의 대사(독백 제외) 하나에 피드백을 남긴다. 회차 본문 pair 블록과 선택 거절 뒤
+         *     대체 pair 블록(`choices` 응답의 blocks)에 남길 수 있고, 혼자인 독백 장면·그룹·메신저·인터뷰·선택 결과에는 안 된다.
+         *     메시지당 하나이고 다시 보내면 글을 바꾼다. body의 `order`는 생략해도 되고, 보내면 경로의 order와 같아야 한다.
+         *     남긴 피드백은 다음 회차 생성 입력(learnedProfile.feedbacks)으로 쓰인다.
+         *
+         *     **오류**: 400 pair 블록이 아님·내 빵의 대사가 아님·독백·text 200자 초과 / 409 `CONTENT_NOT_READY`, `STORY_NOT_STARTED`
+         */
+        post: operations["submitFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1275,6 +1416,8 @@ export interface components {
         UserProfileUpdateRequest: {
             nickname?: string;
             gender?: string;
+            /** Format: int32 */
+            age?: number;
             job?: string;
             bio?: string;
         };
@@ -1431,14 +1574,6 @@ export interface components {
             picks?: components["schemas"]["PickItem"][];
             matches?: components["schemas"]["MatchItem"][];
         };
-        OutcomeItem: {
-            /** Format: int64 */
-            participantId?: number;
-            messages?: components["schemas"]["MessageItem"][];
-        };
-        RebakeSaveRequest: {
-            outcomes?: components["schemas"]["OutcomeItem"][];
-        };
         GameResultRequest: {
             success?: boolean;
         };
@@ -1579,6 +1714,9 @@ export interface components {
             characterId?: string;
             role?: string;
             gender?: string;
+            castRole?: string;
+            attachmentStyle?: string;
+            name?: string;
         };
         AiSeasonStatusView: {
             /** Format: uuid */
@@ -1593,6 +1731,8 @@ export interface components {
             sourceSurveyResultId?: string;
             /** Format: int32 */
             seasonNumber?: number;
+            episodeFormat?: string;
+            story?: components["schemas"]["AiStoryStateView"];
         };
         ApiResponseAiSeasonStatusView: {
             success?: boolean;
@@ -1612,22 +1752,6 @@ export interface components {
         MarkSeenHttpRequest: {
             /** Format: int32 */
             sequence?: number;
-        };
-        RerollHttpRequest: {
-            /** Format: uuid */
-            partnerId: string;
-        };
-        AiRerollView: {
-            /** Format: uuid */
-            jobId?: string;
-            jobStatus?: string;
-            errorCode?: string;
-        };
-        ApiResponseAiRerollView: {
-            success?: boolean;
-            data?: components["schemas"]["AiRerollView"];
-            message?: string;
-            code?: string;
         };
         EpisodeMessageLikeHttpRequest: {
             /** Format: uuid */
@@ -1971,6 +2095,7 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             completedAt?: string;
+            episodeFormat?: string;
         };
         ApiResponseListAiSeasonSummaryView: {
             success?: boolean;
@@ -2070,6 +2195,186 @@ export interface components {
             /** Format: int64 */
             userId?: number;
             message?: string;
+        };
+        SseEmitter: {
+            /** Format: int64 */
+            timeout?: number;
+        };
+        SceneChoiceResult: {
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: uuid */
+            breadId?: string;
+            accepted?: boolean;
+        };
+        AiEpisodeContentView: {
+            /** Format: int32 */
+            order?: number;
+            status?: string;
+            errorCode?: string;
+            intro?: components["schemas"]["AiStoryIntroView"];
+            stageIntro?: components["schemas"]["AiStageIntroView"];
+            blocks?: components["schemas"]["AiSceneBlockView"][];
+            completed?: boolean;
+            feedbacks?: components["schemas"]["AiStoryFeedbackView"][];
+            likedMessageIds?: string[];
+        };
+        AiStageIntroView: {
+            setting?: string;
+            title?: string;
+            subtitle?: string;
+            cast?: components["schemas"]["StageCast"][];
+        };
+        AiStoryMessageView: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: int32 */
+            sequence?: number;
+            /** Format: uuid */
+            speakerId?: string;
+            kind?: string;
+            fromRepresentative?: boolean;
+            text?: string;
+            read?: boolean;
+            typing?: boolean;
+            deletedAfterSend?: boolean;
+        };
+        SceneChoiceCandidate: {
+            /** Format: uuid */
+            breadId?: string;
+            memory?: string;
+        };
+        StageCast: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            breadType?: string;
+            role?: string;
+            description?: string;
+        };
+        SceneChoice: {
+            /** Format: int32 */
+            pointId?: number;
+            question?: string;
+            candidates?: components["schemas"]["SceneChoiceCandidate"][];
+        };
+        ApiResponseAiChoiceOutcomeView: {
+            success?: boolean;
+            data?: components["schemas"]["AiChoiceOutcomeView"];
+            message?: string;
+            code?: string;
+        };
+        ApiResponseAiStoryStateView: {
+            success?: boolean;
+            data?: components["schemas"]["AiStoryStateView"];
+            message?: string;
+            code?: string;
+        };
+        SceneInterview: {
+            /** Format: uuid */
+            breadId?: string;
+        };
+        AiChoiceHttpRequest: {
+            /** Format: int32 */
+            pointId: number;
+            /** Format: uuid */
+            breadId?: string;
+        };
+        AiStoryStateView: {
+            setting?: string;
+            /** Format: int32 */
+            currentOrder?: number;
+            completedOrders?: number[];
+            route?: string;
+            /** Format: uuid */
+            romancePartnerId?: string;
+            choices?: components["schemas"]["ChoiceHistory"][];
+            breads?: components["schemas"]["BreadStatus"][];
+        };
+        AiSceneBlockView: {
+            id?: string;
+            type?: string;
+            participants?: components["schemas"]["AiStoryParticipantView"][];
+            messages?: components["schemas"]["AiStoryMessageView"][];
+            transitionText?: string;
+            messenger?: components["schemas"]["SceneMessenger"];
+            choice?: components["schemas"]["SceneChoice"];
+            choiceResult?: components["schemas"]["SceneChoiceResult"];
+            interview?: components["schemas"]["SceneInterview"];
+        };
+        BreadStatus: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            role?: string;
+            statusText?: string;
+        };
+        ApiResponseAiEpisodeContentView: {
+            success?: boolean;
+            data?: components["schemas"]["AiEpisodeContentView"];
+            message?: string;
+            code?: string;
+        };
+        SceneMessenger: {
+            kind?: string;
+            roomName?: string;
+        };
+        ChoiceHistory: {
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: int32 */
+            episodeOrder?: number;
+            /** Format: uuid */
+            breadId?: string;
+            accepted?: boolean;
+        };
+        AiStoryIntroView: {
+            title?: string;
+            situation?: string;
+        };
+        AiChoiceOutcomeView: {
+            blocks?: components["schemas"]["AiSceneBlockView"][];
+            season?: components["schemas"]["AiStoryStateView"];
+        };
+        AiStoryParticipantView: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            role?: string;
+            attachmentStyle?: string;
+            isMe?: boolean;
+            breadType?: string;
+            stageRole?: string;
+        };
+        AiStoryLikeHttpRequest: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
+            /** Format: uuid */
+            messageId: string;
+            liked: boolean;
+        };
+        AiStoryFeedbackView: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
+            /** Format: uuid */
+            messageId?: string;
+            text?: string;
+        };
+        AiStoryFeedbackHttpRequest: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
+            /** Format: uuid */
+            messageId: string;
+            text?: string;
+        };
+        ApiResponseAiStoryFeedbackView: {
+            success?: boolean;
+            data?: components["schemas"]["AiStoryFeedbackView"];
+            message?: string;
+            code?: string;
         };
     };
     responses: never;
@@ -2673,32 +2978,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VoteResultData"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["MessageResponse"];
-                };
-            };
-        };
-    };
-    saveRebakeConversations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RebakeSaveRequest"];
             };
         };
         responses: {
@@ -3325,56 +3604,6 @@ export interface operations {
             };
         };
     };
-    getRerollStatus: {
-        parameters: {
-            query?: {
-                season_id?: string;
-            };
-            header?: never;
-            path: {
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAiRerollView"];
-                };
-            };
-        };
-    };
-    requestReroll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RerollHttpRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAiRerollView"];
-                };
-            };
-        };
-    };
     toggleEpisodeMessageLike: {
         parameters: {
             query?: {
@@ -3747,29 +3976,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ParticipantResponse"][];
-                };
-            };
-        };
-    };
-    getRebakeConversation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-                participantId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ConversationMessageResponse"][];
                 };
             };
         };
@@ -4195,6 +4401,205 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseKickResponse"];
+                };
+            };
+        };
+    };
+    streamJobEvents: {
+        parameters: {
+            query?: {
+                after_event_id?: string;
+            };
+            header?: {
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE 스트림 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description 토큰 없음/만료 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "인증이 필요합니다. 로그인 후 다시 시도해주세요.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+            /** @description 내 job이 아니거나 없는 job */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "job을 찾을 수 없습니다: <jobId>",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+            /** @description 서버당 동시 스트림 한도 초과 — 기존 polling으로 진행 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "요청이 많아 처리가 지연되고 있습니다. 잠시 후 다시 시도해주세요.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    getContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiEpisodeContentView"];
+                };
+            };
+        };
+    };
+    choose: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiChoiceHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiChoiceOutcomeView"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiStoryStateView"];
+                };
+            };
+        };
+    };
+    setLike: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiStoryLikeHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiMessageLikeView"];
+                };
+            };
+        };
+    };
+    submitFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiStoryFeedbackHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiStoryFeedbackView"];
                 };
             };
         };
