@@ -19,9 +19,9 @@ export const ERROR_MESSAGES = {
   seasonCompleted: '이번 시즌은 끝났어요. 최종 리포트와 지난 회차만 볼 수 있어요',
   choiceFailed: '선택을 전하지 못했어요. 다시 시도해주세요',
   completeFailed: '회차를 마치지 못했어요. 다시 시도해주세요',
-  ageRequired: '나이를 알려주면 이야기의 무대가 정해져요',
+  ageRequired: '나이와 성별을 알려주면 이야기의 무대가 정해져요',
   reportLoadFailed: '최종 리포트를 불러오지 못했어요. 다시 시도해주세요',
   insufficientTokens: '토큰이 부족해요',
   unlockFailed: '회차를 열지 못했어요. 다시 시도해주세요',
-  ageSaveFailed: '나이를 저장하지 못했어요. 다시 시도해주세요',
+  ageSaveFailed: '나이와 성별을 저장하지 못했어요. 다시 시도해주세요',
 };

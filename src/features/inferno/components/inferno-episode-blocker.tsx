@@ -1,11 +1,11 @@
 /**
  * [DRAFT] 재생할 블록이 아직 없을 때의 본문: 로딩·생성 대기·오류(InfernoEpisodeStateView)와
- * 나이 입력 바텀시트. 409 `AGE_REQUIRED` 면 시트를 바로 띄우고, 닫으면 "나이 입력하기"
- * 버튼으로 다시 연다. 저장하면 본문을 다시 요청한다(보정 문서 7장).
+ * 나이·성별 입력 바텀시트. 409 `AGE_REQUIRED` 면 시트를 바로 띄우고, 닫으면 "나이·성별 입력하기"
+ * 버튼으로 다시 연다. 저장하면 본문을 다시 요청한다(보정 문서 7장, 계약 v4).
  */
 import { useState } from 'react';
 
-import AgeRequiredSheet from '@/src/features/inferno/components/age-required-sheet';
+import AgeGenderRequiredSheet from '@/src/features/inferno/components/age-gender-required-sheet';
 import InfernoEpisodeStateView from '@/src/features/inferno/components/inferno-episode-state-view';
 import { getStoryErrorCode } from '@/src/features/inferno/utils/story-error';
 
@@ -48,7 +48,11 @@ export default function InfernoEpisodeBlocker({
         onShowReport={onShowReport}
         onAgeRequired={handleAgeRequired}
       />
-      <AgeRequiredSheet visible={ageSheetVisible} onSaved={onRetry} onClose={handleAgeSheetClose} />
+      <AgeGenderRequiredSheet
+        visible={ageSheetVisible}
+        onSaved={onRetry}
+        onClose={handleAgeSheetClose}
+      />
     </>
   );
 }

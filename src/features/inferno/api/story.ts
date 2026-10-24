@@ -33,6 +33,7 @@ import {
 } from '@/src/features/inferno/utils/map-story';
 import type { ApiEnvelope } from '@/src/lib/api-envelope';
 import { getMyTokenBalance } from '@/src/features/tokens/api/tokens';
+import type { Gender } from '@/src/features/my-page/types';
 import { updateMyProfile } from '@/src/features/user/api/profile';
 import httpClient from '@/src/lib/http-client';
 
@@ -118,6 +119,18 @@ export async function saveStoryAge(age: number): Promise<void> {
     return;
   }
   await updateMyProfile({ age });
+}
+
+/**
+ * 나이·성별 함께 저장(`PUT /api/users/me { age, gender }`, 계약 v4). 409 `AGE_REQUIRED` 바텀시트가 쓴다.
+ * 둘은 반드시 같이 정한다 — "선택 안 함"은 없다. 목 모드면 목 서버에 나이만 알린다(배경을 나이로 정한다).
+ */
+export async function saveStoryProfile(profile: { age: number; gender: Gender }): Promise<void> {
+  if (isStoryMock) {
+    setMockAge(profile.age);
+    return;
+  }
+  await updateMyProfile(profile);
 }
 
 /**
