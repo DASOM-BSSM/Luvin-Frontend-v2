@@ -10,8 +10,6 @@ import InfernoHighlightScene from '@/src/features/inferno/components/inferno-hig
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
 import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
-import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
-import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSceneSeasonStore } from '@/src/features/inferno/store/scene-season-store';
 import type {
   InfernoEpisode,
@@ -19,7 +17,6 @@ import type {
   InfernoSeasonSummary,
 } from '@/src/features/inferno/types';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
-import { buildPartnerLetterSender } from '@/src/features/inferno/utils/partner-letter';
 export default function InfernoSeasonReportScreen({
   summary,
   mine,
@@ -40,27 +37,13 @@ export default function InfernoSeasonReportScreen({
   const save = useSceneSeasonStore((state) => state.saveReport);
   const flow = useInfernoEp5Flow(readOnly ? 0 : page, readOnly);
   const [baking, setBaking] = useState(!readOnly && page === 0 && !solo);
-  const queueLetter = usePartnerLetterStore((state) => state.queueLetter);
-  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
   function leave() {
     if (!readOnly) save(sessionKey, flow.pageIndex);
     exit.leave();
   }
-  function finish(next: boolean) {
-    if (!readOnly) {
-      const sender = buildPartnerLetterSender(summary.finalMatch, String(Date.now()));
-      queueLetter(
-        solo
-          ? {
-              ...sender,
-              draftMessage:
-                '같은 오븐에서 서로의 마음을 들어줘서 고마워. 네 속도로 지내도 괜찮아. 이야기하고 싶을 때 다시 만나자.',
-            }
-          : sender,
-      );
-      if (next) requestNextSeasonNotice();
-      save(sessionKey, 0);
-    }
+  // 10화 쪽지(시즌 종료 쪽지)는 서버가 10화 완료 때 만든다 — 여기서 따로 만들지 않는다.
+  function finish() {
+    if (!readOnly) save(sessionKey, 0);
     exit.completeAndLeave();
   }
   return (
@@ -97,10 +80,7 @@ export default function InfernoSeasonReportScreen({
       ) : flow.pageIndex === 2 ? (
         <InfernoHighlightScene highlights={summary.highlights} />
       ) : (
-        <InfernoWrapUpScene
-          onEndSeasonPress={() => finish(false)}
-          onNextSeasonPress={() => finish(true)}
-        />
+        <InfernoWrapUpScene onEndSeasonPress={finish} />
       )}
     </InfernoEpisodeFrame>
   );

@@ -1,21 +1,30 @@
-import { skipToken, useQuery } from '@tanstack/react-query';
-
-import { fetchPartnerLetter } from '@/src/features/inferno/api/partner-letter';
-import { partnerLetterKeys } from '@/src/features/inferno/api/query-keys';
-import type { InfernoPartnerLetterSender } from '@/src/features/inferno/types';
-
 /**
- * 쪽지 본문. "쪽지가 도착했어요" 안내가 뜨는 순간부터 받아 두어서, 열어보기를 누르면 기다리지 않고
- * 바로 펼쳐지게 한다.
- *
- * 본문은 AI 가 매번 다르게 써 주는 값이라, 같은 쪽지를 보는 동안 다시 받아서 문구가 바뀌면 안 된다.
- * 그래서 오래됐다고 다시 받지 않게(staleTime/gcTime 무한) 둔다.
+ * [DRAFT] 안 읽은 회차 쪽지. 발신 빵 이름은 시즌 출연진과 맞춰 붙인다(utils/map-story 의
+ * mapPartnerLetter). 읽음으로 표시하면 다음 안 읽은 쪽지를 다시 받는다.
  */
-export default function usePartnerLetter(sender: InfernoPartnerLetterSender | null) {
-  return useQuery({
-    queryKey: partnerLetterKeys.letter(sender?.id ?? ''),
-    queryFn: sender ? () => fetchPartnerLetter(sender) : skipToken,
-    staleTime: Infinity,
-    gcTime: Infinity,
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import { getUnreadLetter, markLetterRead } from '@/src/features/inferno/api/partner-letter';
+import { partnerLetterKeys } from '@/src/features/inferno/api/query-keys';
+import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
+import { mapPartnerLetter } from '@/src/features/inferno/utils/map-story';
+
+export default function usePartnerLetter() {
+  const client = useQueryClient();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const status = useAiSeasonStatus();
+  const query = useQuery({
+    queryKey: partnerLetterKeys.unread,
+    queryFn: getUnreadLetter,
+    enabled: isAuthenticated,
   });
+  const read = useMutation({
+    mutationFn: markLetterRead,
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: partnerLetterKeys.unread });
+    },
+  });
+  const letter = query.data ? mapPartnerLetter(query.data, status.data?.characters) : null;
+  return { query, letter, read };
 }

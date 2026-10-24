@@ -22,7 +22,6 @@ import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
-import NextSeasonNoticeModal from '@/src/features/inferno/components/next-season-notice-modal';
 import {
   INFERNO_EPISODE_HREFS,
   infernoIntroHref,
@@ -49,9 +48,6 @@ export default function HomeScreen() {
   const [isProfileRequiredVisible, setIsProfileRequiredVisible] = useState(false);
   // 기기 기록 + 서버 시즌 상태. 기기 기록만 보면 다시 로그인했을 때 처음부터로 돌아갔다(LUV-56).
   const { completedOrders, isSyncing: isProgressSyncing } = useInfernoProgress();
-  const isNextSeasonNoticePending = useInfernoStore((state) => state.isNextSeasonNoticePending);
-  const requestNextSeasonNotice = useInfernoStore((state) => state.requestNextSeasonNotice);
-  const clearNextSeasonNotice = useInfernoStore((state) => state.clearNextSeasonNotice);
   const surveyResultQuery = useMySurveyResult();
   const createSeasonMutation = useCreateSeason();
 
@@ -110,29 +106,15 @@ export default function HomeScreen() {
     });
   }
 
-  // 시즌을 이미 끝냈으면 서버가 그 끝난 시즌을 그대로 돌려준다(from-survey 는 있는 시즌을
-  // 돌려주는 API — 새 시즌을 만드는 API 는 백엔드에 요청해 둔 상태). 끝난 시즌으로 다시
-  // 들어가지 않고, 다음 시즌은 토큰이 필요하다고 안내한다.
+  // [DRAFT] 시즌은 사용자마다 하나이고 10화가 끝나면 끝이다(사용자 결정). 끝난 시즌이면 새 시즌을
+  // 열지 않고, 최종 리포트와 지난 회차 다시 보기가 있는 오븐 회차 목록으로 보낸다.
   function handleSeasonReady(status: string, href: Href) {
-    // [DRAFT] The old server completion flag cannot skip the ten-episode mock season.
-    if (status === COMPLETED_SEASON_STATUS && completedOrders.includes(10)) {
-      requestNextSeasonNotice();
+    if (status === COMPLETED_SEASON_STATUS) {
+      router.push('/oven');
       return;
     }
 
     router.push(href);
-  }
-
-  // 다음 시즌 안내의 "미니게임으로 토큰 모으기". 토큰을 버는 미니게임 모음으로 보낸다.
-  function handleNextSeasonMiniGamePress() {
-    clearNextSeasonNotice();
-    router.push('/luvin-hell');
-  }
-
-  // 다음 시즌이 열렸으면 새 시즌의 첫 회차(가이드 ep0)로 보낸다.
-  function handleNextSeasonStarted() {
-    clearNextSeasonNotice();
-    router.push(INFERNO_EPISODE_HREFS[0] ?? '/inferno');
   }
 
   // 성별이 없으면 서버가 시즌 생성을 막는다(409 PROFILE_REQUIRED). 로그로만 남기지 않고
@@ -251,12 +233,6 @@ export default function HomeScreen() {
         visible={isNoticeVisible}
         onClose={handleNoticeClose}
         onActionPress={handleNoticeSurveyPress}
-      />
-      <NextSeasonNoticeModal
-        visible={isNextSeasonNoticePending}
-        onClose={clearNextSeasonNotice}
-        onCollectTokensPress={handleNextSeasonMiniGamePress}
-        onSeasonStarted={handleNextSeasonStarted}
       />
       <ConfirmModal
         visible={isProfileRequiredVisible}

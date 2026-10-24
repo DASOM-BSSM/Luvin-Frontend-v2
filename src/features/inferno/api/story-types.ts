@@ -18,10 +18,11 @@ export type AiStoryFeedbackHttpRequest = Schemas['AiStoryFeedbackHttpRequest'];
 export type AiStoryFeedbackView = Schemas['AiStoryFeedbackView'];
 export type AiStoryLikeHttpRequest = Schemas['AiStoryLikeHttpRequest'];
 export type AiMessageLikeView = Schemas['AiMessageLikeView'];
+export type PartnerLetterView = Schemas['PartnerLetterView'];
 
 /**
- * [DRAFT][가정] 회차 열기(토큰) 필드. 백엔드가 아직 만드는 중이라 openapi 에 없고, 계약 문서에도
- * 형식이 없다. 들어오면 이 타입과 api/story.ts 의 unlockEpisode 만 openapi 에 맞춰 고친다.
+ * [DRAFT] 회차 열기(토큰) 필드. 계약 v3 0장 "토큰 정책". 백엔드가 아직 만드는 중이라 openapi 에
+ * 없다 — openapi 에 확정되면 이 타입과 api/story.ts 의 unlockEpisode 만 맞춰 고친다.
  */
 export interface AiStoryUnlockFields {
   /** 열어 둔 회차(무료 회차 포함 여부는 서버가 정한다). */
@@ -30,9 +31,13 @@ export interface AiStoryUnlockFields {
   episodeTokenCost?: number;
 }
 
-/** [DRAFT][가정] `POST .../episodes/{order}/unlock` 응답. */
+/**
+ * [DRAFT] `POST .../episodes/{order}/unlock` 응답(계약 v3). 1~3화나 이미 연 회차면 차감 없이
+ * `unlocked: true`. 시즌 상태는 들어 있지 않아서 열고 나면 `GET /me` 를 다시 받는다.
+ */
 export interface AiEpisodeUnlockView {
-  season?: AiStoryStateView & AiStoryUnlockFields;
+  order?: number;
+  unlocked?: boolean;
   /** 열고 난 뒤 남은 토큰. */
   tokenBalance?: number;
 }

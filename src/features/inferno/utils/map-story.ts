@@ -16,7 +16,10 @@ import type {
   AiStoryParticipantView,
   AiStoryStateView,
   AiStoryUnlockFields,
+  PartnerLetterView,
 } from '@/src/features/inferno/api/story-types';
+import type { AiCharacterView } from '@/src/features/inferno/api/ai-season-types';
+import type { InfernoPartnerLetter } from '@/src/features/inferno/types';
 import type { BreadType } from '@/src/assets/images/BreadCharacter';
 import type {
   ChoicePoint,
@@ -241,4 +244,20 @@ export function mapChoiceOutcome(
   options: StoryMapOptions = {},
 ): ChoiceSubmission {
   return { blocks: mapStoryBlocks(view.blocks, options), season: mapStoryState(view.season) };
+}
+
+/**
+ * 회차 쪽지. 서버 `partnerName` 은 비어 있어서(계약 0장) `partnerId` 를 시즌 출연진
+ * (`GET /me` 의 `characters[].characterId`)과 맞춰 이름을 찾는다. 못 찾으면 이름 없이 보낸다.
+ */
+export function mapPartnerLetter(
+  view: PartnerLetterView,
+  characters: AiCharacterView[] | undefined,
+): InfernoPartnerLetter & { letterId: number | null } {
+  const sender = characters?.find((character) => character.characterId === view.partnerId);
+  return {
+    letterId: view.letterId ?? null,
+    partnerName: view.partnerName || sender?.name || '',
+    message: view.message ?? '',
+  };
 }

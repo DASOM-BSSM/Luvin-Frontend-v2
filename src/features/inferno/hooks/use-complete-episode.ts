@@ -6,7 +6,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { completeEpisode } from '@/src/features/inferno/api/story';
-import { aiSeasonKeys, storyKeys } from '@/src/features/inferno/api/query-keys';
+import { aiSeasonKeys, partnerLetterKeys, storyKeys } from '@/src/features/inferno/api/query-keys';
 import type { AiSeasonStatusView } from '@/src/features/inferno/api/ai-season-types';
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import type { EpisodeContent } from '@/src/features/inferno/types/story';
@@ -33,6 +33,8 @@ export default function useCompleteEpisode(order: number) {
       );
       // 다음 회차 본문은 이 완료로 비로소 열린다. 전에 받은 409 를 남겨두지 않는다.
       void client.invalidateQueries({ queryKey: storyKeys.content(order + 1) });
+      // 회차마다 쪽지가 한 통씩 생긴다(10화 쪽지가 시즌 종료 쪽지).
+      void client.invalidateQueries({ queryKey: partnerLetterKeys.unread });
     },
   });
 }

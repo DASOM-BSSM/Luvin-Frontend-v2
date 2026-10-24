@@ -9,16 +9,14 @@ import Text from '@/src/components/ui/text';
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import InfernoBlockPlayer from '@/src/features/inferno/components/inferno-block-player';
-import InfernoEpisodeUnlockView from '@/src/features/inferno/components/inferno-episode-unlock-view';
-import InfernoEpisodeIntroGate from '@/src/features/inferno/components/inferno-episode-intro-gate';
+import InfernoEpisodeGateView from '@/src/features/inferno/components/inferno-episode-gate-view';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoEpisodeBlocker from '@/src/features/inferno/components/inferno-episode-blocker';
 import InfernoEpisodeDoneModal from '@/src/features/inferno/components/inferno-episode-done-modal';
-import InfernoSeasonReportScreen from '@/src/features/inferno/components/inferno-season-report-screen';
+import InfernoSeasonReportGate from '@/src/features/inferno/components/inferno-season-report-gate';
 import useEpisodePlayback from '@/src/features/inferno/hooks/use-episode-playback';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { DEFAULT_BREAD_TYPE } from '@/src/features/inferno/utils/bread-type';
-import { buildSceneSummary } from '@/src/features/inferno/utils/scene-summary';
 import { getStoryErrorCode } from '@/src/features/inferno/utils/story-error';
 
 /** 생성은 끝났는데 재생할 블록이 하나도 없을 때. 다시 시도 버튼으로 이어진다. */
@@ -50,12 +48,14 @@ export default function InfernoEpisodeBody({
     completion,
     done,
     report,
-    showIntro,
-    choiceReady,
+    gate,
     isLastEpisode,
-    showUnlock,
+    surface,
+    onPreviousPress,
+    onNextPress,
     tokenCost,
     handleUnlocked,
+    handleLoaderExitComplete,
     handleLeavePress,
     handleSelect,
     handleFinishPress,
@@ -68,36 +68,34 @@ export default function InfernoEpisodeBody({
 
   if (report && story.data)
     return (
-      <InfernoSeasonReportScreen
-        summary={buildSceneSummary(story.data, cast)}
+      <InfernoSeasonReportGate
+        story={story.data}
+        cast={cast}
         mine={myProfile ?? cast.find((person) => person.isMine) ?? FALLBACK_MINE}
         sessionKey={sessionKey}
-        solo={story.data.route !== 'romance'}
         readOnly={readOnly}
       />
     );
   return (
     <InfernoEpisodeFrame
       episode={episode}
-      surface={
-        showUnlock || showIntro || block?.type === 'choice' || block?.type === 'interview'
-          ? 'note'
-          : 'plain'
-      }
+      surface={surface}
       skipLabel={exit.skipLabel}
       onSkipPress={handleLeavePress}
-      onPreviousPress={showIntro ? undefined : flow.previous}
-      onNextPress={!showIntro && (flow.ready || choiceReady) ? flow.next : undefined}
+      onPreviousPress={onPreviousPress}
+      onNextPress={onNextPress}
     >
-      {showUnlock ? (
-        <InfernoEpisodeUnlockView order={order} tokenCost={tokenCost} onUnlocked={handleUnlocked} />
-      ) : showIntro && content.data ? (
-        <InfernoEpisodeIntroGate
+      {gate ? (
+        <InfernoEpisodeGateView
+          gate={gate}
           order={order}
-          stageIntro={content.data.stageIntro}
-          intro={content.data.intro}
+          content={content.data}
+          tokenCost={tokenCost}
+          isGenerating={content.isGenerating}
           skippable={readOnly}
-          onDone={handleIntroDone}
+          onUnlocked={handleUnlocked}
+          onLoaderExitComplete={handleLoaderExitComplete}
+          onIntroDone={handleIntroDone}
         />
       ) : !block ? (
         <InfernoEpisodeBlocker

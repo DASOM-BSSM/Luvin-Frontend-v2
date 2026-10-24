@@ -10,8 +10,8 @@
  * (default | all-accept | ep6-reject), 처음 나이는 `EXPO_PUBLIC_MOCK_AGE`(비우면 나이 없음),
  * 처음 토큰은 `EXPO_PUBLIC_MOCK_TOKENS`(비우면 3).
  *
- * [가정] 회차 열기(unlock)는 백엔드·계약 문서에 형식이 아직 없어서 api/story-types.ts 의
- * AiEpisodeUnlockView 모양으로 답한다. 1~3화는 무료라 처음부터 열려 있다.
+ * 회차 열기(unlock)는 계약 v3 "토큰 정책" 형식(`{ order, unlocked, tokenBalance }`)으로 답한다.
+ * 1~3화는 무료라 처음부터 열려 있다.
  */
 import { AxiosError, AxiosHeaders } from 'axios';
 
@@ -38,7 +38,9 @@ import type {
   AiStoryStateView,
   AiStoryUnlockFields,
   AiEpisodeUnlockView,
+  PartnerLetterView,
 } from '@/src/features/inferno/api/story-types';
+import type { AiReportView } from '@/src/features/inferno/api/ai-season-types';
 import type { InfernoParticipant } from '@/src/features/inferno/types';
 import type {
   ChoicePoint,
@@ -72,6 +74,9 @@ interface MockServer {
   feedbacks: AiStoryFeedbackView[];
   unlocked: number[];
   tokens: number;
+  /** 회차를 끝낼 때마다 한 통씩 쌓이는 쪽지. 서버처럼 `partnerName` 은 비워 둔다. */
+  letters: PartnerLetterView[];
+  readLetterIds: number[];
 }
 
 const server: MockServer = {
@@ -84,6 +89,8 @@ const server: MockServer = {
   feedbacks: [],
   unlocked: [...MOCK_FREE_ORDERS],
   tokens: parseNumber(process.env.EXPO_PUBLIC_MOCK_TOKENS) ?? DEFAULT_MOCK_TOKENS,
+  letters: [],
+  readLetterIds: [],
 };
 
 const scenario = () => process.env.EXPO_PUBLIC_MOCK_SCENARIO ?? 'default';
@@ -301,7 +308,10 @@ export async function mockCompleteEpisode(order: number): Promise<AiStoryStateVi
   const pointId = CHOICE_ORDERS[order];
   if (pointId && !server.season.choices.some((choice) => choice.pointId === pointId))
     throw mockError(409, 'CHOICE_REQUIRED');
-  if (!server.completed.includes(order)) server.completed.push(order);
+  if (!server.completed.includes(order)) {
+    server.completed.push(order);
+    server.letters.push(mockLetter(order));
+  }
   return storyState();
 }
 
@@ -350,7 +360,7 @@ export function setMockAge(age: number) {
   server.age = age;
 }
 
-/** [가정] `POST .../episodes/{order}/unlock`. 이미 열었거나 무료 회차면 토큰을 쓰지 않는다. */
+/** `POST .../episodes/{order}/unlock`. 이미 열었거나 무료 회차면 토큰을 쓰지 않는다. */
 export async function mockUnlockEpisode(order: number): Promise<AiEpisodeUnlockView> {
   await wait();
   if (order < 1 || order > LAST_ORDER) throw mockError(400, null);
@@ -359,10 +369,55 @@ export async function mockUnlockEpisode(order: number): Promise<AiEpisodeUnlockV
     server.tokens -= MOCK_EPISODE_TOKEN_COST;
     server.unlocked.push(order);
   }
-  return { season: storyState(), tokenBalance: server.tokens };
+  return { order, unlocked: true, tokenBalance: server.tokens };
 }
 
 /** 목 모드의 보유 토큰. 회차 열기 화면이 보여준다. */
 export function mockTokenBalance(): number {
   return server.tokens;
+}
+
+/** 회차 쪽지를 보내는 빵: 연애 흐름이면 상대, 아니면 친구. */
+function mockLetter(order: number): PartnerLetterView {
+  const confession = server.season.choices.find((choice) => choice.pointId === 3);
+  const senderId =
+    server.season.route === 'romance' && confession?.breadId ? confession.breadId : 'friend';
+  return {
+    letterId: order,
+    partnerId: uuidFor(senderId),
+    message:
+      order === LAST_ORDER
+        ? '같은 시간을 함께 보내줘서 고마워. 네 속도로 지내도 괜찮아.'
+        : `${order}화 이야기 고마웠어. 다음 이야기에서도 편하게 이야기하자.`,
+  };
+}
+
+/** `GET /api/ai/seasons/letters/unread`. 안 읽은 쪽지가 없으면 null. */
+export async function mockGetUnreadLetter(): Promise<PartnerLetterView | null> {
+  await wait();
+  return (
+    server.letters.find((letter) => !server.readLetterIds.includes(letter.letterId ?? -1)) ?? null
+  );
+}
+
+/** `POST /api/ai/seasons/letters/{letterId}/read`. */
+export async function mockMarkLetterRead(letterId: number): Promise<void> {
+  await wait();
+  if (!server.readLetterIds.includes(letterId)) server.readLetterIds.push(letterId);
+}
+
+/** `GET /api/ai/seasons/report`. 10화를 끝내야 생긴다. 하이라이트는 비워 둬 앱이 선택 기록으로 채운다. */
+export async function mockGetSeasonReport(): Promise<AiReportView> {
+  await wait();
+  if (!server.completed.includes(LAST_ORDER)) throw mockError(404, null);
+  const confession = server.season.choices.find((choice) => choice.pointId === 3);
+  return {
+    finalPartnerId:
+      server.season.route === 'romance' && confession?.breadId ? uuidFor(confession.breadId) : '',
+    tendency: '마음이 움직이면 먼저 표현하지만, 상대의 속도도 기다릴 줄 알아요.',
+    feedback: '서운한 마음은 짐작하기보다 말로 꺼내 보면 더 가까워질 수 있어요.',
+    strengths: ['솔직한 표현', '상대 배려'],
+    weaknesses: ['혼자 결론 내리기'],
+    highlights: {},
+  };
 }

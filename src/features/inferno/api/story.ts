@@ -121,8 +121,8 @@ export async function saveStoryAge(age: number): Promise<void> {
 }
 
 /**
- * [DRAFT][가정] 회차 열기. 4화 이상을 처음 볼 때 토큰을 한 번 쓴다(이미 연 회차는 무료).
- * 백엔드 unlock API 가 아직 없어 경로와 응답 모양을 가정했다 — openapi 에 들어오면 이 함수와
+ * [DRAFT] 회차 열기(계약 v3 "토큰 정책"). 4화 이상을 처음 볼 때 토큰을 한 번 쓴다. 1~3화나 이미 연
+ * 회차는 차감 없이 `unlocked: true`. 백엔드가 아직 만드는 중이라 openapi 에 확정되면 이 함수와
  * story-types.ts 의 AiEpisodeUnlockView 만 맞춰 고친다.
  * 오류: 409 `INSUFFICIENT_TOKENS`(토큰 부족).
  */
@@ -131,7 +131,7 @@ export async function unlockEpisode(order: number) {
     ? await mockUnlockEpisode(order)
     : (await httpClient.post<ApiEnvelope<AiEpisodeUnlockView>>(`${episodePath(order)}/unlock`)).data
         .data;
-  return { state: mapStoryState(view.season), seasonView: view.season, tokenBalance: view.tokenBalance };
+  return { unlocked: view.unlocked === true, tokenBalance: view.tokenBalance };
 }
 
 /** 회차 열기 화면에 보여줄 보유 토큰. 목 모드면 목 서버의 토큰을 쓴다. */

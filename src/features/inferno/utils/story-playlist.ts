@@ -56,3 +56,8 @@ export function feedbackTargets(block: StoryBlock) {
   const mine = new Set(block.participants.filter((person) => person.isMine).map((person) => person.id));
   return block.messages.filter((message) => message.kind === 'chat' && mine.has(message.participantId));
 }
+
+/** 회차 화면 바탕. 앞을 가리는 화면·선택·인터뷰는 쪽지 위에, 나머지 대화는 흰 바탕에 그린다. */
+export function frameSurface(hasGate: boolean, block: StoryBlock | undefined): 'note' | 'plain' {
+  return hasGate || block?.type === 'choice' || block?.type === 'interview' ? 'note' : 'plain';
+}

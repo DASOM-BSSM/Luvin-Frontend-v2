@@ -126,3 +126,6 @@ export interface ChoiceSubmission {
   blocks: StoryBlock[];
   season: StoryState;
 }
+
+/** [DRAFT] 본문 앞을 가리는 화면: 회차 열기 → 생성 대기(빵 줄넘기) → 소개(inferno-episode-gate-view). */
+export type EpisodeGate = 'unlock' | 'loader' | 'intro';

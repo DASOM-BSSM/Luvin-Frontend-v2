@@ -1,8 +1,12 @@
 /**
- * [DRAFT] 10화 뒤 리포트 화면에 넘길 임시 요약. 서버 `story`(선택 기록·경로)로 만든다.
- * 실제 최종 리포트(`GET /api/ai/seasons/report`)로 바꾸기 전까지만 쓴다.
+ * [DRAFT] 10화 뒤 최종 리포트 화면에 넘길 요약.
+ *
+ * 내용은 서버 최종 리포트(`GET /api/ai/seasons/report`, 기존 형식 그대로)를 쓰고(mergeSeasonReport),
+ * 리포트에 하이라이트가 없을 때만 서버 `story` 의 선택 기록으로 채운다(buildSceneSummary).
  */
+import type { AiReportView } from '@/src/features/inferno/api/ai-season-types';
 import type { InfernoParticipant, InfernoSeasonSummary } from '@/src/features/inferno/types';
+import { mapAiHighlights, mapAiReport } from '@/src/features/inferno/utils/map-ai-season-report';
 import type { StoryState } from '@/src/features/inferno/types/story';
 
 export function buildSceneSummary(
@@ -37,5 +41,24 @@ export function buildSceneSummary(
             episodeOrder: choice.order,
             text: `${choice.order}화 · ${choice.breadId === null ? '혼자만의 시간을 골랐어요.' : `${nameOf(choice.breadId)}에게 마음을 전했어요. ${choice.accepted ? '대화를 나눴어요.' : '상대의 답을 존중하고 마음을 돌봤어요.'}`}`,
           })),
+  };
+}
+
+/**
+ * 최종 리포트를 요약에 얹는다. 최종 상대는 `finalPartnerId` 를 이 시즌 출연진에서 찾는다.
+ * 솔로일 때 최종 상대 표시는 백엔드 안내 전까지 기존 화면 동작을 그대로 둔다(보정 문서 8장).
+ */
+export function mergeSeasonReport(
+  base: InfernoSeasonSummary,
+  report: AiReportView,
+  cast: InfernoParticipant[],
+): InfernoSeasonSummary {
+  const partner = cast.find((person) => person.id === report.finalPartnerId);
+  const highlights = mapAiHighlights(report.highlights);
+  return {
+    ...base,
+    finalMatch: partner ? { ...base.finalMatch, profile: partner } : base.finalMatch,
+    report: mapAiReport(report),
+    highlights: highlights.length > 0 ? highlights : base.highlights,
   };
 }
