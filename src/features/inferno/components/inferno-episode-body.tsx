@@ -9,6 +9,7 @@ import Text from '@/src/components/ui/text';
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import InfernoBlockPlayer from '@/src/features/inferno/components/inferno-block-player';
+import InfernoEpisodeUnlockView from '@/src/features/inferno/components/inferno-episode-unlock-view';
 import InfernoEpisodeIntroGate from '@/src/features/inferno/components/inferno-episode-intro-gate';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoEpisodeBlocker from '@/src/features/inferno/components/inferno-episode-blocker';
@@ -52,6 +53,9 @@ export default function InfernoEpisodeBody({
     showIntro,
     choiceReady,
     isLastEpisode,
+    showUnlock,
+    tokenCost,
+    handleUnlocked,
     handleLeavePress,
     handleSelect,
     handleFinishPress,
@@ -76,14 +80,18 @@ export default function InfernoEpisodeBody({
     <InfernoEpisodeFrame
       episode={episode}
       surface={
-        showIntro || block?.type === 'choice' || block?.type === 'interview' ? 'note' : 'plain'
+        showUnlock || showIntro || block?.type === 'choice' || block?.type === 'interview'
+          ? 'note'
+          : 'plain'
       }
       skipLabel={exit.skipLabel}
       onSkipPress={handleLeavePress}
       onPreviousPress={showIntro ? undefined : flow.previous}
       onNextPress={!showIntro && (flow.ready || choiceReady) ? flow.next : undefined}
     >
-      {showIntro && content.data ? (
+      {showUnlock ? (
+        <InfernoEpisodeUnlockView order={order} tokenCost={tokenCost} onUnlocked={handleUnlocked} />
+      ) : showIntro && content.data ? (
         <InfernoEpisodeIntroGate
           order={order}
           stageIntro={content.data.stageIntro}

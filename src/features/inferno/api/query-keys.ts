@@ -33,4 +33,6 @@ export const partnerLetterKeys = {
 export const storyKeys = {
   all: ['ai-season', 'story'] as const,
   content: (order: number) => ['ai-season', 'story', 'content', order] as const,
+  /** [DRAFT] 회차 열기 화면의 보유 토큰. 목 모드면 목 서버 값이라 tokens 기능 키와 따로 둔다. */
+  tokenBalance: ['ai-season', 'story', 'token-balance'] as const,
 };

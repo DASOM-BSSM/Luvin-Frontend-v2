@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import Text from '@/src/components/ui/text';
@@ -14,6 +14,8 @@ interface EpisodeHistoryRowProps {
    * 투명이고, 눌리는 동안에만 pink/200 쪽으로 애니메이션된다.
    */
   highlighted?: boolean;
+  /** [DRAFT] 회차 열기 상태 표시. 예: "무료", "열림", "🔒 잠김". */
+  badge?: string;
   /** 누르면 그 회차로 들어간다. 넘기지 않으면 눌림 표시만 하고 아무 데도 가지 않는다. */
   onPress?: () => void;
 }
@@ -28,7 +30,13 @@ const PRESS_ANIMATION_DURATION_MS = 150;
  * 배경색은 className 이 아니라 Reanimated `style` 로 애니메이션한다 — 미니게임 씬의
  * LaneSlotView/RailWarningOverlay 와 같은 패턴(AGENTS.md §16 애니메이션 스코프 예외).
  */
-export default function EpisodeHistoryRow({ label, body, highlighted = false, onPress }: EpisodeHistoryRowProps) {
+export default function EpisodeHistoryRow({
+  label,
+  body,
+  highlighted = false,
+  badge,
+  onPress,
+}: EpisodeHistoryRowProps) {
   const restProgress = highlighted ? 1 : 0;
   const pressProgress = useSharedValue(restProgress);
 
@@ -48,15 +56,22 @@ export default function EpisodeHistoryRow({ label, body, highlighted = false, on
     <Animated.View className="w-full rounded-[8px] border border-dashed border-default-gray" style={animatedStyle}>
       <Pressable
         accessibilityRole={onPress ? 'button' : undefined}
-        accessibilityLabel={onPress ? `${label} ${body} 다시 보기` : undefined}
+        accessibilityLabel={onPress ? `${label} ${body}${badge ? ` ${badge}` : ''}` : undefined}
         className="w-full flex-col items-start gap-[4px] px-[20px] py-[12px]"
         onPressIn={handleRowPressIn}
         onPressOut={handleRowPressOut}
         onPress={onPress}
       >
-        <Text variant="body-xxs" className="text-text-primary">
-          {label}
-        </Text>
+        <View className="w-full flex-row items-center justify-between">
+          <Text variant="body-xxs" className="text-text-primary">
+            {label}
+          </Text>
+          {badge ? (
+            <Text variant="body-xxs" className="text-pink-500">
+              {badge}
+            </Text>
+          ) : null}
+        </View>
         <Text variant="body-s" className="text-text-primary">
           {body}
         </Text>

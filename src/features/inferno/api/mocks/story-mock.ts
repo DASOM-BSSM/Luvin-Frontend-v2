@@ -7,7 +7,11 @@
  * 역할 고정 id 로 분기하는 코드는 이 목 안에만 있다.
  *
  * 상태는 앱을 다시 켜기 전까지만 남는다. 시나리오는 `EXPO_PUBLIC_MOCK_SCENARIO`
- * (default | all-accept | ep6-reject), 처음 나이는 `EXPO_PUBLIC_MOCK_AGE`(비우면 나이 없음).
+ * (default | all-accept | ep6-reject), 처음 나이는 `EXPO_PUBLIC_MOCK_AGE`(비우면 나이 없음),
+ * 처음 토큰은 `EXPO_PUBLIC_MOCK_TOKENS`(비우면 3).
+ *
+ * [가정] 회차 열기(unlock)는 백엔드·계약 문서에 형식이 아직 없어서 api/story-types.ts 의
+ * AiEpisodeUnlockView 모양으로 답한다. 1~3화는 무료라 처음부터 열려 있다.
  */
 import { AxiosError, AxiosHeaders } from 'axios';
 
@@ -32,6 +36,8 @@ import type {
   AiStoryMessageView,
   AiStoryParticipantView,
   AiStoryStateView,
+  AiStoryUnlockFields,
+  AiEpisodeUnlockView,
 } from '@/src/features/inferno/api/story-types';
 import type { InfernoParticipant } from '@/src/features/inferno/types';
 import type {
@@ -43,10 +49,14 @@ import type { SeasonSetting } from '@/src/features/inferno/types/story';
 import { applyChoice, resolveChoice } from '@/src/features/inferno/api/mocks/mock-choice-rules';
 
 const MOCK_DELAY_MS = 300;
+/** 목 서버가 정한 회차 열기 비용. 실제 값은 서버가 `episodeTokenCost` 로 준다. */
+const MOCK_EPISODE_TOKEN_COST = 1;
+const MOCK_FREE_ORDERS = [1, 2, 3];
+const DEFAULT_MOCK_TOKENS = 3;
 const LAST_ORDER = 10;
 const CHOICE_ORDERS: Record<number, ChoicePoint> = { 3: 1, 5: 2, 6: 3, 8: 4 };
 
-function parseAge(value: string | undefined): number | null {
+function parseNumber(value: string | undefined): number | null {
   const age = Number.parseInt(value ?? '', 10);
   return Number.isNaN(age) ? null : age;
 }
@@ -60,16 +70,20 @@ interface MockServer {
   requested: number[];
   likes: string[];
   feedbacks: AiStoryFeedbackView[];
+  unlocked: number[];
+  tokens: number;
 }
 
 const server: MockServer = {
-  age: parseAge(process.env.EXPO_PUBLIC_MOCK_AGE),
+  age: parseNumber(process.env.EXPO_PUBLIC_MOCK_AGE),
   setting: null,
   season: { route: null, choices: [], rejectCount: {} },
   completed: [],
   requested: [],
   likes: [],
   feedbacks: [],
+  unlocked: [...MOCK_FREE_ORDERS],
+  tokens: parseNumber(process.env.EXPO_PUBLIC_MOCK_TOKENS) ?? DEFAULT_MOCK_TOKENS,
 };
 
 const scenario = () => process.env.EXPO_PUBLIC_MOCK_SCENARIO ?? 'default';
@@ -177,7 +191,7 @@ function statusText(mockId: string): string {
   return picks.length > 0 ? '친해짐' : '알아가는 중';
 }
 
-function storyState(): AiStoryStateView {
+function storyState(): AiStoryStateView & AiStoryUnlockFields {
   const confession = server.season.choices.find((choice) => choice.pointId === 3);
   return {
     setting: server.setting ?? undefined,
@@ -192,6 +206,8 @@ function storyState(): AiStoryStateView {
       breadId: choice.breadId ? uuidFor(choice.breadId) : undefined,
       accepted: choice.accepted,
     })),
+    unlockedOrders: [...server.unlocked].sort((a, b) => a - b),
+    episodeTokenCost: MOCK_EPISODE_TOKEN_COST,
     breads: SCENE_CAST.filter((person) => !person.isMine).map((person) => ({
       breadId: uuidFor(person.id),
       name: person.name,
@@ -229,6 +245,7 @@ export async function mockGetEpisodeContent(order: number): Promise<AiEpisodeCon
   if (!server.setting) throw mockError(409, 'STORY_NOT_STARTED');
   if (order > 1 && !server.completed.includes(order - 1))
     throw mockError(409, 'PREVIOUS_EPISODE_NOT_COMPLETED');
+  if (!server.unlocked.includes(order)) throw mockError(409, 'EPISODE_NOT_UNLOCKED');
   if (!server.requested.includes(order)) {
     server.requested.push(order);
     return { order, status: 'generating' };
@@ -331,4 +348,21 @@ export async function mockSetSceneLike(
 /** 목 모드에서 `PUT /api/users/me` 의 나이를 받는다. 이미 정해진 시즌 배경은 바꾸지 않는다. */
 export function setMockAge(age: number) {
   server.age = age;
+}
+
+/** [가정] `POST .../episodes/{order}/unlock`. 이미 열었거나 무료 회차면 토큰을 쓰지 않는다. */
+export async function mockUnlockEpisode(order: number): Promise<AiEpisodeUnlockView> {
+  await wait();
+  if (order < 1 || order > LAST_ORDER) throw mockError(400, null);
+  if (!server.unlocked.includes(order)) {
+    if (server.tokens < MOCK_EPISODE_TOKEN_COST) throw mockError(409, 'INSUFFICIENT_TOKENS');
+    server.tokens -= MOCK_EPISODE_TOKEN_COST;
+    server.unlocked.push(order);
+  }
+  return { season: storyState(), tokenBalance: server.tokens };
+}
+
+/** 목 모드의 보유 토큰. 회차 열기 화면이 보여준다. */
+export function mockTokenBalance(): number {
+  return server.tokens;
 }

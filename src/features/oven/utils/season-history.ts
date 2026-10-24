@@ -6,6 +6,8 @@ import { LEGACY_INFERNO_EPISODES } from '@/src/features/inferno/constants/episod
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 import { getBreadFlavorName } from '@/src/features/inferno/utils/character-persona';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
+import type { StoryState } from '@/src/features/inferno/types/story';
+import { episodeAccess } from '@/src/features/inferno/utils/episode-unlock';
 import type { SeasonEpisodeItem } from '@/src/features/oven/components/season-card';
 
 /** 오븐 화면의 시즌 카드 하나. */
@@ -117,13 +119,30 @@ function resolveEpisodeTitle(
  * 그 서버 상태다 — 회차 번호는 서버 값을 쓰고, 제목은 위 `resolveEpisodeTitle`이 정한다.
  * 제목을 못 만드는 회차는 뺀다.
  */
+/** [DRAFT] 회차 목록에 붙는 열기 상태. 1~3화 무료, 4화부터는 `story.unlockedOrders` 기준. */
+const ACCESS_BADGES = { free: '무료', unlocked: '열림', locked: '🔒 잠김' } as const;
+
+export function accessBadge(order: number, story: StoryState | undefined): string {
+  return ACCESS_BADGES[episodeAccess(order, story)];
+}
+
 export function toSeasonEpisodes(
   orders: number[],
   myProfile: BreadProfile,
   legacy = false,
+  story?: StoryState,
 ): SeasonEpisodeItem[] {
   return orders.flatMap((order) => {
     const title = resolveEpisodeTitle(order, myProfile, legacy);
-    return title ? [{ order, label: formatEpisodeLabel(order), body: title }] : [];
+    return title
+      ? [
+          {
+            order,
+            label: formatEpisodeLabel(order),
+            body: title,
+            badge: legacy ? undefined : accessBadge(order, story),
+          },
+        ]
+      : [];
   });
 }

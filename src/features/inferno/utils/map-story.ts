@@ -15,6 +15,7 @@ import type {
   AiStoryMessageView,
   AiStoryParticipantView,
   AiStoryStateView,
+  AiStoryUnlockFields,
 } from '@/src/features/inferno/api/story-types';
 import type { BreadType } from '@/src/assets/images/BreadCharacter';
 import type {
@@ -203,7 +204,9 @@ export function mapEpisodeContent(
   };
 }
 
-export function mapStoryState(view: AiStoryStateView | undefined): StoryState {
+export function mapStoryState(
+  view: (AiStoryStateView & AiStoryUnlockFields) | undefined,
+): StoryState {
   return {
     setting: toSetting(view?.setting),
     currentOrder: view?.currentOrder ?? 1,
@@ -228,6 +231,8 @@ export function mapStoryState(view: AiStoryStateView | undefined): StoryState {
       name: bread.name ?? '',
       statusText: bread.statusText ?? '',
     })),
+    unlockedOrders: view?.unlockedOrders ?? [],
+    episodeTokenCost: view?.episodeTokenCost ?? null,
   };
 }
 

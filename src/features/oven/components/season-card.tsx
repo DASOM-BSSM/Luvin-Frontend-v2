@@ -13,6 +13,8 @@ export interface SeasonEpisodeItem {
   label: string;
   /** 회차 제목. */
   body: string;
+  /** [DRAFT] 회차 열기 상태 표시(utils/season-history 의 accessBadge). */
+  badge?: string;
 }
 
 interface SeasonCardProps {
@@ -35,7 +37,14 @@ const SeasonEpisodeRow = ({ episode, onPress }: SeasonEpisodeRowProps) => {
     onPress(episode.order);
   }
 
-  return <EpisodeHistoryRow label={episode.label} body={episode.body} onPress={handleRowPress} />;
+  return (
+    <EpisodeHistoryRow
+      label={episode.label}
+      body={episode.body}
+      badge={episode.badge}
+      onPress={handleRowPress}
+    />
+  );
 };
 
 /** 시즌 제목 위의 부제. 사용자가 준 시안 이미지의 문구 그대로. */

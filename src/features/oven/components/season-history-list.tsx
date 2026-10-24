@@ -6,6 +6,7 @@ import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
 import useAiSeasonList from '@/src/features/inferno/hooks/use-ai-season-list';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
+import useStoryState from '@/src/features/inferno/hooks/use-story-state';
 import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
 import SeasonCard, { type SeasonEpisodeItem } from '@/src/features/oven/components/season-card';
@@ -50,6 +51,7 @@ const SeasonHistoryCard = ({ history }: SeasonHistoryCardProps) => {
 export default function SeasonHistoryList() {
   const listQuery = useAiSeasonList();
   const statusQuery = useAiSeasonStatus();
+  const storyQuery = useStoryState();
   // ep1 인사말에 실제 반죽을 넣으려고 필요하다(season-history.ts 의 resolveEpisodeTitle) — 서버 설문
   // 결과가 원천이라 아직 없으면(설문 전) 그 회차 제목은 그냥 못 만든다(가짜 대체값 금지).
   const { profile: myProfile } = useBreadProfile();
@@ -67,7 +69,7 @@ export default function SeasonHistoryList() {
     ? buildSeasonHistories(seasons, status?.seasonId, currentLastOrder).map((history) => ({
         ...history,
         // [DRAFT] Preserve the original labels for older five-episode server seasons.
-        episodes: toSeasonEpisodes(history.episodeOrders, myProfile, !history.isCurrent),
+        episodes: toSeasonEpisodes(history.episodeOrders, myProfile, !history.isCurrent, storyQuery.data),
       }))
     : [];
   const hasEpisodes = histories.some((history) => history.episodes.length > 0);

@@ -34,3 +34,9 @@ export const LEGACY_INFERNO_EPISODES: readonly InfernoEpisode[] = [
   { order: 4, title: '계속 알아가고 싶어요' },
   { order: 5, title: '최종 결과를 공유해요' },
 ];
+
+/**
+ * [DRAFT] 토큰 없이 볼 수 있는 회차(사용자 결정: 1~3화 무료). 회차 목록의 "무료" 표시와 열기
+ * 화면을 띄울지 판단하는 데만 쓴다. 토큰 개수는 서버 값(`episodeTokenCost`)이라 여기 두지 않는다.
+ */
+export const FREE_EPISODE_ORDERS: readonly number[] = [1, 2, 3];

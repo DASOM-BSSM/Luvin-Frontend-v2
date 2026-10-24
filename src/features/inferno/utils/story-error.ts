@@ -16,6 +16,10 @@ export const STORY_ERROR_CODES = [
   'CHOICE_REQUIRED',
   'CHOICE_ALREADY_MADE',
   'STORY_GENERATION_FAILED',
+  /** [DRAFT] 회차 열기(토큰). 4화 이상을 아직 열지 않았다. */
+  'EPISODE_NOT_UNLOCKED',
+  /** [DRAFT] 회차를 열 토큰이 모자란다. */
+  'INSUFFICIENT_TOKENS',
 ] as const;
 
 export type StoryErrorCode = (typeof STORY_ERROR_CODES)[number];

@@ -3,7 +3,7 @@
  * 나이로 러빈지옥 시즌 배경이 정해진다(19세 이하 학교 / 20~23세 대학·아르바이트 / 24세 이상 회사).
  */
 export const MIN_AGE = 14;
-export const MAX_AGE = 60;
+export const MAX_AGE = 40;
 /** 아직 나이가 없을 때 처음 +/− 를 누르면 여기서 시작한다. */
 export const START_AGE = 20;
 

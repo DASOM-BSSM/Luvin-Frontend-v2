@@ -115,6 +115,10 @@ export interface StoryState {
   romancePartnerId: string | null;
   choices: ChoiceHistory[];
   breads: StoryBread[];
+  /** [DRAFT] 열어 둔 회차. 1~3화는 무료라 열지 않아도 된다. */
+  unlockedOrders: number[];
+  /** [DRAFT] 4화 이상을 처음 열 때 드는 토큰 수(서버 값). 아직 모르면 null. */
+  episodeTokenCost: number | null;
 }
 
 export interface ChoiceSubmission {
