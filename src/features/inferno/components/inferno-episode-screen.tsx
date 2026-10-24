@@ -21,7 +21,10 @@ export default function InfernoEpisodeScreen({ order }: { order: number }) {
   // 플레이어는 위치를 들고 있어서 시즌을 받은 뒤에 한 번만 띄운다.
   if (status.isLoading)
     return (
-      <InfernoEpisodeFrame episode={findInfernoEpisode(order) ?? { order, title: '' }}>
+      <InfernoEpisodeFrame
+        episode={findInfernoEpisode(order) ?? { order, title: '' }}
+        titleVariant="text"
+      >
         <InfernoEpisodeStateView
           order={order}
           isLoading

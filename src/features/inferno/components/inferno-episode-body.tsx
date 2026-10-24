@@ -15,6 +15,7 @@ import InfernoEpisodeBlocker from '@/src/features/inferno/components/inferno-epi
 import InfernoEpisodeDoneModal from '@/src/features/inferno/components/inferno-episode-done-modal';
 import InfernoSeasonReportGate from '@/src/features/inferno/components/inferno-season-report-gate';
 import useEpisodePlayback from '@/src/features/inferno/hooks/use-episode-playback';
+import useSeasonCast from '@/src/features/inferno/hooks/use-season-cast';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import { DEFAULT_BREAD_TYPE } from '@/src/features/inferno/utils/bread-type';
 import { getStoryErrorCode } from '@/src/features/inferno/utils/story-error';
@@ -65,6 +66,7 @@ export default function InfernoEpisodeBody({
     handleCloseDone,
   } = useEpisodePlayback(order, sessionKey);
   const episode = findInfernoEpisode(order) ?? { order, title: '' };
+  const seasonCast = useSeasonCast(sessionKey, order, content.data?.stageIntro?.cast);
 
   if (report && story.data)
     return (
@@ -79,6 +81,7 @@ export default function InfernoEpisodeBody({
   return (
     <InfernoEpisodeFrame
       episode={episode}
+      titleVariant="text"
       surface={surface}
       skipLabel={exit.skipLabel}
       onSkipPress={handleLeavePress}
@@ -115,6 +118,8 @@ export default function InfernoEpisodeBody({
           feedbacks={content.data?.feedbacks ?? NO_FEEDBACKS}
           line={flow.line}
           cast={cast}
+          stageCast={seasonCast.stageCast}
+          characters={seasonCast.characters}
           choices={choices}
           recorded={recorded}
           readOnly={readOnly}

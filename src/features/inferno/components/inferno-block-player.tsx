@@ -8,10 +8,12 @@ import InfernoMessengerScene from '@/src/features/inferno/components/inferno-mes
 import InfernoPairScene from '@/src/features/inferno/components/inferno-pair-scene';
 import InfernoNarrationLine from '@/src/features/inferno/components/inferno-narration-line';
 import InfernoTransitionScene from '@/src/features/inferno/components/inferno-transition-scene';
+import type { AiCharacterWithDescription } from '@/src/features/inferno/api/story-types';
 import { INTERVIEW_QUESTIONS } from '@/src/features/inferno/constants/episode-copy';
 import type {
   ChoiceHistory,
   ChoiceOutcome,
+  StageCastMember,
   StoryBlock,
   StoryParticipant,
 } from '@/src/features/inferno/types/story';
@@ -24,6 +26,8 @@ export default function InfernoBlockPlayer({
   likedMessageIds,
   feedbacks,
   cast,
+  stageCast,
+  characters,
   choices,
   recorded,
   readOnly,
@@ -41,6 +45,10 @@ export default function InfernoBlockPlayer({
   feedbacks: Record<string, string>;
   /** 회차에 나오는 빵 전부. 선택 카드가 이름·그림을 찾는다. */
   cast: StoryParticipant[];
+  /** 시즌 단위로 저장한 1화 무대 소개 출연진. 전체대화 반죽 소개 모달이 쓴다(use-season-cast). */
+  stageCast: StageCastMember[];
+  /** 서버 시즌 출연진. 반죽 소개 특징 문구의 첫 번째 출처. */
+  characters: AiCharacterWithDescription[];
   /** 시즌 선택 기록. 인터뷰 질문을 고른다. */
   choices: ChoiceHistory[];
   recorded?: ChoiceOutcome;
@@ -86,6 +94,8 @@ export default function InfernoBlockPlayer({
         id={block.id}
         participants={block.participants}
         message={message}
+        stageCast={stageCast}
+        characters={characters}
         onDone={onDone}
       />
     );

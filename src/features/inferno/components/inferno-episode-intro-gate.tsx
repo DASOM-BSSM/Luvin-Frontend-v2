@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 
-import InfernoCastCarousel from '@/src/features/inferno/components/inferno-cast-carousel';
+import InfernoCastIntro from '@/src/features/inferno/components/inferno-cast-intro';
 import InfernoEpisodeIntro from '@/src/features/inferno/components/inferno-episode-intro';
 import InfernoStageIntro from '@/src/features/inferno/components/inferno-stage-intro';
 import type { EpisodeIntro, StageIntro } from '@/src/features/inferno/types/story';
@@ -51,9 +51,7 @@ export default function InfernoEpisodeIntroGate({
       />
     );
   if (step === 'cast' && stageIntro)
-    return (
-      <InfernoCastCarousel cast={stageIntro.cast} skippable={skippable} onStart={goToSituation} />
-    );
+    return <InfernoCastIntro cast={stageIntro.cast} onStart={goToSituation} />;
   if (intro)
     return (
       <InfernoEpisodeIntro

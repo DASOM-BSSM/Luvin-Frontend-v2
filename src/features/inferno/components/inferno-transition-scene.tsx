@@ -1,26 +1,41 @@
-/** [DRAFT] Existing note surface and typography. */
-import { Pressable } from 'react-native';
-import Text from '@/src/components/ui/text';
+/**
+ * [DRAFT] 장면 전환 쪽지. Figma `REBAKE` modal (7856:3959).
+ *
+ * "REBAKE" 제목 아래 전환 문구(예: "쉬는시간, 복도에서 프레첼과")와 "1:1 대화하기" 버튼을 쪽지 모달로
+ * 띄운다. 문구는 시안에 적힌 그대로다(사용자 결정) — 다음이 혼자 있는 장면이어도 버튼은 같다.
+ *
+ * 쪽지 자체가 이 장면이라 바깥을 누르거나 뒤로가기를 해도 닫지 않는다 — 닫히면 빈 화면만 남는다.
+ * 모달이 상하 바까지 덮으므로 넘어가는 길은 버튼 하나다.
+ */
+import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
+
+/** Figma 7856:3965. */
+const TITLE = 'REBAKE';
+/** Figma 7856:3967. */
+const ACTION_LABEL = '1:1 대화하기';
+
+interface InfernoTransitionSceneProps {
+  text: string;
+  onNext: () => void;
+}
+
 export default function InfernoTransitionScene({
   text,
   onNext,
-}: {
-  text: string;
-  onNext: () => void;
-}) {
+}: InfernoTransitionSceneProps) {
+  function handleClose() {
+    // 일부러 비워 둔다(위 주석 참고).
+  }
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${text}, 계속하기`}
-      onPress={onNext}
-      className="flex-1 items-center justify-center"
-    >
-      <Text variant="heading-h3" className="text-center text-text-primary">
-        {text}
-      </Text>
-      <Text variant="body-s" className="text-text-muted">
-        탭해서 계속하기
-      </Text>
-    </Pressable>
+    <InfernoNoteModal
+      visible
+      minWidthClass="min-w-[344px]"
+      title={TITLE}
+      message={text}
+      actionLabel={ACTION_LABEL}
+      onActionPress={onNext}
+      onClose={handleClose}
+    />
   );
 }

@@ -18,6 +18,14 @@ export type AiStoryFeedbackHttpRequest = Schemas['AiStoryFeedbackHttpRequest'];
 export type AiStoryFeedbackView = Schemas['AiStoryFeedbackView'];
 export type AiStoryLikeHttpRequest = Schemas['AiStoryLikeHttpRequest'];
 export type AiMessageLikeView = Schemas['AiMessageLikeView'];
+
+/**
+ * [DRAFT] 시즌 출연진(`characters[]`)에 백엔드가 넣어 줄 예정인 반죽 특징 한 줄. 아직 openapi 에
+ * 없어서 선택 필드로만 덧붙인다. 스펙에 들어오면 이 타입을 지우고 생성 타입을 그대로 쓸 것.
+ */
+export type AiCharacterWithDescription = Schemas['AiCharacterView'] & {
+  description?: string | null;
+};
 export type PartnerLetterView = Schemas['PartnerLetterView'];
 
 /**

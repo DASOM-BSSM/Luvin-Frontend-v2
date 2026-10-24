@@ -5,10 +5,10 @@
 import type { SeasonSetting } from '@/src/features/inferno/types/story';
 
 export const STAGE_TITLES: Record<SeasonSetting, { title: string; subtitle: string }> = {
-  school: { title: 'IN SCHOOL', subtitle: '같은 반 친구들 사이에서 구워지는 내 반죽의 이야기' },
-  campus: { title: 'IN CAMPUS', subtitle: '같은 과 동기들 사이에서 부풀어 오르는 내 반죽의 이야기' },
-  office: { title: 'IN OFFICE', subtitle: '같은 팀 동기들 사이에서 익어가는 내 반죽의 이야기' },
-  cafe: { title: 'IN CAFE', subtitle: '같은 매장 근무 팀 안에서 구워지는 내 반죽의 이야기' },
+  school: { title: 'In School', subtitle: '같은 반 친구들 사이에서 구워지는 내 반죽의 이야기' },
+  campus: { title: 'In Campus', subtitle: '같은 과 동기들 사이에서 부풀어 오르는 내 반죽의 이야기' },
+  office: { title: 'In Office', subtitle: '같은 팀 동기들 사이에서 익어가는 내 반죽의 이야기' },
+  cafe: { title: 'In Cafe', subtitle: '같은 매장 근무 팀 안에서 구워지는 내 반죽의 이야기' },
 };
 
 /** 목 출연진 id(scene-cast.ts) → 배경별 역할과 행동으로만 쓴 성격 한 줄. */
