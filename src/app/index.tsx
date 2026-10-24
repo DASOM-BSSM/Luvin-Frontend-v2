@@ -62,7 +62,7 @@ export default function HomeScreen() {
     }
   }, [isHydrating, isAuthenticated]);
 
-  // ep0 을 끝내기 전에는 보여줄 회차가 없다. 끝내면 다음 회차가 이번주 에피소드가 된다.
+  // 1화를 끝내기 전에는 시작 버튼만 보인다. 끝내면 다음 회차가 이번주 에피소드가 된다.
   const hasStartedInferno = completedOrders.length > 0;
   const weeklyEpisode = hasStartedInferno ? findNextInfernoEpisode(completedOrders) : undefined;
 
@@ -138,7 +138,7 @@ export default function HomeScreen() {
     openInferno('/inferno');
   }
 
-  // 이번주 에피소드는 시작 화면부터 본다. 본문으로 바로 뛰지 않는 건 ep0 과 같은 흐름이다.
+  // 이번주 에피소드는 시작 화면부터 본다. 본문으로 바로 뛰지 않는 건 시작 버튼과 같은 흐름이다.
   function handleWeeklyEpisodePress() {
     if (!weeklyEpisode) {
       return;

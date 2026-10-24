@@ -11,9 +11,10 @@ export const INFERNO_TAGLINE = '낯선 온도를 만나는 반죽들의 이야�
  * 러빈지옥 전체 에피소드. API 연동 전까지 여기서 관리한다.
  *
  * 에피소드를 추가하거나 제목을 고칠 일이 생기면 이 배열만 건드리면 된다.
+ *
+ * 가이드 회차(ep0)는 없앴다(사용자 결정). 러빈지옥은 늘 1화부터 시작한다.
  */
 export const INFERNO_EPISODES: readonly InfernoEpisode[] = [
-  { order: 0, title: '러빈지옥에 대해 알려드릴게요' },
   { order: 1, title: '안녕하세요 소금빵입니다!' },
   { order: 2, title: '우리의 단톡방' },
   { order: 3, title: '처음 둘만 남은 날' },

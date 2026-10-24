@@ -11,7 +11,6 @@ import type { Href } from 'expo-router';
  * 본문이 아직 없는 회차는 여기에 없다. 없는 회차로는 들어가지 못하게 호출부가 막는다.
  */
 const INFERNO_EPISODE_PATHNAMES = {
-  0: '/inferno/ep0',
   1: '/inferno/ep1',
   2: '/inferno/ep2',
   3: '/inferno/ep3',
@@ -22,7 +21,6 @@ const INFERNO_EPISODE_PATHNAMES = {
   8: '/inferno/ep8',
   9: '/inferno/ep9',
   10: '/inferno/ep10',
-
 } as const;
 
 export const INFERNO_EPISODE_HREFS: Record<number, Href | undefined> = INFERNO_EPISODE_PATHNAMES;

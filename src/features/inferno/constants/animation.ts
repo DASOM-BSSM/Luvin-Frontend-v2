@@ -58,31 +58,6 @@ export const BOIL_FRAMES: readonly BoilFrame[] = [
   { x: -1.4, y: -0.4, rotate: 0.4, scale: 0.999 },
 ];
 
-// --- 단계 카드 등장 ---
-
-/** 본문이 다 쳐졌다는 신호를 받고 첫 카드가 나오기까지의 간격. */
-export const STEP_CARD_START_GAP_MS = 250;
-
-/** 카드끼리의 시간 차. 위에서부터 차례로 나오게 한다. */
-export const STEP_CARD_STAGGER_MS = 210;
-
-/** 카드 하나가 떠오르는 시간. */
-export const STEP_CARD_FADE_MS = 620;
-
-/** 떠오를 때 아래에서 올라오는 거리(px). */
-export const STEP_CARD_RISE = 10;
-
-// --- 안내 항목 등장 ---
-
-/** 안내 두 개가 왼쪽부터 차례로 뜨는 시간 차. */
-export const GUIDE_ITEM_STAGGER_MS = 260;
-
-/** 안내 하나가 떠오르는 시간. */
-export const GUIDE_ITEM_FADE_MS = 620;
-
-/** 떠오를 때 아래에서 올라오는 거리(px). */
-export const GUIDE_ITEM_RISE = 12;
-
 // --- 대화 끝 투표 안내 ---
 
 /**
