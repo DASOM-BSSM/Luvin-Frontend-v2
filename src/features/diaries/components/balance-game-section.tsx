@@ -8,6 +8,9 @@ import useTodayQuestion from '@/src/features/diaries/hooks/use-today-question';
 
 const SECTION_TITLE = '오늘의 밸런스 게임';
 
+/** 밸런스 게임은 두 보기 중 하나를 고른다(리뷰 LUV-83) — 서버가 더 보내도 앞의 두 개만 쓴다. */
+const BALANCE_OPTION_COUNT = 2;
+
 /**
  * "오늘의 밸런스 게임" 섹션(Figma 6172:3344). `GET /api/daily_questions/today` 로 질문을 받고,
  * 보기를 누르면 바로 답을 보낸다.
@@ -74,7 +77,7 @@ export default function BalanceGameSection() {
       <SectionHeader title={SECTION_TITLE} actionLabel={`${today.totalCount}명 응답중`} />
       <BalanceGameCard
         question={today.question}
-        options={today.options}
+        options={today.options.slice(0, BALANCE_OPTION_COUNT)}
         selectedOptionId={selectedOptionId}
         disabled={today.answered || answerMutation.isPending}
         onOptionPress={handleOptionPress}
