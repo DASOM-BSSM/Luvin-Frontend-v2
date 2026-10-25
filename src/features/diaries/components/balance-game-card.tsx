@@ -14,8 +14,16 @@ interface BalanceGameCardProps {
   onOptionPress: (optionId: number) => void;
 }
 
+/**
+ * 보기 버튼 문구. 밸런스 게임은 O / X 로 답한다(리뷰 LUV-83) — 첫 번째 보기가 O, 두 번째가 X.
+ * 서버 보기 문구(예: "가능하다")는 버튼에 쓰지 않고 접근성 라벨로만 남긴다.
+ */
+const OPTION_LABELS = ['O', 'X'] as const;
+
 interface BalanceGameOptionButtonProps {
   option: DailyQuestionOption;
+  /** 버튼에 보이는 글자. "O" 또는 "X". */
+  label: string;
   selected: boolean;
   disabled: boolean;
   /** 누른 보기의 id 를 돌려준다. 목록에서 익명 함수를 만들지 않으려고 여기서 감싼다(§16). */
@@ -28,7 +36,7 @@ interface BalanceGameOptionButtonProps {
  * 막혀 있어도 `Button` 의 `disabled`(회색) 를 쓰지 않는다 — 답한 뒤에도 고른 보기 색이 그대로
  * 보여야 해서, 누르기만 막는다.
  */
-function BalanceGameOptionButton({ option, selected, disabled, onPress }: BalanceGameOptionButtonProps) {
+function BalanceGameOptionButton({ option, label, selected, disabled, onPress }: BalanceGameOptionButtonProps) {
   function handlePress() {
     if (disabled) return;
     onPress(option.optionId);
@@ -36,9 +44,10 @@ function BalanceGameOptionButton({ option, selected, disabled, onPress }: Balanc
 
   return (
     <Button
-      label={option.content}
+      label={label}
       variant={selected ? 'filledSelected' : 'filled'}
       textVariant="body-s"
+      accessibilityLabel={`${label} ${option.content}`}
       accessibilityState={{ selected, disabled }}
       onPress={handlePress}
     />
@@ -59,10 +68,11 @@ export default function BalanceGameCard({
         {question}
       </Text>
       <View className="flex-row items-start gap-[16px]">
-        {options.map((option) => (
+        {options.map((option, index) => (
           <BalanceGameOptionButton
             key={option.optionId}
             option={option}
+            label={OPTION_LABELS[index] ?? option.content}
             selected={option.optionId === selectedOptionId}
             disabled={disabled}
             onPress={onOptionPress}
