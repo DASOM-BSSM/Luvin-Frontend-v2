@@ -6,10 +6,11 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { colorScheme } from "nativewind";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import LoadingScreen from "@/src/components/loading-screen";
 import theme from "@/src/constants/theme";
 import { getAccessToken } from "@/src/features/auth/lib/token-storage";
 import { useAuthStore } from "@/src/features/auth/store/auth-store";
@@ -59,6 +60,13 @@ export default function RootLayout() {
   // app.json 의 orientation 이 "default" 인 것도 그래서다(자세한 이유는 훅 주석 참고).
   useLandscapeRoutes();
 
+  const isHydrating = useAuthStore((state) => state.isHydrating);
+  const [isLoadingScreenDone, setIsLoadingScreenDone] = useState(false);
+
+  function handleLoadingScreenFinish() {
+    setIsLoadingScreenDone(true);
+  }
+
   useEffect(() => {
     // 폰트 로드에 실패해도 스플래시에 갇히지 않게 error 도 함께 본다.
     if (loaded || error) {
@@ -82,6 +90,12 @@ export default function RootLayout() {
 
   if (!loaded && !error) {
     return null;
+  }
+
+  // 네이티브 스플래시(app.json)는 배경색만 깔고, 폰트가 준비되면 같은 배경의 로딩 화면이
+  // 이어받는다. 문구가 Yde street 라 폰트 전에는 그릴 수 없다.
+  if (!isLoadingScreenDone) {
+    return <LoadingScreen isReady={!isHydrating} onFinish={handleLoadingScreenFinish} />;
   }
 
   return (
