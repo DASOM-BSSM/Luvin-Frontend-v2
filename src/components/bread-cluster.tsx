@@ -1,19 +1,7 @@
-import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 
-import BreadCharacter, {
-  type BreadState,
-  type BreadType,
-} from '@/src/assets/images/BreadCharacter';
+import { type BreadState, type BreadType } from '@/src/assets/images/BreadCharacter';
+import JumpingBread from '@/src/components/jumping-bread';
 
 /**
  * 빵 8마리가 흩어져 있는 장식 묶음.
@@ -26,18 +14,6 @@ import BreadCharacter, {
  * NOTE: 여기만 absolute 를 쓴다(§16 예외). 8마리가 서로 어긋난 오프셋으로 흩어져 있어
  * flex 로는 Figma 배치를 재현할 수 없다. 예외를 이 컴포넌트 안에 가둬 둔다.
  */
-
-/** 뛰어오르는 높이(px). 빵 크기가 달라도 같은 값을 쓴다. */
-const JUMP_HEIGHT = 9;
-
-/** 올라가는 시간. 중력처럼 보이도록 내려오는 것보다 느리다. */
-const JUMP_UP_MS = 260;
-
-/** 내려오는 시간. */
-const JUMP_DOWN_MS = 200;
-
-/** 한 번 뛴 뒤 쉬는 시간. 이게 있어야 계속 들썩이지 않고 이따금 뛰는 느낌이 난다. */
-const JUMP_REST_MS = 1100;
 
 /**
  * 배열 순서 = Figma 의 쌓임 순서라 그대로 둘 것.
@@ -62,74 +38,28 @@ const LAYOUT: {
   { type: 'madeleine', className: 'absolute left-[37.500%] top-[72.436%] h-[27.564%] w-[26.196%]', jumpDelayMs: 500, jumpSpeed: 0.9 },
 ];
 
-interface JumpingBreadProps {
-  type: BreadType;
-  state: BreadState;
-  className: string;
-  jumpDelayMs: number;
-  jumpSpeed: number;
-  jumping: boolean;
-}
-
-/**
- * 빵 한 마리. jumping 이면 제 타이밍으로 계속 뛴다.
- *
- * 공중에 있는 동안 세로로 살짝 늘려 준다. 이게 없으면 그림이 위아래로 미끄러지는 것처럼만
- * 보이고, 있으면 제 힘으로 뛰어오르는 것처럼 보인다.
- */
-function JumpingBread({
-  type,
-  state,
-  className,
-  jumpDelayMs,
-  jumpSpeed,
-  jumping,
-}: JumpingBreadProps) {
-  const lift = useSharedValue(0);
-
-  useEffect(() => {
-    if (!jumping) {
-      return;
-    }
-
-    lift.value = withDelay(
-      jumpDelayMs,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: JUMP_UP_MS / jumpSpeed, easing: Easing.out(Easing.quad) }),
-          withTiming(0, { duration: JUMP_DOWN_MS / jumpSpeed, easing: Easing.in(Easing.quad) }),
-          withDelay(JUMP_REST_MS / jumpSpeed, withTiming(0, { duration: 0 })),
-        ),
-        -1,
-        false,
-      ),
-    );
-  }, [jumping, jumpDelayMs, jumpSpeed, lift]);
-
-  const jumpStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: -lift.value * JUMP_HEIGHT },
-      { scaleY: 1 + lift.value * 0.05 },
-      { scaleX: 1 - lift.value * 0.03 },
-    ],
-  }));
-
-  return (
-    <Animated.View className={className} style={jumpStyle}>
-      <BreadCharacter type={type} state={state} className="h-full w-full" />
-    </Animated.View>
-  );
-}
-
 export interface BreadClusterProps {
   state: BreadState;
   /** Figma 의 묶음 크기를 그대로 준다. 예) 온보딩 h-[169px] w-[236px] */
   className?: string;
   /** 8마리가 제각각 통통 뛴다. 기본은 꺼짐이라 기존 화면은 그대로다. */
   jumping?: boolean;
+  /**
+   * 주면 이 시간 뒤부터 8마리가 배열 순서대로 하나씩 통 튀어나온다. 다 나온 빵부터 뛴다.
+   * 기본은 없음이라 기존 화면은 처음부터 다 보인다.
+   */
+  popInDelayMs?: number;
 }
 
-export default function BreadCluster({ state, className, jumping = false }: BreadClusterProps) {
+/** 한 마리씩 튀어나오는 간격. 배열 순서가 위치상 흩어져 있어서 여기저기서 퐁퐁 나오는 것처럼 보인다. */
+const POP_STAGGER_MS = 110;
+
+export default function BreadCluster({
+  state,
+  className,
+  jumping = false,
+  popInDelayMs,
+}: BreadClusterProps) {
   const label = state === 'dough' ? '여덟 가지 반죽 캐릭터' : '여덟 가지 빵 캐릭터';
 
   return (
@@ -139,7 +69,7 @@ export default function BreadCluster({ state, className, jumping = false }: Brea
       accessibilityRole="image"
       accessibilityLabel={label}
     >
-      {LAYOUT.map((item) => (
+      {LAYOUT.map((item, index) => (
         <JumpingBread
           key={item.type}
           type={item.type}
@@ -148,6 +78,9 @@ export default function BreadCluster({ state, className, jumping = false }: Brea
           jumpDelayMs={item.jumpDelayMs}
           jumpSpeed={item.jumpSpeed}
           jumping={jumping}
+          popInDelayMs={
+            popInDelayMs === undefined ? undefined : popInDelayMs + index * POP_STAGGER_MS
+          }
         />
       ))}
     </View>
