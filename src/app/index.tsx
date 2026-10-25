@@ -178,6 +178,10 @@ export default function HomeScreen() {
     router.push('/oven');
   }
 
+  function handleDiaryStartPress() {
+    router.push('/diaries');
+  }
+
   function handleProfilePress() {
     router.push('/my-page');
   }
@@ -228,17 +232,16 @@ export default function HomeScreen() {
         </View>
 
         <View className="w-full flex-col items-start gap-[12px]">
-          <SectionHeader
-            title={hasBread ? '쫀쫀한 조합들' : '감정일기'}
-            actionLabel={hasBread ? '감정일기 바로가기→' : undefined}
-          />
+          {/* 그룹 이름 같은 제목은 감정일기를 시작한 뒤에만 의미가 있어, 홈에서는 항상 섹션 이름을 쓴다
+              (Figma "메인-우린" 5726:2556, 리뷰 LUV-83). */}
+          <SectionHeader title="Emodi 감정일기" />
           {DIARY_PREVIEW ? (
             <>
               <DiaryPreviewCard diary={DIARY_PREVIEW} />
               <CreateQuestionCard />
             </>
           ) : (
-            <DiaryStartCard />
+            <DiaryStartCard onStartPress={handleDiaryStartPress} />
           )}
         </View>
       </ScrollView>
