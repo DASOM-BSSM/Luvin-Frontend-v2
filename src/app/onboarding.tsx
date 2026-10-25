@@ -7,6 +7,7 @@ import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useGoogleSignIn from '@/src/features/auth/hooks/use-google-sign-in';
+import { getPostLoginHref } from '@/src/features/auth/utils/welcome';
 
 /**
  * 온보딩 화면. Figma "Luvin-Design" / `온보딩-우린` (5461:3552).
@@ -17,19 +18,23 @@ import useGoogleSignIn from '@/src/features/auth/hooks/use-google-sign-in';
  */
 export default function OnboardingScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const signInMutation = useGoogleSignIn();
 
   // 이미 로그인돼 있으면(재실행 등) 온보딩을 다시 보여주지 않는다.
+  //
+  // 로그인 성공 시에도 useGoogleSignIn 의 onSuccess 가 setSession 을 먼저 부르므로 실제로는
+  // 이 effect 가 먼저 화면을 넘긴다. 그래서 첫 로그인이면 환영 화면으로 보내는 판단도 여기서 한다.
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace('/');
+      router.replace(getPostLoginHref(user));
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // 로그인 성공(취소가 아닌 실제 성공) 시에만 홈으로 넘어간다.
   useEffect(() => {
     if (signInMutation.isSuccess && signInMutation.data) {
-      router.replace('/');
+      router.replace(getPostLoginHref(signInMutation.data.user));
     }
   }, [signInMutation.isSuccess, signInMutation.data]);
 
