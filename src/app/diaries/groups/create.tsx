@@ -46,9 +46,12 @@ export default function CreateGroupScreen() {
   }
 
   // 만들면 초대코드를 바로 볼 수 있게 그 그룹의 설정 화면으로 간다. 뒤로가기로 이 폼에 돌아오지
-  // 않도록 replace 로 이동한다.
+  // 않도록 replace 로 이동한다. `created` 가 있으면 설정 화면에서 저장했을 때 그룹 안으로 들어간다.
   function handleCreateSuccess({ id }: DiaryRoom) {
-    router.replace({ pathname: '/diaries/groups/[roomId]/settings', params: { roomId: id } });
+    router.replace({
+      pathname: '/diaries/groups/[roomId]/settings',
+      params: { roomId: id, created: '1' },
+    });
   }
 
   function handleCreatePress() {

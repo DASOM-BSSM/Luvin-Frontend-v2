@@ -7,13 +7,15 @@ import Screen from '@/src/components/ui/screen';
 import BalanceGameSection from '@/src/features/diaries/components/balance-game-section';
 import DiariesHeader from '@/src/features/diaries/components/diaries-header';
 import GroupFeedSection from '@/src/features/diaries/components/group-feed-section';
+import type { RoomId } from '@/src/features/diaries/types';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
 
 /**
  * 감정일기 홈. Figma "감정일기 홈 - 제민"(5950:6585).
  *
  * 밸런스 게임은 `/api/daily_questions`, 쫀쫀한 조합들은 `/api/diaries/community` 에 연결되어 있다.
- * 바로가기, 일기 카드의 더보기 버튼은 아직 갈 화면이 없어서 눌러도 아무 동작을 하지 않는다.
+ * "쫀쫀한 조합들"의 바로가기는 그 그룹의 감정일기 메인으로 간다. 일기 카드의 더보기 버튼은 아직 갈
+ * 화면이 없어서 눌러도 아무 동작을 하지 않는다.
  * 하단 탭의 감정일기 아이콘을 누르면 이 화면으로 온다.
  */
 export default function DiariesHomeScreen() {
@@ -25,6 +27,10 @@ export default function DiariesHomeScreen() {
 
   function handleJoinGroupPress() {
     router.push('/diaries/groups/join');
+  }
+
+  function handleGroupPress(roomId: RoomId) {
+    router.push({ pathname: '/diaries/groups/[roomId]', params: { roomId } });
   }
 
   /**
@@ -58,7 +64,7 @@ export default function DiariesHomeScreen() {
 
         <View className="w-full flex-col items-center gap-[40px]">
           <BalanceGameSection />
-          <GroupFeedSection onStartPress={handleDiaryStartPress} />
+          <GroupFeedSection onStartPress={handleDiaryStartPress} onGroupPress={handleGroupPress} />
         </View>
       </ScrollView>
 
