@@ -20,10 +20,18 @@ import useMyProfile from '@/src/features/user/hooks/use-my-profile';
  *
  * 그룹 이름 수정 · 멤버 내보내기 · 설정 저장은 방장만 보인다. 그룹 이름은 방 하나 조회 API 가 없어
  * 내 방 목록에서 찾는다.
+ *
+ * 설정 저장하기는 이름을 바꾸지 않아도 누를 수 있다(혼자 만든 그룹도 바로 들어갈 수 있게) — 바뀐
+ * 이름이 있으면 저장한 뒤, 없으면 바로 나간다. 그룹을 막 만들고 왔으면(`created`) 그 그룹의 감정일기
+ * 메인으로, 아니면 이전 화면으로 돌아간다.
  */
 export default function GroupSettingsScreen() {
-  const { roomId: roomIdParam } = useLocalSearchParams<{ roomId: string }>();
+  const { roomId: roomIdParam, created } = useLocalSearchParams<{
+    roomId: string;
+    created?: string;
+  }>();
   const roomId = Number(roomIdParam);
+  const isJustCreated = created === '1';
   const room = useMyRooms().data?.find(({ id }) => id === roomId);
   const myId = useMyProfile().data?.memberId;
   const isOwner = room !== undefined && room.ownerId === myId;
@@ -34,7 +42,8 @@ export default function GroupSettingsScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isLeaveModalVisible, setIsLeaveModalVisible] = useState(false);
   const name = nameDraft ?? room?.name ?? '';
-  const canSave = isOwner && name.trim() !== '' && name.trim() !== room?.name;
+  const hasNameChange = name.trim() !== room?.name;
+  const canSave = isOwner && name.trim() !== '';
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -48,12 +57,25 @@ export default function GroupSettingsScreen() {
     setIsEditingName((editing) => !editing);
   }
 
+  function leaveSettings() {
+    if (isJustCreated || !router.canGoBack()) {
+      router.replace({ pathname: '/diaries/groups/[roomId]', params: { roomId } });
+      return;
+    }
+    router.back();
+  }
+
   function handleSaveSuccess() {
     setIsEditingName(false);
     setNameDraft(null);
+    leaveSettings();
   }
 
   function handleSavePress() {
+    if (!hasNameChange) {
+      leaveSettings();
+      return;
+    }
     updateRoomMutation.mutate({ roomId, name: name.trim() }, { onSuccess: handleSaveSuccess });
   }
 

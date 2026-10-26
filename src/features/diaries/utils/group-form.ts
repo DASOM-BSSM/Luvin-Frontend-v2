@@ -1,5 +1,8 @@
-/** 그룹 인원수 범위. Figma "그룹 인원수 2~6명". */
-export const GROUP_MEMBER_COUNT_MIN = 2;
+/**
+ * 그룹 인원수 범위. Figma 는 "2~6명"이지만 혼자서도 그룹을 만들어 쓸 수 있어야 해서 최소를 1명으로
+ * 낮췄다.
+ */
+export const GROUP_MEMBER_COUNT_MIN = 1;
 export const GROUP_MEMBER_COUNT_MAX = 6;
 
 /** 숫자 키패드로 받은 인원수 입력에서 숫자만 남긴다. */
@@ -7,7 +10,7 @@ export function sanitizeMemberCountInput(value: string): string {
   return value.replace(/[^0-9]/g, '');
 }
 
-/** 비어 있지 않고 2~6 사이인지. */
+/** 비어 있지 않고 1~6 사이인지. */
 export function isValidMemberCount(value: string): boolean {
   if (value === '') return false;
   const count = Number(value);
