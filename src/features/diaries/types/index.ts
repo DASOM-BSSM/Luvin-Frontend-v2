@@ -3,8 +3,8 @@ import type { BreadState, BreadType } from '@/src/assets/images/BreadCharacter';
 /**
  * 감정일기 · 공유방 도메인 타입.
  *
- * 일기 · 공유방은 `docs/api/diaries.md`(백엔드 스펙 문서) 기준이고, 오늘의 밸런스 게임은
- * `docs/api/openapi.json` 기준이다. 일기 쪽이 openapi.json 에 들어오면 그쪽에 맞춰 다시 확인할 것.
+ * 일기는 `docs/api/diaries.md`(백엔드 스펙 문서) 기준이고, 공유방은 `docs/api/openapi.json` 기준이다.
+ * 일기 쪽도 openapi.json 에 들어와 있으니 손댈 때 그쪽에 맞춰 다시 확인할 것.
  *
  * 이름 규칙: API 가 쓰는 "room" 을 데이터 계층(타입·API·훅)에서 그대로 쓰고, 화면 문구와 화면
  * 컴포넌트만 "그룹"이라고 부른다(감정일기 홈의 "그룹 만들기" / "그룹 참여하기").
@@ -78,24 +78,39 @@ export interface DiaryReactionResult {
   likeCount: number;
 }
 
-/** 공유방 응답(RoomResponse). */
+/** 공유방 응답(openapi `DiaryRoomResponse`). 목록 · 단건 조회 · 생성 · 수정이 같이 쓴다. */
 export interface DiaryRoom {
   id: RoomId;
   name: string;
+  description?: string | null;
   ownerId: UserId;
+  /** 최대 인원(방장 포함). 2~6. */
+  maxMemberCount: number;
+  /** 지금 인원(방장 포함). */
+  memberCount: number;
 }
 
-/** `POST /api/diary-rooms`, `PUT /api/diary-rooms/{roomId}` 요청. */
+/**
+ * `POST /api/diary-rooms`(`DiaryRoomCreateRequest`), `PUT /api/diary-rooms/{roomId}`
+ * (`DiaryRoomUpdateRequest`) 요청. PUT 도 모든 필드를 다시 보낸다.
+ */
 export interface DiaryRoomWriteRequest {
   name: string;
   description?: string;
+  /** 최대 인원(방장 포함). 2~6, 범위 밖이면 400. */
+  maxMemberCount: number;
+  /** 이 방에서 쓸 방장 닉네임. 1~10자. */
+  ownerNickname: string;
 }
 
-/** 멤버 목록 한 줄. `email` 은 개인정보 문제로 빠질 수 있다고 해서 선택값으로 둔다. */
+/** 멤버 목록 한 줄(openapi `DiaryRoomMemberResponse`). `email` 은 개인정보 문제로 빠질 수 있다고 해서 선택값으로 둔다. */
 export interface DiaryRoomMember {
   id: UserId;
   name: string;
   email?: string;
+  /** 이 방에서 쓰는 닉네임. */
+  nickname?: string | null;
+  role?: 'OWNER' | 'MEMBER';
 }
 
 /** 멤버십 응답(MembershipResponse). 멤버 추가 · 나가기가 돌려준다. */
@@ -120,9 +135,11 @@ export interface DiaryRoomInviteCode {
   inviteCode: string;
 }
 
-/** `POST /api/diary-rooms/join` 요청. 응답은 `DiaryRoomMembership`. */
+/** `POST /api/diary-rooms/join` 요청(`DiaryRoomJoinRequest`). 응답은 `DiaryRoomMembership`. */
 export interface JoinRoomRequest {
   inviteCode: string;
+  /** 이 방에서 쓸 닉네임. 1~10자. 이미 멤버면 무시된다. */
+  nickname: string;
 }
 
 /** 댓글. `GET /api/diaries/{diaryId}/comments` 목록의 한 줄, 작성 · 수정 응답. */
@@ -138,39 +155,6 @@ export interface DiaryComment {
 /** 댓글 작성 · 수정 요청. */
 export interface DiaryCommentWriteRequest {
   content: string;
-}
-
-/** openapi `DailyQuestionOptionResponse`. */
-export interface DailyQuestionOption {
-  optionId: number;
-  content: string;
-}
-
-/** openapi `DailyQuestionOptionResultResponse`. 결과 화면 디자인이 아직 없어 화면에서 쓰지 않는다. */
-export interface DailyQuestionOptionResult {
-  optionId: number;
-  content: string;
-  voteCount: number;
-  percentage: number;
-}
-
-/** openapi `DailyQuestionTodayResponse` — `GET /api/daily_questions/today`. */
-export interface DailyQuestionToday {
-  questionId: number;
-  question: string;
-  options: DailyQuestionOption[];
-  /** 내가 이미 답했는지. */
-  answered: boolean;
-  /** 답했을 때 고른 보기. 안 답했으면 비어 있다. */
-  selectedOptionId?: number | null;
-  results?: DailyQuestionOptionResult[];
-  /** 지금까지 답한 사람 수. "318명 응답중" */
-  totalCount: number;
-}
-
-/** openapi `DailyQuestionAnswerRequest` — `POST /api/daily_questions/{questionId}/answer`. */
-export interface DailyQuestionAnswerRequest {
-  selectedOption: number;
 }
 
 /** 그룹 일기 카드에 그릴 작성자. */

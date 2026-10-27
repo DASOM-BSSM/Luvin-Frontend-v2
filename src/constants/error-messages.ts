@@ -11,4 +11,12 @@ export const ERROR_MESSAGES = {
   partnerLetterFailed: '쪽지를 펼치지 못했어요. 다시 시도해주세요',
   /** "나의 빵에게" 피드백 저장 실패. 서버 code 가 아직 정해지지 않아 하나로 묶는다. */
   feedbackFailed: '피드백을 보내지 못했어요. 다시 시도해주세요',
+  /** 그룹 참여 — 초대코드가 틀렸을 때(서버 404). */
+  invalidInviteCode: '초대코드가 올바르지 않아요. 다시 확인해주세요',
+  /** 그룹 참여 — 최대 인원이 다 찼을 때(서버 409 `DIARY_ROOM_FULL`). */
+  diaryRoomFull: '그룹 인원이 가득 찼어요',
+  /** 그룹 참여 — 같은 그룹에 같은 닉네임이 있을 때(서버 409 `DIARY_ROOM_NICKNAME_DUPLICATED`). */
+  diaryRoomNicknameDuplicated: '그룹에 같은 닉네임이 있어요. 다른 닉네임을 적어주세요',
+  /** 그룹 참여 실패 — 위 경우가 아닌 나머지. */
+  joinRoomFailed: '그룹에 참여하지 못했어요. 다시 시도해 주세요',
 };

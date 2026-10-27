@@ -8,7 +8,13 @@ import queryClient from '@/src/lib/query-client';
 export default function useKickRoomMember() {
   return useMutation({
     mutationFn: (input: RoomMemberInput) => kickRoomMember(input),
+    // 인원 수(memberCount)도 줄어서 방 정보도 다시 불러온다. 서버는 강퇴하면 초대코드를 새로 만들어
+    // 내보낸 사람이 이전 코드로 못 돌아오게 하므로 초대코드도 다시 불러온다.
     onSuccess: (_, { roomId }) =>
-      queryClient.invalidateQueries({ queryKey: roomKeys.members(roomId) }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: roomKeys.members(roomId) }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.room(roomId) }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.inviteCode(roomId) }),
+      ]),
   });
 }

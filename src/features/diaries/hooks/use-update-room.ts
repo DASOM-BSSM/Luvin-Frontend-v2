@@ -8,6 +8,12 @@ import queryClient from '@/src/lib/query-client';
 export default function useUpdateRoom() {
   return useMutation({
     mutationFn: (input: UpdateRoomInput) => updateRoom(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomKeys.list() }),
+    // 방장 닉네임도 같이 바뀔 수 있어 멤버 목록까지 다시 불러온다.
+    onSuccess: (_, { roomId }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: roomKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.room(roomId) }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.members(roomId) }),
+      ]),
   });
 }
