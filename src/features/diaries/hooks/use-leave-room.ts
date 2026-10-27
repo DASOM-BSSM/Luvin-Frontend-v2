@@ -10,6 +10,7 @@ export default function useLeaveRoom() {
   return useMutation({
     mutationFn: (roomId: RoomId) => leaveRoom(roomId),
     onSuccess: (_, roomId) => {
+      // detail 은 방 정보(room) · 멤버 · 초대코드 · 피드의 상위 키라 한 번에 지워진다.
       queryClient.removeQueries({ queryKey: roomKeys.detail(roomId) });
       return queryClient.invalidateQueries({ queryKey: roomKeys.list() });
     },

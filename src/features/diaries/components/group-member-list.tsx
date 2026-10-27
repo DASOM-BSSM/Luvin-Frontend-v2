@@ -19,8 +19,13 @@ interface MemberRowProps {
   onRemovePress: (member: DiaryRoomMember) => void;
 }
 
+/** 이 그룹에서 쓰는 닉네임. 닉네임이 없는 멤버(닉네임이 생기기 전에 들어온 멤버)는 계정 이름. */
+const getMemberDisplayName = (member: DiaryRoomMember) => member.nickname ?? member.name;
+
 /** 멤버 한 줄 — 연한 노랑 칸 + (방장일 때) x. Figma 6606:4161. */
 function MemberRow({ member, removable, onRemovePress }: MemberRowProps) {
+  const displayName = getMemberDisplayName(member);
+
   function handleRemovePress() {
     onRemovePress(member);
   }
@@ -29,13 +34,13 @@ function MemberRow({ member, removable, onRemovePress }: MemberRowProps) {
     <View className="w-full flex-row items-center gap-[8px]">
       <View className="flex-1 items-center justify-center overflow-hidden rounded-[8px] border border-yellow-300 bg-yellow-200 px-[20px] py-[6px]">
         <Text variant="body-xs" numberOfLines={1} className="text-text-primary">
-          {member.name}
+          {displayName}
         </Text>
       </View>
       {removable ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${member.name} 내보내기`}
+          accessibilityLabel={`${displayName} 내보내기`}
           hitSlop={8}
           onPress={handleRemovePress}
         >
@@ -62,7 +67,7 @@ export default function GroupMemberList({ roomId, ownerId, isOwner }: GroupMembe
 
   function handleRemovePress(member: DiaryRoomMember) {
     if (kickMutation.isPending) return;
-    Alert.alert('멤버 내보내기', `${member.name}님을 그룹에서 내보낼까요?`, [
+    Alert.alert('멤버 내보내기', `${getMemberDisplayName(member)}님을 그룹에서 내보낼까요?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '내보내기',

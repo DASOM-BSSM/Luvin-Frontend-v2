@@ -14,16 +14,14 @@ import type { DiaryRoom } from '@/src/features/diaries/types';
 import {
   GROUP_MEMBER_COUNT_MAX,
   GROUP_MEMBER_COUNT_MIN,
+  GROUP_NICKNAME_MAX_LENGTH,
   canSubmitCreateGroupForm,
   sanitizeMemberCountInput,
 } from '@/src/features/diaries/utils/group-form';
 
 /**
- * 그룹 만들기. Figma "그룹 만들기 - 리원"(6199:3608).
- *
- * NOTE: API(`POST /api/diary-rooms`)는 그룹 이름(`name`)만 받는다. "그룹 인원수"와 "그룹장 닉네임"은
- * 시안에 있어 입력은 받지만 보낼 필드가 아직 없다 — 백엔드에 필드가 생기면 `createRoomMutation.mutate`
- * 에 함께 넣는다.
+ * 그룹 만들기. Figma "그룹 만들기 - 리원"(6199:3608). 그룹 이름 · 인원수 · 그룹장 닉네임을
+ * `POST /api/diary-rooms` 에 보낸다.
  */
 export default function CreateGroupScreen() {
   const [name, setName] = useState('');
@@ -55,7 +53,14 @@ export default function CreateGroupScreen() {
   }
 
   function handleCreatePress() {
-    createRoomMutation.mutate({ name: name.trim() }, { onSuccess: handleCreateSuccess });
+    createRoomMutation.mutate(
+      {
+        name: name.trim(),
+        maxMemberCount: Number(memberCount),
+        ownerNickname: ownerNickname.trim(),
+      },
+      { onSuccess: handleCreateSuccess },
+    );
   }
 
   return (
@@ -104,6 +109,7 @@ export default function CreateGroupScreen() {
                 value={ownerNickname}
                 onChangeText={setOwnerNickname}
                 placeholder="자신의 닉네임을 설정해주세요"
+                maxLength={GROUP_NICKNAME_MAX_LENGTH}
               />
             </GroupFormField>
           </View>
