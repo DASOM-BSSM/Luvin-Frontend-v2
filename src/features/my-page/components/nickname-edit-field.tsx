@@ -3,6 +3,7 @@ import { Pressable, TextInput, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import { text as textColor } from '@/src/constants/colors';
+import { body } from '@/src/constants/typography';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 
 /**
@@ -38,7 +39,9 @@ export default function NicknameEditField() {
           textAlignVertical="center"
           underlineColorAndroid="transparent"
           numberOfLines={1}
-          className="w-full flex-1 p-0 font-yde-street-l text-body-xs text-text-primary"
+          className="w-full flex-1 p-0 text-text-primary"
+          // 줄 높이는 빼고 글꼴 · 크기만 준다 — iOS 한 줄 입력칸에 160% 줄 높이를 주면 글자가 아래로 밀려 잘린다.
+          style={{ fontFamily: body.xs.fontFamily, fontSize: body.xs.fontSize }}
         />
       </View>
       <Pressable

@@ -31,4 +31,10 @@ export const roomKeys = {
   inviteCode: (roomId: RoomId) => [...roomKeys.detail(roomId), 'invite-code'] as const,
   /** 공유방 안의 일기 피드. */
   diaries: (roomId: RoomId) => [...roomKeys.detail(roomId), 'diaries'] as const,
+  /** 그룹 질문 키 전체의 상위 키. */
+  questions: (roomId: RoomId) => [...roomKeys.detail(roomId), 'questions'] as const,
+  /** 지금 그룹 질문(`GET .../questions/current`). */
+  currentQuestion: (roomId: RoomId) => [...roomKeys.questions(roomId), 'current'] as const,
+  /** 지난 질문 목록(`GET .../questions`). */
+  questionHistory: (roomId: RoomId) => [...roomKeys.questions(roomId), 'history'] as const,
 };
