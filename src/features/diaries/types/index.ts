@@ -173,4 +173,53 @@ export interface GroupDiaryPreview {
   time: string;
   /** 줄바꿈(\n)으로 문단을 나눈다. */
   message: string;
+  /** 내가 남긴 반응 이모지(그릴 수 있게 다듬은 값). 없으면 null — 카드에 반응 남기기 아이콘이 보인다. */
+  myEmoji: string | null;
+}
+
+/** 그룹 질문 id. */
+export type RoomQuestionId = number;
+
+/**
+ * 그룹 질문 상태. 만들기를 누르면 `generating` 으로 바로 오고 1~3초 뒤 `ready` 가 된다.
+ * `failed` 면 다시 만들기(POST)를 누를 수 있다.
+ */
+export type RoomQuestionStatus = 'generating' | 'ready' | 'failed';
+
+/**
+ * 그룹 질문의 답 한 개(openapi `RoomQuestionAnswerItem`). `authorNickname` 은 계정 닉네임이다 —
+ * 그룹 닉네임(멤버 목록)으로 바꿔 끼우지 않는다(백엔드 확인).
+ */
+export interface RoomQuestionAnswer {
+  answerId: number;
+  authorId: UserId;
+  authorNickname: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 그룹 질문(openapi `RoomQuestionView`). `content` · `myAnswer` · `answers` 는 `ready` 일 때만 채워진다. */
+export interface RoomQuestion {
+  questionId: RoomQuestionId;
+  roomId: RoomId;
+  /** 질문 날짜(KST, "2026-10-28"). 그룹당 하루 1개. */
+  questionDate: string;
+  content: string | null;
+  status: RoomQuestionStatus;
+  createdAt: string;
+  /** 내 답. 없으면 null. */
+  myAnswer: RoomQuestionAnswer | null;
+  /** 멤버들의 답(내 답 포함), 작성순. */
+  answers: RoomQuestionAnswer[] | null;
+}
+
+/** 지난 질문 목록 한 줄(openapi `RoomQuestionHistoryItem`). 답 내용은 없고 답 수만 온다. */
+export interface RoomQuestionHistoryItem {
+  questionId: RoomQuestionId;
+  questionDate: string;
+  content: string | null;
+  status: RoomQuestionStatus;
+  createdAt: string;
+  answerCount: number;
 }
