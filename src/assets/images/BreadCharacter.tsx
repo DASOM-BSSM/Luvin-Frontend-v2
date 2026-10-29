@@ -69,6 +69,11 @@ interface BreadCharacterProps {
   type: BreadType;
   state: BreadState;
   className?: string;
+  /**
+   * 크기를 부모 비율(`h-full`)이 아니라 고정 px 로 줘야 할 때만 쓴다. 미니게임 장애물처럼
+   * reanimated 로 움직이는 박스 안에서는 박스가 납작화되면 비율 크기가 엉뚱한 부모 기준으로 잡힌다.
+   */
+  style?: ImageProps['style'];
   accessibilityLabel?: string;
   contentPosition?: ImageProps['contentPosition'];
   recyclingKey?: ImageProps['recyclingKey'];
@@ -80,6 +85,7 @@ export default function BreadCharacter({
   type,
   state,
   className = 'h-[45px] w-[76px]',
+  style,
   accessibilityLabel,
   contentPosition,
   recyclingKey,
@@ -87,7 +93,8 @@ export default function BreadCharacter({
 }: BreadCharacterProps) {
   return (
     <InteropImage
-      className={className}
+      className={style ? undefined : className}
+      style={style}
       source={BREAD_SOURCES[state][type]}
       contentFit="contain"
       accessibilityLabel={accessibilityLabel}
