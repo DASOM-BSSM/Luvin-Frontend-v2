@@ -1,6 +1,8 @@
 /** openapi `MinigameListItemResponse`. */
 export interface MinigameListItem {
   gameId: number;
+  /** title 과 달리 바뀌지 않는 식별 키(예: `dinosaur_bread_game`). 백엔드 V4 마이그레이션에서 추가. */
+  code: string;
   title: string;
   rewardToken: number;
 }

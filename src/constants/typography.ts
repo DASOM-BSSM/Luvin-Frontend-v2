@@ -85,6 +85,59 @@ export const infernoMiniGameLayout = {
   },
 };
 
+/** Figma 5726:2608 / 7966:6180 / 7966:6239, coordinates inside the frame border.
+ * Sprite positions, like the other minigames, require positioned animated views.
+ */
+export const bakingLayout = {
+  spacing: {
+    'baking-top': '26px',
+    'baking-header-gap': '8px',
+    'baking-frame-gap': '16px',
+    'baking-footer-gap': '40px',
+    'baking-timer-top': '19px',
+    'baking-timer-right': '16px',
+  },
+  width: { 'baking-content': '340px' },
+  slots: {
+    flour: { x: 12, y: 94, width: 67, height: 72 },
+    eggs: { x: 87, y: 106.5, width: 85, height: 47 },
+    butter: { x: 180, y: 104.5, width: 68, height: 51 },
+    water: { x: 256, y: 94, width: 64, height: 72 },
+    salt: { x: 93, y: 175.5, width: 37, height: 57 },
+    sugar: { x: 146, y: 175.5, width: 39, height: 57 },
+    yeast: { x: 201, y: 175, width: 39, height: 58 },
+    whisk: { x: 208, y: 213, width: 100.788, height: 137.041 },
+    emptyBowl: { x: 92.5, y: 334.5, width: 147, height: 124 },
+    doughBowl: { x: 92, y: 334, width: 148, height: 125 },
+    board: { x: 72, y: 226, width: 188, height: 135 },
+    // Shaping on the large board (GPT assets, 2026-10-29). Not in Figma: placed to fit the frame.
+    largeBoard: { x: 10, y: 250, width: 320, height: 189.2 },
+    // Every shaping-* dough image shares one crop (1169x569), so stages swap without jumping.
+    boardDough: { x: 55, y: 275, width: 230, height: 112 },
+    shapeArrow: { x: 120, y: 171, width: 100, height: 38.3 },
+    rollingPin: { x: 95, y: 455, width: 150, height: 39 },
+    boardButter: { x: 40, y: 140, width: 68, height: 51 },
+    boardSalt: { x: 262, y: 137, width: 37, height: 57 },
+    oven: { x: 71, y: 129, width: 177, height: 147 },
+    tray: { x: 74, y: 293, width: 188, height: 126 },
+    saltBread: { x: 121, y: 317, width: 94.808, height: 78.351 },
+    // Salted shaping dough on the tray, centred where `saltBread` sits.
+    trayDough: { x: 103, y: 325, width: 130, height: 63.3 },
+    // Oven gauge (GPT asset, 2005x341 after crop). Track = inner hole at px 132–1873 x 141–257.
+    timerFrame: { x: 40, y: 74, width: 260, height: 44.2 },
+    timerTrack: { x: 57.1, y: 92.3, width: 225.8, height: 15 },
+    // Marker x follows progress; its tip (bottom) dips into the track.
+    timerMarker: { x: 0, y: 66, width: 24.5, height: 30 },
+  },
+  targets: {
+    bowl: { x: 92, y: 334, width: 148, height: 125 },
+    board: { x: 72, y: 226, width: 188, height: 135 },
+    oven: { x: 71, y: 129, width: 177, height: 147 },
+    tray: { x: 74, y: 293, width: 188, height: 126 },
+    largeBoard: { x: 10, y: 250, width: 320, height: 189.2 },
+  },
+} as const;
+
 /**
  * AI 답장 대기 "빵 줄넘기" 장면의 기준 좌표. Figma `ep0` 줄넘기 시안(7219:3595)의 쪽지
  * (781x300) 안 좌표를 그대로 옮겼다. 실제 쪽지 크기에 맞춰 비율로 스케일한다.
