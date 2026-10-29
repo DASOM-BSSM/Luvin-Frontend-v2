@@ -51,6 +51,8 @@ interface UseDinoEngineParams {
 export interface DinoEngine {
   playerY: SharedValue<number>;
   duckSquash: SharedValue<number>;
+  /** 누적 생존거리(px). 배경(땅·구름) 스크롤 위치를 여기서 파생한다. */
+  distance: SharedValue<number>;
   slots: ObstacleSlot[];
   /** 슬롯별 반죽 종류(장애물 다양화). 마운트 때 한 번 정해지고 바뀌지 않는다(이미지 재로딩 방지). */
   doughTypes: BreadType[];
@@ -218,5 +220,5 @@ export function useDinoEngine({ phase, onHit, onScoreChange }: UseDinoEnginePara
     },
   );
 
-  return { playerY, duckSquash, slots, doughTypes, triggerJump, setDucking };
+  return { playerY, duckSquash, distance, slots, doughTypes, triggerJump, setDucking };
 }

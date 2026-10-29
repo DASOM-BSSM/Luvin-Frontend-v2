@@ -60,6 +60,7 @@ export function toGroupDiaryPreview(item: DiaryFeedItem): GroupDiaryPreview {
     },
     time: formatDiaryTime(item.createdAt),
     message: item.content,
+    myEmoji: item.emoji ? toDisplayEmoji(item.emoji) : null,
   };
 }
 

@@ -42,14 +42,12 @@ export default function GroupDiaryCard({
             {diary.author.name}
           </Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="더보기"
-          hitSlop={12}
-          onPress={onMorePress}
-        >
-          <KebabIcon />
-        </Pressable>
+        {/* 더보기(⋮)는 메뉴가 있는 카드(내 일기)에만 — 남의 일기에는 시안에 정해진 동작이 없다. */}
+        {onMorePress ? (
+          <Pressable accessibilityRole="button" accessibilityLabel="더보기" hitSlop={12} onPress={onMorePress}>
+            <KebabIcon />
+          </Pressable>
+        ) : null}
       </View>
 
       <View className="flex-col items-center">
@@ -75,7 +73,14 @@ export default function GroupDiaryCard({
           hitSlop={12}
           onPress={onReactionPress}
         >
-          <EmotionAddIcon />
+          {/* 반응을 남겼으면 그 이모지를 아이콘 자리에 보여준다(Figma 6102:2606 의 6199:3754). */}
+          {diary.myEmoji ? (
+            <Text variant="body-m" className="text-default-black">
+              {diary.myEmoji}
+            </Text>
+          ) : (
+            <EmotionAddIcon />
+          )}
         </Pressable>
       </View>
     </View>

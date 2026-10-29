@@ -9,6 +9,10 @@ import queryClient from '@/src/lib/query-client';
 export default function useCreateRoom() {
   return useMutation({
     mutationFn: (input: DiaryRoomWriteRequest) => createRoom(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: roomKeys.list() }),
+    onSuccess: (room) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: roomKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: roomKeys.room(room.id) }),
+      ]),
   });
 }

@@ -22,6 +22,10 @@ export default function LuvinHellModeSelectScreen() {
     router.replace('/');
   }
 
+  function handleBreadBakingPress() {
+    router.push('/luvin-hell/bread-baking/play');
+  }
+
   return (
     <View className="flex-1 bg-default-bg">
       <View className="h-[70px]" />
@@ -66,6 +70,8 @@ export default function LuvinHellModeSelectScreen() {
                 onPress={() => router.push('/luvin-hell/dino-runner/play')}
               />
               <Button label="빵건너친구들" variant="modeSelectSecondary" className="w-full" />
+              <Button label="빵굽기" variant="modeSelectSecondary" className="w-full"
+                onPress={handleBreadBakingPress} />
             </View>
           </View>
 

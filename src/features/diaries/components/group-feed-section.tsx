@@ -7,6 +7,7 @@ import Text from '@/src/components/ui/text';
 import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import useCommunityDiaries from '@/src/features/diaries/hooks/use-community-diaries';
 import useMyRooms from '@/src/features/diaries/hooks/use-my-rooms';
+import type { RoomId } from '@/src/features/diaries/types';
 import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 
@@ -19,9 +20,19 @@ interface SectionShellProps {
   children: ReactNode;
 }
 
-const SectionShell = ({ children }: SectionShellProps) => (
+interface GroupSectionShellProps extends SectionShellProps {
+  /** "바로가기→"를 누르면. */
+  onShortcutPress: () => void;
+}
+
+const SectionShell = ({ children, onShortcutPress }: GroupSectionShellProps) => (
   <View className="w-full flex-col items-start gap-[12px]">
-    <SectionHeader title={SECTION_TITLE} icon={<GroupIcon />} actionLabel="바로가기→" />
+    <SectionHeader
+      title={SECTION_TITLE}
+      icon={<GroupIcon />}
+      actionLabel="바로가기→"
+      onActionPress={onShortcutPress}
+    />
     {children}
   </View>
 );
@@ -47,17 +58,26 @@ const NotStartedShell = ({ children }: SectionShellProps) => (
 interface GroupFeedSectionProps {
   /** 그룹이 없을 때 "감정일기 시작하기"를 누르면. */
   onStartPress: () => void;
+  /** "바로가기→"를 누르면 그 그룹의 감정일기 메인으로 간다. */
+  onGroupPress: (roomId: RoomId) => void;
 }
 
-export default function GroupFeedSection({ onStartPress }: GroupFeedSectionProps) {
+export default function GroupFeedSection({ onStartPress, onGroupPress }: GroupFeedSectionProps) {
   const roomsQuery = useMyRooms();
   const feedQuery = useCommunityDiaries();
   const latestDiary = feedQuery.data?.[0];
   const hasNoRoom = roomsQuery.isSuccess && roomsQuery.data.length === 0;
+  // 바로가기는 지금 보여주는 일기의 그룹으로, 일기가 없으면 내 첫 번째 그룹으로 간다.
+  const shortcutRoomId = latestDiary?.roomId ?? roomsQuery.data?.[0]?.id;
 
   function handleRetryPress() {
     roomsQuery.refetch();
     feedQuery.refetch();
+  }
+
+  function handleShortcutPress() {
+    if (shortcutRoomId === undefined) return;
+    onGroupPress(shortcutRoomId);
   }
 
   // 그룹이 있는지 모르는 동안에는 그룹 이름처럼 보이는 제목이 잠깐이라도 뜨지 않게 섹션 이름을 쓴다.
@@ -93,7 +113,7 @@ export default function GroupFeedSection({ onStartPress }: GroupFeedSectionProps
 
   if (!latestDiary) {
     return (
-      <SectionShell>
+      <SectionShell onShortcutPress={handleShortcutPress}>
         <Text variant="body-s" className="text-text-muted">
           아직 그룹에 올라온 일기가 없어요
         </Text>
@@ -102,7 +122,7 @@ export default function GroupFeedSection({ onStartPress }: GroupFeedSectionProps
   }
 
   return (
-    <SectionShell>
+    <SectionShell onShortcutPress={handleShortcutPress}>
       <GroupDiaryCard diary={toGroupDiaryPreview(latestDiary)} />
     </SectionShell>
   );

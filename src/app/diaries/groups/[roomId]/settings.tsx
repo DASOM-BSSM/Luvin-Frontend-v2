@@ -11,22 +11,36 @@ import GroupMemberList from '@/src/features/diaries/components/group-member-list
 import InviteCodeField from '@/src/features/diaries/components/invite-code-field';
 import LeaveGroupModal from '@/src/features/diaries/components/leave-group-modal';
 import SettingsFieldRow from '@/src/features/diaries/components/settings-field-row';
-import useMyRooms from '@/src/features/diaries/hooks/use-my-rooms';
+import useRoom from '@/src/features/diaries/hooks/use-room';
+import useRoomMembers from '@/src/features/diaries/hooks/use-room-members';
 import useUpdateRoom from '@/src/features/diaries/hooks/use-update-room';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 
 /**
  * 그룹 설정하기. Figma "그룹 설정하기 - 리원"(6606:3984). 경로 `/diaries/groups/[roomId]/settings`.
  *
- * 그룹 이름 수정 · 멤버 내보내기 · 설정 저장은 방장만 보인다. 그룹 이름은 방 하나 조회 API 가 없어
- * 내 방 목록에서 찾는다.
+ * 그룹 이름 수정 · 멤버 내보내기 · 설정 저장은 방장만 보인다. 그룹 정보는 `GET /api/diary-rooms/{roomId}`
+ * 로 받는다.
+ *
+ * 설정 저장하기는 이름을 바꾸지 않아도 누를 수 있다(막 만든 그룹도 바로 들어갈 수 있게) — 바뀐
+ * 이름이 있으면 저장한 뒤, 없으면 바로 나간다. 그룹을 막 만들고 왔으면(`created`) 그 그룹의 감정일기
+ * 메인으로, 아니면 이전 화면으로 돌아간다.
+ *
+ * 수정 API(PUT)는 모든 필드를 다시 받아서, 이 화면에서 바꾸지 않는 최대 인원 · 소개 · 방장 닉네임은
+ * 지금 값을 그대로 보낸다. 방장 닉네임은 방 정보에 없어 멤버 목록의 방장 줄에서 가져온다.
  */
 export default function GroupSettingsScreen() {
-  const { roomId: roomIdParam } = useLocalSearchParams<{ roomId: string }>();
+  const { roomId: roomIdParam, created } = useLocalSearchParams<{
+    roomId: string;
+    created?: string;
+  }>();
   const roomId = Number(roomIdParam);
-  const room = useMyRooms().data?.find(({ id }) => id === roomId);
+  const isJustCreated = created === '1';
+  const room = useRoom(roomId).data;
   const myId = useMyProfile().data?.memberId;
   const isOwner = room !== undefined && room.ownerId === myId;
+  // 멤버 목록(GroupMemberList)과 같은 쿼리라 캐시를 같이 쓴다.
+  const ownerNickname = useRoomMembers(roomId).data?.find(({ id }) => id === room?.ownerId)?.nickname;
   const updateRoomMutation = useUpdateRoom();
 
   // null 이면 아직 손대지 않은 것 — 서버의 그룹 이름을 그대로 보여준다.
@@ -34,7 +48,9 @@ export default function GroupSettingsScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isLeaveModalVisible, setIsLeaveModalVisible] = useState(false);
   const name = nameDraft ?? room?.name ?? '';
-  const canSave = isOwner && name.trim() !== '' && name.trim() !== room?.name;
+  const hasNameChange = name.trim() !== room?.name;
+  // 이름을 바꿨으면 PUT 에 같이 보낼 방장 닉네임이 있어야 저장할 수 있다.
+  const canSave = isOwner && name.trim() !== '' && (!hasNameChange || !!ownerNickname);
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -48,13 +64,36 @@ export default function GroupSettingsScreen() {
     setIsEditingName((editing) => !editing);
   }
 
+  function leaveSettings() {
+    if (isJustCreated || !router.canGoBack()) {
+      router.replace({ pathname: '/diaries/groups/[roomId]', params: { roomId } });
+      return;
+    }
+    router.back();
+  }
+
   function handleSaveSuccess() {
     setIsEditingName(false);
     setNameDraft(null);
+    leaveSettings();
   }
 
   function handleSavePress() {
-    updateRoomMutation.mutate({ roomId, name: name.trim() }, { onSuccess: handleSaveSuccess });
+    if (!hasNameChange) {
+      leaveSettings();
+      return;
+    }
+    if (!room || !ownerNickname) return;
+    updateRoomMutation.mutate(
+      {
+        roomId,
+        name: name.trim(),
+        description: room.description ?? undefined,
+        maxMemberCount: room.maxMemberCount,
+        ownerNickname,
+      },
+      { onSuccess: handleSaveSuccess },
+    );
   }
 
   function handleLeavePress() {

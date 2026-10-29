@@ -2,11 +2,9 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import { View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import CloudLargeIcon from '@/src/assets/icons/CloudLargeIcon';
-import CloudMediumIcon from '@/src/assets/icons/CloudMediumIcon';
-import CloudSmallIcon from '@/src/assets/icons/CloudSmallIcon';
 import { InGameStats } from '@/src/features/luvin-hell/components/GameHud';
 import { sceneColors } from '@/src/features/luvin-hell/constants/scene-colors';
+import DinoClouds from '@/src/features/luvin-hell/games/dino-runner/components/DinoClouds';
 import DinoGround from '@/src/features/luvin-hell/games/dino-runner/components/DinoGround';
 import { useDinoEngine } from '@/src/features/luvin-hell/games/dino-runner/hooks/useDinoEngine';
 import { useDinoGestures } from '@/src/features/luvin-hell/games/dino-runner/hooks/useDinoGestures';
@@ -27,6 +25,7 @@ interface DinoRunnerSceneProps {
  * AGENTS.md §16 레이아웃 규칙의 스코프 한정 예외(계획 문서 "엔진 아키텍처" 1번).
  * 하늘/구름/땅은 게임 판정에 쓰이지 않는 장식이지만, Figma 미니게임1(`5913:5154`)의
  * 구름 벡터 3개와 4겹 땅(밝은 잔디/어두운 잔디/흙바닥+패치)을 그대로 재현한다.
+ * 달리는 동안 구름(느리게)과 흙바닥(장애물과 같은 속도)이 생존거리에 맞춰 왼쪽으로 흐른다.
  */
 export default function DinoRunnerScene({ phase, score, hearts, onHit, onScoreChange }: DinoRunnerSceneProps) {
   const engine = useDinoEngine({ phase, onHit, onScoreChange });
@@ -45,17 +44,9 @@ export default function DinoRunnerScene({ phase, score, hearts, onHit, onScoreCh
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#dinoSky)" />
         </Svg>
 
-        <View className="absolute left-[37px] top-[99px]">
-          <CloudMediumIcon />
-        </View>
-        <View className="absolute left-[226px] top-[129px]">
-          <CloudLargeIcon />
-        </View>
-        <View className="absolute left-[100px] top-[164px]">
-          <CloudSmallIcon />
-        </View>
+        <DinoClouds distance={engine.distance} />
 
-        <DinoGround />
+        <DinoGround distance={engine.distance} />
 
         <PlayerSprite playerY={engine.playerY} duckSquash={engine.duckSquash} />
         {engine.slots.map((slot, i) => (

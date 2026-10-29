@@ -24,4 +24,26 @@ export const ERROR_MESSAGES = {
   insufficientTokens: '토큰이 부족해요',
   unlockFailed: '회차를 열지 못했어요. 다시 시도해주세요',
   ageSaveFailed: '나이와 성별을 저장하지 못했어요. 다시 시도해주세요',
+  /** 그룹 참여 — 초대코드가 틀렸을 때(서버 404). */
+  invalidInviteCode: '초대코드가 올바르지 않아요. 다시 확인해주세요',
+  /** 그룹 참여 — 최대 인원이 다 찼을 때(서버 409 `DIARY_ROOM_FULL`). */
+  diaryRoomFull: '그룹 인원이 가득 찼어요',
+  /** 그룹 참여 — 같은 그룹에 같은 닉네임이 있을 때(서버 409 `DIARY_ROOM_NICKNAME_DUPLICATED`). */
+  diaryRoomNicknameDuplicated: '그룹에 같은 닉네임이 있어요. 다른 닉네임을 적어주세요',
+  /** 그룹 참여 실패 — 위 경우가 아닌 나머지. */
+  joinRoomFailed: '그룹에 참여하지 못했어요. 다시 시도해 주세요',
+  /** 그룹 질문 만들기 실패(요청 실패 · 서버가 `failed` 를 준 경우 모두). */
+  createQuestionFailed: '질문을 만들지 못했어요. 다시 시도해 주세요',
+  /** 그룹 질문 답 — 1~200자가 아닐 때(서버 400 `ROOM_ANSWER_INVALID`). */
+  roomAnswerInvalid: '답은 1~200자로 적어 주세요',
+  /** 그룹 질문 답 — 아직 질문이 준비되지 않았을 때(서버 409 `ROOM_QUESTION_NOT_READY`). */
+  roomQuestionNotReady: '질문이 아직 준비되지 않았어요. 잠시 후 다시 시도해 주세요',
+  /** 그룹 질문 답 저장 실패 — 위 경우가 아닌 나머지. */
+  answerQuestionFailed: '답을 남기지 못했어요. 다시 시도해 주세요',
+  /** 그룹 질문 내 답 삭제 실패. */
+  deleteAnswerFailed: '답을 지우지 못했어요. 다시 시도해 주세요',
+  /** 일기 수정 실패. */
+  updateDiaryFailed: '일기를 고치지 못했어요. 다시 시도해 주세요',
+  /** 일기 삭제 실패. */
+  deleteDiaryFailed: '일기를 지우지 못했어요. 다시 시도해 주세요',
 };

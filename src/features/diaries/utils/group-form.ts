@@ -1,6 +1,12 @@
-/** 그룹 인원수 범위. Figma "그룹 인원수 2~6명". */
+/**
+ * 그룹 인원수 범위(방장 포함). Figma "2~6명", 백엔드 `maxMemberCount` 도 2~6 이다 — 혼자 쓰는 방(1명)은
+ * 백엔드가 400 으로 막아서 한때 1명으로 낮췄던 최소를 2명으로 되돌렸다.
+ */
 export const GROUP_MEMBER_COUNT_MIN = 2;
 export const GROUP_MEMBER_COUNT_MAX = 6;
+
+/** 그룹별 닉네임(그룹장 · 참여자) 최대 글자 수. 백엔드가 10자를 넘으면 400 으로 막는다. */
+export const GROUP_NICKNAME_MAX_LENGTH = 10;
 
 /** 숫자 키패드로 받은 인원수 입력에서 숫자만 남긴다. */
 export function sanitizeMemberCountInput(value: string): string {

@@ -13,21 +13,28 @@ interface GroupDiaryListProps {
   onWritePress: () => void;
   /** 일기 카드를 누르면 상세(반응 · 댓글)를 연다. */
   onDiaryPress: (diary: DiaryFeedItem) => void;
+  /** 내 일기 카드의 더보기(⋮) — 상세를 삭제 · 수정 메뉴가 펼쳐진 채로 연다. */
+  onDiaryMorePress: (diary: DiaryFeedItem) => void;
 }
 
 interface DiaryItemProps {
   diary: DiaryFeedItem;
   onPress: (diary: DiaryFeedItem) => void;
+  onMorePress: (diary: DiaryFeedItem) => void;
 }
 
-const DiaryItem = ({ diary, onPress }: DiaryItemProps) => {
+const DiaryItem = ({ diary, onPress, onMorePress }: DiaryItemProps) => {
   function handlePress() {
     onPress(diary);
   }
 
+  function handleMorePress() {
+    onMorePress(diary);
+  }
+
   return (
     <Pressable accessibilityRole="button" className="w-full" onPress={handlePress}>
-      <GroupDiaryCard diary={toGroupDiaryPreview(diary)} />
+      <GroupDiaryCard diary={toGroupDiaryPreview(diary)} onMorePress={diary.isMine ? handleMorePress : undefined} />
     </Pressable>
   );
 };
@@ -39,7 +46,7 @@ const DiaryItem = ({ diary, onPress }: DiaryItemProps) => {
  *
  * 로딩 · 에러 상태는 시안이 없어 다른 화면과 같은 글자 안내로 둔다.
  */
-export default function GroupDiaryList({ roomId, onWritePress, onDiaryPress }: GroupDiaryListProps) {
+export default function GroupDiaryList({ roomId, onWritePress, onDiaryPress, onDiaryMorePress }: GroupDiaryListProps) {
   const diariesQuery = useRoomDiaries(roomId);
   const me = useMyDiaryAuthor();
   const now = new Date();
@@ -72,7 +79,7 @@ export default function GroupDiaryList({ roomId, onWritePress, onDiaryPress }: G
     <View className="w-full flex-col items-start gap-[20px]">
       <MyDiaryPromptCard author={me} time={formatHourSlot(now)} onWritePress={onWritePress} />
       {diaries.map((diary) => (
-        <DiaryItem key={diary.diaryId} diary={diary} onPress={onDiaryPress} />
+        <DiaryItem key={diary.diaryId} diary={diary} onPress={onDiaryPress} onMorePress={onDiaryMorePress} />
       ))}
     </View>
   );
