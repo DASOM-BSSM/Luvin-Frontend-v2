@@ -1,0 +1,483 @@
+{
+  "task": "LUV-88 background removal",
+  "updated": "2026-10-29",
+  "method": "built-in image_gen transparent cutout; normalized alpha mask applied to unchanged original RGB",
+  "prompt": "background-extraction: remove only the flat exterior background; preserve original illustration, internal light areas, text, colors, composition and framing; output real transparent alpha. Final RGB is always taken from the original PNG.",
+  "assets": [
+    {
+      "file": "baked-bread.png",
+      "width": 120,
+      "height": 85,
+      "original": "src/assets/images/bread-baking/originals/baked-bread.png",
+      "originalSha256": "df03463b335ead2498fe846d442cb433a4b91dae17dcd7b7514bb5df073fd282",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-3427507d-b148-4e33-9964-f0513d9cd543.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/baked-bread.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 5068,
+        "visiblePixels": 4933,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "board.png",
+      "width": 188,
+      "height": 135,
+      "original": "src/assets/images/bread-baking/originals/board.png",
+      "originalSha256": "77ac1e1c2b29179d70f865412eec584ce1e8721a8a72a5bfb0728578a2098572",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-4c4135b3-3ee6-4eee-a880-f071d30beccd.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/board.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 10154,
+        "visiblePixels": 14861,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "burnt-bread.png",
+      "width": 120,
+      "height": 85,
+      "original": "src/assets/images/bread-baking/originals/burnt-bread.png",
+      "originalSha256": "f4500cc077d71fd5503e996dbdd84ef757bc59cf4277acf037d409832814fdc0",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-57e31af1-a7f8-4bf8-9d7c-93c6757f7e3d.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/burnt-bread.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 5150,
+        "visiblePixels": 4850,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "butter-cube.png",
+      "width": 28,
+      "height": 28,
+      "original": "src/assets/images/bread-baking/originals/butter-cube.png",
+      "originalSha256": "edfa95d08cd02b6958c52183490f3f0d97386384432b2f7ef5ee08076d3f0e8f",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-31aae6eb-fbf4-4b22-8751-73a36edfd2b1.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/butter-cube.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 366,
+        "visiblePixels": 364,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "butter.png",
+      "width": 68,
+      "height": 51,
+      "original": "src/assets/images/bread-baking/originals/butter.png",
+      "originalSha256": "acc940ed95cecdbe427a0147216209dc592bac145ac588bfb161e0beb1aaa789",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-ff5b3117-1b4b-4141-9532-fa96ac1fbd90.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/butter.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 1395,
+        "visiblePixels": 1999,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "cracked-egg.png",
+      "width": 35,
+      "height": 25,
+      "original": "src/assets/images/bread-baking/originals/cracked-egg.png",
+      "originalSha256": "d1402dcb1b980c0e609cd2b08c921f59a27b9ebbf81467b5de930a3f547e79d5",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-2d5b4a45-0cd7-491c-abfc-1b1a7c34478d.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/cracked-egg.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 340,
+        "visiblePixels": 475,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "dough-bowl.png",
+      "width": 148,
+      "height": 125,
+      "original": "src/assets/images/bread-baking/originals/dough-bowl.png",
+      "originalSha256": "7ce22955fb4b39828a46e8ae415360817a18ef0d124323c384fb35f9653101d9",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-c51399d2-8e51-41fc-8dae-936d26ecabc0.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/dough-bowl.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 5222,
+        "visiblePixels": 12995,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "dough.png",
+      "width": 98,
+      "height": 76,
+      "original": "src/assets/images/bread-baking/originals/dough.png",
+      "originalSha256": "f4d663ddcb6c76c61b8fd3214ebe95705fefa6c6ae9608085fdcfab83d0febe4",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-7e43945c-5f05-4f72-b189-8edac44fa4b5.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/dough.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 2417,
+        "visiblePixels": 4844,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "egg.png",
+      "width": 24,
+      "height": 31,
+      "original": "src/assets/images/bread-baking/originals/egg.png",
+      "originalSha256": "f4564bbf7dc3dca77cc94507d9d71c882c326f9defeaa2ea36e62879601b3592",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-f260f7d5-4635-4f28-8f7b-346b3d4c483b.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/egg.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 210,
+        "visiblePixels": 486,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "eggs.png",
+      "width": 85,
+      "height": 47,
+      "original": "src/assets/images/bread-baking/originals/eggs.png",
+      "originalSha256": "bafa49daabeba11ccce9021229263c38f5eb198d10bc99a37ccbbce00094ff10",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-4bbf77f2-0a3d-43ef-ad37-6f8eb5e8484c.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/eggs.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 1157,
+        "visiblePixels": 2720,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "empty-bowl.png",
+      "width": 147,
+      "height": 124,
+      "original": "src/assets/images/bread-baking/originals/empty-bowl.png",
+      "originalSha256": "f02e337cd3160fadf0b55e23fc357f6418a7ba7f7870bb44e74c8f56ad546d38",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-f71ee589-7f98-40ae-9a0d-46cf698fb758.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/empty-bowl.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 5230,
+        "visiblePixels": 12760,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "flat-dough.png",
+      "width": 150,
+      "height": 68,
+      "original": "src/assets/images/bread-baking/originals/flat-dough.png",
+      "originalSha256": "859a84483f7bb9b86fbeff761efbb956e6d2d00b3714f8b2d8e10cd08adb9165",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-3a2a169d-68ab-414d-8301-b26a97021fd7.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/flat-dough.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 3518,
+        "visiblePixels": 6034,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "flour-pile.png",
+      "width": 53,
+      "height": 38,
+      "original": "src/assets/images/bread-baking/originals/flour-pile.png",
+      "originalSha256": "58d98da194a559eab63558f2c3cd07aec8217a636fd5440f58c48fa242952f67",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-2ec4b39f-d7ea-44d4-9976-f7323f6fddf4.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/flour-pile.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 819,
+        "visiblePixels": 1023,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "flour.png",
+      "width": 67,
+      "height": 72,
+      "original": "src/assets/images/bread-baking/originals/flour.png",
+      "originalSha256": "4877efe307f24cc27ae3c64719cc12a873e523a24377030244c303cb49c98bf4",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-cf5e7efb-50d2-4d58-8e1c-e0ea08ea24a9.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/flour.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 1687,
+        "visiblePixels": 2999,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "lit-oven.png",
+      "width": 129,
+      "height": 106,
+      "original": "src/assets/images/bread-baking/originals/lit-oven.png",
+      "originalSha256": "82aab55df505227caea3caf27a71f0a9c73daddecb3c3bcb536c47844301c914",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-232f3a63-3a7b-4e60-bfd0-a31c775ea424.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/lit-oven.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 2877,
+        "visiblePixels": 10539,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "oven.png",
+      "width": 177,
+      "height": 147,
+      "original": "src/assets/images/bread-baking/originals/oven.png",
+      "originalSha256": "8120fbf5ab9ac9fcd4f271645fa06a1a6e32dd09fed1e177441fa9bca4cde877",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-10699945-eac1-48be-aad2-5334bc4139ef.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/oven.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 4536,
+        "visiblePixels": 21035,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "rolling-pin.png",
+      "width": 150,
+      "height": 39,
+      "original": "src/assets/images/bread-baking/originals/rolling-pin.png",
+      "originalSha256": "67dcb1756f47d047bd8cc9baca90664184a8950aee70fd463502227b1b723873",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-869d7ac7-632a-4f29-9968-60a41414acfa.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/rolling-pin.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 3153,
+        "visiblePixels": 2478,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "salt-bread.png",
+      "width": 95,
+      "height": 79,
+      "original": "src/assets/images/bread-baking/originals/salt-bread.png",
+      "originalSha256": "147fee3a5f36f9b6604baca68684de8e6305dd9a691aec917b25cd9791d18c50",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-e99b3088-d5d9-4069-a753-7c5313eeed77.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/salt-bread.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 4752,
+        "visiblePixels": 2629,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "salt.png",
+      "width": 37,
+      "height": 57,
+      "original": "src/assets/images/bread-baking/originals/salt.png",
+      "originalSha256": "a1215cc2f06f8e7ca8bd72c2c1d7fe4e810938e2101afe83e8287d1a412a579d",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-dabfebdd-6443-4b1c-97ce-89289aa5bb2b.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/salt.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 537,
+        "visiblePixels": 1486,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "sugar.png",
+      "width": 39,
+      "height": 57,
+      "original": "src/assets/images/bread-baking/originals/sugar.png",
+      "originalSha256": "8bbf557d31ac16f4e244029245f13d015762bf8a964e3de7b89a5a256de54fd0",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-050f9a22-c930-49c9-a350-1e83b3ec4c18.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/sugar.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 647,
+        "visiblePixels": 1506,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "tray.png",
+      "width": 188,
+      "height": 126,
+      "original": "src/assets/images/bread-baking/originals/tray.png",
+      "originalSha256": "1f321513f12039d5d61af5cae16747135cf774e718060ca00de318df3fa17473",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-d68c45d8-1078-4b74-b369-be6e68240462.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/tray.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 11182,
+        "visiblePixels": 12200,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "water-splash.png",
+      "width": 46,
+      "height": 25,
+      "original": "src/assets/images/bread-baking/originals/water-splash.png",
+      "originalSha256": "e9f86c72177256213184cb470efadfbde78c70cffffed7222c08dd27f7d1f015",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-6f9fcc9d-0d88-46c4-a36e-c6da4fc41503.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/water-splash.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 448,
+        "visiblePixels": 586,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "water.png",
+      "width": 64,
+      "height": 72,
+      "original": "src/assets/images/bread-baking/originals/water.png",
+      "originalSha256": "385b36fb497fd543a8c4c0871df8b3d688b045b7a912d8377a0dbfa59130905e",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-ff610607-e477-4a31-a982-ec70b2302e49.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/water.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 1526,
+        "visiblePixels": 2900,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "whisk.png",
+      "width": 101,
+      "height": 138,
+      "original": "src/assets/images/bread-baking/originals/whisk.png",
+      "originalSha256": "4fd54d5c1530b8fefa2d33fd4faa06479654969972380f58e52b0aa5378ada12",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-7b6865c5-9878-4556-bd14-4429a2d6ca30.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/whisk.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 11411,
+        "visiblePixels": 2186,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    },
+    {
+      "file": "yeast.png",
+      "width": 39,
+      "height": 58,
+      "original": "src/assets/images/bread-baking/originals/yeast.png",
+      "originalSha256": "00f100a27e4bc5ccc85e98eaf78ab13aede6703f15b61396798933a82a1a6717",
+      "status": "background_removed_pending_visual_review",
+      "generated": "/Users/sopeuteuweeomaiseuteo/.codex/generated_images/01a1829a-78cf-71f3-a504-7f73de2d76ca/exec-ebe0d4cd-b718-4d0c-b213-89c40445fc39.png",
+      "alphaMask": "src/assets/images/bread-baking/alpha-masks/yeast.png",
+      "originalRgbPreserved": true,
+      "validation": {
+        "dimensionsMatch": true,
+        "rgbMatch": true,
+        "transparentPixels": 675,
+        "visiblePixels": 1478,
+        "cornersTransparent": true
+      },
+      "exteriorMatteTolerance": 4
+    }
+  ]
+}
