@@ -1,5 +1,7 @@
 # LUV-88 빵굽기 미니게임 인계
 
+> **2026-10-30: PR #66 (feat/LUV-88 → dev) 열림** — 커밋 `23e43ee`. 원본 백업(`originals/`)·`*-hires.png`·다른 작업(inferno 등)·AGENTS.md §20 은 커밋하지 않았다. 남은 것: 백엔드 `salt_bread_baking` 등록 후 토큰 지급 확인, Android 확인.
+
 갱신: 2026-10-29 오후 (Asia/Seoul). 작업 브랜치: `feat/LUV-88`.
 
 ## 먼저 확인
@@ -114,7 +116,7 @@
 
 - **미션 성공 쪽지 (2026-10-29)**: 소금빵 3개를 완성하면(`phase: 'success'`) 공용 `ResultOverlay` 대신 Figma `7962:6087` SUCCESS 쪽지("소금빵 만들기에 성공했어요")를 띄운다. `NoticeModal` 에 `title` prop 을 추가해 재사용. 화면 아무 곳 탭 → 닫히고 재시작(이전 오버레이와 같은 동작). 실패(`fail`)는 그대로 `ResultOverlay`. 쪽지는 기존 NOTICE 모달처럼 화면 세로 가운데에 뜬다(시안은 30pt 정도 위). iOS 확인, Android 미확인.
 
-- **미션 보상 연동 (2026-10-30)**: 미션 성공/실패 시 `useReportMinigameResult(BAKING_MINIGAME_CODE, phase, 'code')` 로 `POST /api/minigames/{gameId}/play` 를 한 번 보낸다. 서버 code 는 **가정값 `salt_bread_baking`**(`utils/game.ts`). 2026-10-30 스테이징 `GET /api/minigames` 에는 `dinosaur_bread_game`·`bread_crossing_friends` 두 개뿐이라 지금은 조용히 건너뛴다(시뮬레이터 로그로 확인: lookup false, 요청 안 나감). 백엔드가 등록하면 code 만 맞추면 된다. 보상은 로컬 선지급 없이 서버 응답(`usePlayMinigame`)으로만 반영. 훅에 `matchBy`(title|code) 를 추가했고, 공룡빵·빵건너는 기존대로 title 매칭.
+- **미션 보상 연동 (2026-10-30)**: 미션 성공/실패 시 `useReportMinigameResult(BAKING_MINIGAME_CODE, phase, 'code')` 로 `POST /api/minigames/{gameId}/play` 를 한 번 보낸다. 서버 code 는 **가정값 `salt_bread_baking`**(`utils/game.ts`). 2026-10-30 스테이징 `GET /api/minigames` 에는 `dinosaur_bread_game`·`bread_crossing_friends` 두 개뿐이라 지금은 조용히 건너뛴다(시뮬레이터 로그로 확인: lookup false, 요청 안 나감). 백엔드가 등록하면 code 만 맞추면 된다. **2026-10-30 갱신**: 백엔드 PR #96·#98(V17 마이그레이션 + 시드)로 `salt_bread_baking`(소금빵굽기, rewardToken 1) 등록, master 스테이징 배포 성공(run 40906560186). code 가 프론트 가정값과 같아 프론트 수정 없음. 2026-10-30 08:06 iOS 시뮬레이터(로그인 계정)에서 임시 시작 상태(마지막 빵 굽기, 넓은 초록 칸)로 성공시켜 확인: 서버 목록에서 code 로 찾음(gameId=3), `POST /play` 성공 → `reward.token=1` (Metro 로그). 이때 스테이징 계정에 토큰 1개 실제 지급됨. 임시 설정은 되돌렸고 tsc 통과. Android 미확인. 보상은 로컬 선지급 없이 서버 응답(`usePlayMinigame`)으로만 반영. 훅에 `matchBy`(title|code) 를 추가했고, 공룡빵·빵건너는 기존대로 title 매칭.
   - 주의(개발 중에만): 보고 훅 파일을 고치면 Fast Refresh 가 ref 를 초기화해, 성공 화면에 머물러 있던 다른 미니게임 화면이 결과를 다시 보낸다. 2026-10-30 00:10 에 이 때문에 `gameId=1`(공룡빵) 성공이 한 번 더 보고되어 스테이징 계정에 토큰 1개가 더 지급됐다.
   - 로그 위치: Metro 로그는 `.expo/dev/logs/start.log`(JSON 줄). 스크래치패드 `metro.log` 는 10-29 20:22 이후 갱신되지 않았다.
 
@@ -132,3 +134,16 @@
 5. 단계 안내·완성 개수는 현재 설명 모달에서 볼 수 있다. 미세 UX/리듬 난이도는 추가 제품 조율 대상이다.
 
 다음 작업 후 이 문서의 증거와 미완료 항목을 갱신한다. 계정 사용량 5% 이하가 확인되면 문서 갱신을 포함해 추가 작업하지 말고 즉시 중단한다.
+
+## Ready/실패 덮개 겹침 수정 (2026-10-30)
+
+- 문제: 재료 스프라이트(`baking-sprite.tsx`, zIndex 1/드래그 중 10)가 Ready 덮개 위로 올라와 "Ready?" 글자를 가렸다.
+- 수정: `src/app/luvin-hell/bread-baking/play.tsx` 에서 `ReadyOverlay`·실패 `ResultOverlay` 를 `absolute inset-0 z-20` View 로 감쌌다. 공용 덮개 컴포넌트는 다른 미니게임도 쓰므로 건드리지 않았다.
+- 확인: iOS 시뮬레이터에서 재료가 덮개 아래로 흐리게 깔리고, 탭하면 정상 시작. tsc 통과. 실패 덮개 화면·Android 는 직접 보지 않았다.
+
+## 모드 선택 화면 Figma 5916:5300 반영 (2026-10-30)
+
+- 버튼은 시안대로 두 개: "공룡빵게임", "다솜이의 소금빵게임"(→ 빵굽기). "빵건너친구들" 버튼은 사용자 결정으로 뺐다(게임 코드는 그대로).
+- 버튼은 시안대로 항상 yellow/300(테두리 없음). 예전 "평소 흰색 + 누를 때만 노랑" 이탈을 사용자 결정으로 되돌렸다. `button.tsx` 의 `modeSelectPrimary`/`modeSelectSecondary` 를 `modeSelect` 하나로 합치고, 이 두 변형 전용이던 눌림 애니메이션(PressHighlightButton)을 지웠다.
+- 확인: iOS 시뮬레이터에서 시안과 같은 화면, 소금빵게임 버튼 → 빵굽기 Ready 화면 이동. tsc 통과. Android 미확인.
+- 남은 것(요청받지 않아 손대지 않음): 환영 투어 문구(`welcome/constants/tour.ts`)와 오븐 화면(`oven.tsx`)에는 아직 "빵건너친구들"이 나온다.
