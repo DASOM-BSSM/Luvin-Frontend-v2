@@ -75,8 +75,15 @@ export default function BreadBakingPlayScreen() {
                 <View className="absolute right-baking-timer-right top-baking-timer-top" pointerEvents="none">
                   <Text variant="display-score">{`T: ${formatBakingTime(state.remainingMs)}`}</Text>
                 </View>
-                {state.phase === 'ready' && <ReadyOverlay onPress={game.handleStart} />}
-                {state.phase === 'fail' && <ResultOverlay success={false} onPress={game.handleRestart} />}
+                {/* Sprites carry zIndex 1 (10 while dragged), so the overlays need a higher layer to dim them. */}
+                {state.phase === 'ready' && (
+                  <View className="absolute inset-0 z-20"><ReadyOverlay onPress={game.handleStart} /></View>
+                )}
+                {state.phase === 'fail' && (
+                  <View className="absolute inset-0 z-20">
+                    <ResultOverlay success={false} onPress={game.handleRestart} />
+                  </View>
+                )}
               </View>
             </GameFrame>
           </View>
