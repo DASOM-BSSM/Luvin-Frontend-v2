@@ -1,4 +1,5 @@
 import type {
+  DiaryCalendarDay,
   DiaryFeedItem,
   DiaryReactionResult,
   GroupDiaryPreview,
@@ -141,7 +142,13 @@ export function formatYearMonth(dateString: string): string {
   return `${year}년 ${month}월`;
 }
 
-/** 내가 일기를 쓴 날짜("YYYY-MM-DD") 모음. 서버 시각의 날짜 부분을 그대로 쓴다(한국 시간). */
-export function getMyDiaryDates(feed: DiaryFeedItem[]): Set<string> {
-  return new Set(feed.filter((item) => item.isMine).map((item) => item.createdAt.slice(0, 10)));
+/** "YYYY-MM-DD" → 달력 API 에 넘길 연 · 월(1~12). */
+export function toYearMonth(dateString: string): { year: number; month: number } {
+  const [year, month] = dateString.split('-').map(Number);
+  return { year, month };
+}
+
+/** 달력 API 응답 → 내가 일기를 쓴 날짜("YYYY-MM-DD", 한국 시간) 모음. */
+export function toWrittenDates(days: DiaryCalendarDay[]): Set<string> {
+  return new Set(days.map((day) => day.date));
 }

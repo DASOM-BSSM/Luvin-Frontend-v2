@@ -17,7 +17,8 @@ export interface DiaryCalendarDayProps {
 
 /**
  * 달력 날짜 한 칸. Figma "일기 모아보기"(6199:3820) — 웃는 얼굴(16) 아래 날짜(Body/XXS).
- * 일기를 쓴 날은 분홍, 아니면 회색. 다른 달 날짜는 글자도 회색, 고른 날은 검정 동그라미.
+ * 일기를 쓴 날은 분홍, 아니면 회색. 다른 달 날짜는 얼굴 자리를 비우고(시안의 빈 아이콘) 글자만 회색,
+ * 고른 날은 검정 동그라미.
  */
 export default function DiaryCalendarDay({ date, state, onPress, written, selected }: DiaryCalendarDayProps) {
   const isOtherMonth = state === 'disabled';
@@ -35,13 +36,12 @@ export default function DiaryCalendarDay({ date, state, onPress, written, select
       className="flex-col items-center justify-center"
       onPress={handlePress}
     >
-      <SentimentNavIcon
-        size={16}
-        color={written && !isOtherMonth ? theme.pink[500] : theme.default.gray}
-      />
-      <View
-        className={`size-[16px] items-center justify-center rounded-full ${selected ? 'bg-default-black' : ''}`}
-      >
+      {isOtherMonth ? (
+        <View className="size-[16px]" />
+      ) : (
+        <SentimentNavIcon size={16} color={written ? theme.pink[500] : theme.default.gray} />
+      )}
+      <View className={`size-[16px] items-center justify-center rounded-full ${selected ? 'bg-default-black' : ''}`}>
         <Text
           variant="body-xxs"
           className={`text-center ${selected ? 'text-default-white' : isOtherMonth ? 'text-default-gray' : 'text-text-primary'}`}

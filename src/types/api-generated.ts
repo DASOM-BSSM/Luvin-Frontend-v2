@@ -528,7 +528,7 @@ export interface paths {
         };
         /**
          * 댓글 목록
-         * @description 일기를 볼 수 있는 사람만 가능 (403). 작성순.
+         * @description 일기를 볼 수 있는 사람만 가능 (403). 작성순. 작성자 정보(authorNickname, authorBreadType)와 내 댓글 여부(isMine)는 DiaryFeedItem과 같은 규칙이다.
          */
         get: operations["getComments"];
         put?: never;
@@ -537,6 +537,36 @@ export interface paths {
          * @description 일기를 볼 수 있는 사람만 가능 (403).
          */
         post: operations["createComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dev/ai/seasons/current/story/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * AI 시즌 초기화(시즌 삭제)
+         * @description 내 AI 시즌을 **시즌 행까지 모두 지운다**. 진행 중이든 완료했든 같고, 시즌이 여러 개면 전부 지운다.
+         *     계정·설문 결과와 빵 유형·감정일기·공유방은 남는다.
+         *
+         *     - 지우는 것: 회차 본문·선택 결과 장면·선택 기록·열린 회차·회차 완료 상태, 1:1 장면 좋아요·피드백(학습 입력 포함),
+         *       회차 정리 기록·관계 기록·회차 쪽지·시즌 편지·최종 리포트, 출연진, 새 시즌 설정, 시즌 생성 입력
+         *     - 그 시즌들에서 4~10화를 열며 쓴 토큰은 돌려준다(`refundedTokens`, 내역은 REWARD "러빈지옥 시즌 초기화 환불").
+         *     - 초기화 전에 돌던 회차 생성·완료·선택 결과 생성은 시즌이 없어져 결과를 버린다.
+         *     - 시즌이 없으면 아무것도 하지 않고 200(`deletedSeasons` 0).
+         *
+         *     초기화 뒤: `GET /api/ai/seasons/me`는 404 `SEASON_NOT_FOUND` → `POST /api/ai/seasons/from-survey`
+         *     (`surveyResultId`는 최신 설문 결과)로 새 시즌 → `GET /api/ai/seasons/episodes/1/content`로 1화부터 시작.
+         */
+        post: operations["resetSeasons"];
         delete?: never;
         options?: never;
         head?: never;
@@ -630,6 +660,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * 시즌 목록
+         * @description 지난 시즌까지 최신 시즌부터(seasonNumber 내림차순) 돌려준다. setting(배경)·settingTitle(카드 제목, 예: In School)을 함께 준다. 지난 시즌 리포트는 GET /report?season_id=, 회차 다시 보기는 season_id를 받는 API를 쓴다.
+         */
         get: operations["listSeasons"];
         put?: never;
         post: operations["createSeason"];
@@ -649,8 +683,23 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * @deprecated
-         * @description 사용자당 시즌은 1개뿐이라 다음 시즌을 만들지 않는다. 진행 중이면 409 SEASON_IN_PROGRESS, 10화를 마쳤으면 409 SEASON_COMPLETED.
+         * 새로운 시즌 만들기
+         * @description 가장 최근 시즌이 끝났으면(10화 완료, status COMPLETED) 다음 번호의 시즌을 새 출연진으로 만들고 바로 1화부터
+         *     시작할 수 있는 상태로 돌려준다(seasonNumber = 직전 + 1, status IN_PROGRESS, currentEpisode 1,
+         *     story.unlockedOrders [1,2,3], completedOrders·choices 빈 값, route null).
+         *     배경(setting)은 나이에 맞는 배경 중 지난 시즌들에서 안 쓴 배경을, 다 썼으면 가장 오래전에 쓴 배경을 고른다(같은
+         *     조건이면 랜덤) — 직전 시즌과 겹치지 않는다. 나이에 맞는 배경: 19세 이하 school·cafe, 20~29세 campus·cafe·office,
+         *     30세 이상 office·cafe. (첫 시즌·시즌 초기화 뒤의 시즌은 from-survey에서 나이로 정한다.)
+         *     시즌 만들기는 무료이고, 새 시즌도 1~3화는 무료, 4화부터 회차마다 `story.episodeTokenCost`만큼 토큰을 쓴다.
+         *
+         *     - surveyResultId: 내 분신 성향 기준이 되는 최신 설문 결과. 생략하면 서버의 최신 설문 결과를 쓴다.
+         *     - clientRequestId: 멱등 키. 같은 값으로 다시 오면 그 요청이 만든 시즌을 그대로 200으로 돌려준다. 동시에 여러 번
+         *       와도 시즌은 하나만 생긴다.
+         *
+         *     **오류**: 409 `SEASON_IN_PROGRESS`(가장 최근 시즌이 진행 중 — 그 시즌으로 들어가면 된다),
+         *     409 `STORY_NOT_STARTED`(시즌이 하나도 없음), 409 `AGE_REQUIRED`(나이·성별 없음),
+         *     409 `SURVEY_RESULT_STALE`(surveyResultId가 최신 설문 결과가 아님), 404 `SURVEY_RESULT_NOT_FOUND`
+         *     (본인 설문 결과가 없음).
          */
         post: operations["startNextSeason"];
         delete?: never;
@@ -705,6 +754,7 @@ export interface paths {
          * @description 1~3화는 무료라 차감 없이 열린 응답이다. 4~10화는 처음 열 때만 토큰(`story.episodeTokenCost`)을 쓰고, 이미 연 회차는
          *     차감 없이 같은 응답이다. 차감은 생성 전에 하고, 열린 뒤 생성이 실패해도 열린 상태로 남는다.
          *     순서: 이전 회차 완료 → 회차 열기 → content 요청. 열지 않은 4~10화의 content는 409 `EPISODE_NOT_UNLOCKED`.
+         *     열리면 서버가 그 회차 생성을 바로 시작한다(content 요청 전에 미리 만든다).
          *
          *     **오류**: 409 `INSUFFICIENT_TOKENS`(data: required, balance — 미니게임으로 안내), `PREVIOUS_EPISODE_NOT_COMPLETED`,
          *     `STORY_NOT_STARTED`, `SEASON_COMPLETED`
@@ -786,10 +836,18 @@ export interface paths {
         /**
          * 회차 완료
          * @description 관계 기록을 갱신하고(정리 단계) 회차 쪽지를 만든다. 10화면 최종 리포트를 만들고 시즌을 완료한다.
-         *     이미 완료한 회차면 상태만 돌려준다.
+         *     AI 생성을 여러 번 기다려 수십 초가 걸리므로 **접수만 하고 바로 응답한다**(비동기).
          *
-         *     **오류**: 409 `CONTENT_NOT_READY`, `CHOICE_REQUIRED`(선택 회차인데 선택 전), `STORY_NOT_STARTED`
-         *     / 502 `STORY_GENERATION_FAILED`(아무것도 저장되지 않음, 다시 요청 가능)
+         *     - 응답의 `completion`이 `{"order":N,"status":"completing"}`이면 진행 중이다.
+         *       `GET /api/ai/seasons/me`의 `story.completion`을 2~3초 간격으로 폴링한다.
+         *       `completion.progress`에 완료 단계(`stage`: summarize | episode-note | season-report)와 `regenerating`이 있다.
+         *     - 끝나면 `completion`이 null이 되고 `completedOrders`에 N이 들어간다(다음 회차 진행 가능).
+         *     - `status`가 `failed`(`errorCode` `STORY_GENERATION_FAILED`)면 아무것도 저장되지 않았다.
+         *       이 API를 다시 보내면 처음부터 다시 시도한다.
+         *     - 완료 중에 다시 보내도 새로 시작하지 않고 진행 상태만 돌려준다. 이미 완료한 회차면 상태만 돌려준다.
+         *
+         *     **오류**: 409 `CONTENT_NOT_READY`, `CHOICE_REQUIRED`(선택 회차인데 선택 전),
+         *     `CHOICE_RESULT_NOT_READY`(선택 결과 장면을 아직 만드는 중이거나 실패), `STORY_NOT_STARTED`, `AGE_REQUIRED`
          */
         post: operations["complete"];
         delete?: never;
@@ -810,11 +868,25 @@ export interface paths {
         /**
          * 선택 처리 (3·5·6·8화)
          * @description body `{ pointId, breadId | null }` — breadId가 null이면 혼자 있기. 수락·거절은 서버 코드 규칙으로 정한다.
-         *     응답은 선택 결과 장면(`choice_result`, 거절이면 대체 장면 포함)과 갱신된 시즌 상태다.
-         *     같은 선택을 다시 보내면 저장된 결과를 그대로 돌려준다.
+         *     선택(수락·거절, 호감·흐름 반영)은 **바로 저장하고**, 결과 장면(`choice_result`, 거절이면 대체 장면 포함)은
+         *     AI가 만드는 데 수십 초가 걸릴 수 있어 **백그라운드에서 만든다**(비동기).
+         *
+         *     - 응답 `choice.status`
+         *       - `generating`: 결과 장면을 만드는 중. `blocks`는 빈 배열이다. `GET /api/ai/seasons/me`의 `story.choice`를
+         *         2~3초 간격으로 폴링한다.
+         *       - `ready`: `blocks`에 결과 장면이 있다. 혼자 있기는 AI를 부르지 않아 바로 ready다.
+         *       - `failed`(`errorCode` `STORY_GENERATION_FAILED`): 선택은 저장된 채 결과 장면만 실패했다. 같은 선택을 다시
+         *         보내면 결과 장면만 다시 만든다(판정·호감은 그대로). 다른 빵으로 바꿀 수는 없다.
+         *     - `story.choice`가 null이 되면 결과 장면이 준비된 것이다. 같은 선택을 다시 보내 `blocks`를 받거나, 회차 콘텐츠를
+         *       다시 받으면 choice 블록 바로 뒤에 결과 장면이 들어 있다.
+         *     - 같은 선택을 다시 보내면: 만드는 중이면 새로 시작하지 않고 상태만, 끝났으면 저장된 결과(200)를 돌려준다.
+         *       다른 빵(또는 혼자 있기)으로 보내면 409 `CHOICE_ALREADY_MADE`.
+         *     - `season.choices[].accepted`와 흐름(`route`)은 접수 응답에서 바로 바뀐다. `resultStatus`는 그 선택의 결과 장면
+         *       상태(generating | ready | failed)다.
+         *     - 결과 장면이 준비되기 전에는 회차를 완료할 수 없다(409 `CHOICE_RESULT_NOT_READY`).
          *
          *     **오류**: 400 회차와 pointId 불일치·후보가 아닌 breadId / 409 `CONTENT_NOT_READY`, `CHOICE_ALREADY_MADE`,
-         *     `STORY_NOT_STARTED` / 502 `STORY_GENERATION_FAILED`(결과 장면 생성 실패, 다시 요청 가능)
+         *     `STORY_NOT_STARTED`, `AGE_REQUIRED`
          */
         post: operations["choose"];
         delete?: never;
@@ -1273,6 +1345,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diaries/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 내 일기 달력
+         * @description year년 month월(한국 시간 기준으로 그 달 1일 00:00 ~ 다음 달 1일 00:00 전)에 내가 쓴 일기의 날짜와 id.
+         *     모든 공유방의 내 일기가 대상이고 본문은 주지 않는다(상세는 GET /api/diaries/{diaryId}).
+         *
+         *     - 날짜(`date`, yyyy-MM-dd)는 작성 시각을 한국 시간으로 바꾼 날짜이고, 오름차순이다.
+         *     - 하루에 여러 개면 그날 항목 하나의 `diaryIds`에 작성순(오래된 것 먼저)으로 모두 담는다.
+         *     - 일기가 없는 날은 목록에 없다. 그 달에 일기가 없으면 빈 배열.
+         *     - month가 1~12가 아니면 400.
+         */
+        get: operations["getMyCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/contents/recommendations": {
         parameters: {
             query?: never;
@@ -1429,7 +1527,13 @@ export interface paths {
          * @description 선택을 마친 회차면 선택 결과 블록(`choice_result`, 거절이면 뒤이은 대체 `pair`)이 `choice` 블록 바로 뒤에 들어 있다
          *     (choices 응답과 같은 순서, 완료한 회차를 다시 볼 때도 같다).
          *     저장된 회차가 있으면 그대로, 없으면 생성을 시작하고 `status: generating`으로 응답한다(1~3초 간격으로 다시 요청).
-         *     `failed`면 다시 요청할 때 생성을 다시 시도한다. 1화 요청이 새 흐름의 시작이다(나이로 배경 결정, 1화에 stageIntro 포함).
+         *     실패하면 그다음 요청 한 번은 `failed`(errorCode 포함)로 응답하고, 그 뒤에 다시 요청하면 생성을 다시 시도한다. 1화 요청이 새 흐름의 시작이다(나이로 배경 결정, 1화에 stageIntro 포함).
+         *     `generating`이면 `progress`에 생성 단계(`stage`: stage-intro | episode | interview)와 `regenerating`이 있다.
+         *     `regenerating: true`는 AI가 문장을 다시 다듬는 중이라는 뜻이고 실패가 아니다("문장을 다듬고 있어요" 등으로 표시).
+         *     생성이 오래 걸려도 같은 요청을 계속 보내면 같은 생성의 진행 상태를 이어서 본다.
+         *     서버는 다음 회차를 미리 만든다 — 2·3화는 이전 회차 완료 직후, 4~10화는 회차를 연(unlock) 직후. 그래서 처음 요청해도
+         *     이미 `ready`이거나 `generating` 진행 중일 수 있다(응답 형식은 같다). 미리 만들다 실패한 경우에는 `failed`를 보여 주지
+         *     않고 바로 다시 생성해 `generating`으로 응답한다.
          *
          *     **409 code**
          *     - `AGE_REQUIRED`: 나이 또는 성별이 없다 — 둘 다 입력(PUT /api/users/me `{ age, gender }`) 후 다시 요청
@@ -1572,6 +1676,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/daily_questions/{questionId}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 밸런스 게임 보기 고르기
+         * @description body `{ selectedOption }` — 고른 보기의 optionId. 한 사람당 질문 하나에 1번이고 **바꿀 수 없다**.
+         *     응답은 결과(results·totalCount)가 채워진 질문이다(GET today와 같은 형식).
+         *
+         *     **400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption 누락, 없는 optionId, 다른 질문의 보기)
+         *     **404 code**: `DAILY_QUESTION_NOT_FOUND`(없는 questionId)
+         *     **409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(이미 고름)
+         */
+        post: operations["answerBalanceGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/daily_questions/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 오늘의 밸런스 게임
+         * @description 하루(KST 자정 기준) 1개, 모든 사용자에게 같은 질문이다. 미리 준비해 둔 목록에서 날짜별로 고른다.
+         *     answered·selectedOptionId는 요청한 사용자 기준이다.
+         *     **results·totalCount는 내가 고른 뒤에만 채워진다** — 고르기 전에는 `results: []`, `totalCount: 0`.
+         *     오늘 질문이 없으면 `data: null`(200)이다. 이때는 섹션을 숨긴다.
+         */
+        get: operations["getTodayBalanceGame"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1684,6 +1836,9 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            authorNickname?: string;
+            authorBreadType?: string;
+            isMine?: boolean;
         };
         TokenUseRequest: {
             /** Format: int32 */
@@ -1958,6 +2113,20 @@ export interface components {
             /** Format: int64 */
             likeCount?: number;
         };
+        AiSeasonResetView: {
+            /** Format: int32 */
+            deletedSeasons?: number;
+            /** Format: int32 */
+            refundedTokens?: number;
+            /** Format: int32 */
+            tokenBalance?: number;
+        };
+        ApiResponseAiSeasonResetView: {
+            success?: boolean;
+            data?: components["schemas"]["AiSeasonResetView"];
+            message?: string;
+            code?: string;
+        };
         ApiResponseVoid: {
             success?: boolean;
             data?: Record<string, never>;
@@ -2042,6 +2211,22 @@ export interface components {
             name?: string;
             description?: string;
         };
+        AiChoiceStatusView: {
+            /** Format: int32 */
+            order?: number;
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: uuid */
+            breadId?: string;
+            /** @enum {string} */
+            status?: "generating" | "ready" | "failed";
+            errorCode?: string | null;
+        };
+        AiGenerationProgressView: {
+            /** @enum {string|null} */
+            stage?: "stage-intro" | "episode" | "interview" | "summarize" | "episode-note" | "season-report" | null;
+            regenerating?: boolean;
+        };
         AiSeasonStatusView: {
             /** Format: uuid */
             seasonId?: string;
@@ -2074,6 +2259,8 @@ export interface components {
             unlockedOrders?: number[];
             /** Format: int32 */
             episodeTokenCost?: number;
+            completion?: components["schemas"]["Completion"];
+            choice?: components["schemas"]["AiChoiceStatusView"];
         };
         ApiResponseAiSeasonStatusView: {
             success?: boolean;
@@ -2096,6 +2283,16 @@ export interface components {
             /** Format: uuid */
             breadId?: string;
             accepted?: boolean;
+            /** @enum {string} */
+            resultStatus?: "generating" | "ready" | "failed";
+        };
+        Completion: {
+            /** Format: int32 */
+            order?: number;
+            /** @enum {string} */
+            status?: "completing" | "failed";
+            errorCode?: string | null;
+            progress?: components["schemas"]["AiGenerationProgressView"];
         };
         StartNextSeasonRequest: {
             /** Format: uuid */
@@ -2191,6 +2388,7 @@ export interface components {
         AiChoiceOutcomeView: {
             blocks?: components["schemas"]["AiSceneBlockView"][];
             season?: components["schemas"]["AiStoryStateView"];
+            choice?: components["schemas"]["AiChoiceStatusView"];
         };
         AiSceneBlockView: {
             id?: string;
@@ -2557,6 +2755,20 @@ export interface components {
             message?: string;
             code?: string;
         };
+        ApiResponseListDiaryCalendarDay: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryCalendarDay"][];
+            message?: string;
+            code?: string;
+        };
+        DiaryCalendarDay: {
+            /**
+             * Format: date
+             * @example 2026-10-03
+             */
+            date?: string;
+            diaryIds?: number[];
+        };
         ContentRecommendationListResponse: {
             contents?: components["schemas"]["ContentRecommendationResponse"][];
         };
@@ -2614,6 +2826,9 @@ export interface components {
             /** Format: date-time */
             completedAt?: string;
             episodeFormat?: string;
+            /** @enum {string|null} */
+            setting?: "school" | "campus" | "office" | "cafe" | null;
+            settingTitle?: string | null;
         };
         ApiResponseListAiSeasonSummaryView: {
             success?: boolean;
@@ -2677,6 +2892,7 @@ export interface components {
             completed?: boolean;
             feedbacks?: components["schemas"]["AiStoryFeedbackView"][];
             likedMessageIds?: string[];
+            progress?: components["schemas"]["AiGenerationProgressView"];
         };
         AiStageIntroView: {
             /** @enum {string} */
@@ -2752,6 +2968,67 @@ export interface components {
             /** Format: int64 */
             userId?: number;
             message?: string;
+        };
+        BalanceGameAnswerRequest: {
+            /**
+             * Format: int64
+             * @description 고른 보기의 optionId. 없거나 이 질문의 보기가 아니면 400 DAILY_QUESTION_INVALID_OPTION
+             */
+            selectedOption?: number;
+        };
+        BalanceGameOption: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+        };
+        BalanceGameResult: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+            /**
+             * Format: int64
+             * @description 이 보기를 고른 사람 수
+             */
+            voteCount?: number;
+            /**
+             * Format: double
+             * @description 전체 중 비율(0~100, 소수 첫째 자리까지)
+             * @example 62.5
+             */
+            percentage?: number;
+        };
+        BalanceGameView: {
+            /** Format: int64 */
+            questionId?: number;
+            /** @description 질문 문장 */
+            question?: string;
+            /**
+             * Format: date
+             * @description 이 질문의 날짜(KST). 하루 1개, 모든 사용자 공통
+             */
+            questionDate?: string;
+            /** @description 보기 2개 */
+            options?: components["schemas"]["BalanceGameOption"][];
+            /** @description 내가 이미 골랐는지 */
+            answered?: boolean;
+            /**
+             * Format: int64
+             * @description 내가 고른 optionId. 안 골랐으면 null
+             */
+            selectedOptionId?: number;
+            /** @description 보기별 결과(options와 같은 순서). 고르기 전에는 빈 목록 */
+            results?: components["schemas"]["BalanceGameResult"][];
+            /**
+             * Format: int64
+             * @description 전체 응답 수. 고르기 전에는 0
+             */
+            totalCount?: number;
+        };
+        ApiResponseBalanceGameView: {
+            success?: boolean;
+            data?: components["schemas"]["BalanceGameView"];
+            message?: string;
+            code?: string;
         };
     };
     responses: never;
@@ -4139,6 +4416,26 @@ export interface operations {
             };
         };
     };
+    resetSeasons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiSeasonResetView"];
+                };
+            };
+        };
+    };
     logout: {
         parameters: {
             query?: never;
@@ -5124,6 +5421,29 @@ export interface operations {
             };
         };
     };
+    getMyCalendar: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListDiaryCalendarDay"];
+                };
+            };
+        };
+    };
     getRecommendations: {
         parameters: {
             query?: never;
@@ -5523,6 +5843,103 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseDiaryRoomKickResponse"];
+                };
+            };
+        };
+    };
+    answerBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BalanceGameAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_INVALID_OPTION(selectedOption 누락, 없는 optionId, 다른 질문의 보기) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이 질문의 보기가 아닙니다.",
+                     *       "code": "DAILY_QUESTION_INVALID_OPTION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_NOT_FOUND(없는 questionId) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "밸런스 게임 질문을 찾을 수 없습니다.",
+                     *       "code": "DAILY_QUESTION_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_ALREADY_ANSWERED(이미 고름. 답은 바꿀 수 없다) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이미 답한 질문입니다.",
+                     *       "code": "DAILY_QUESTION_ALREADY_ANSWERED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTodayBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
                 };
             };
         };

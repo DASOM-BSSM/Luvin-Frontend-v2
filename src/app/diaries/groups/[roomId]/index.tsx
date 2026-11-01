@@ -17,7 +17,7 @@ import useQuestionHistory from '@/src/features/diaries/hooks/use-question-histor
 import useRoom from '@/src/features/diaries/hooks/use-room';
 import useRoomDiaries from '@/src/features/diaries/hooks/use-room-diaries';
 import { isRoomUnavailableError } from '@/src/features/diaries/utils/errors';
-import { getLastWrittenAt, getMyDiaryDates } from '@/src/features/diaries/utils/feed';
+import { getLastWrittenAt } from '@/src/features/diaries/utils/feed';
 import { getQuestionProgressIndex } from '@/src/features/diaries/utils/question';
 
 /** 시안의 칸 막대 수. */
@@ -138,11 +138,7 @@ export default function GroupMainScreen() {
         onClose={handleWriteClose}
       />
       <DiaryDetailModal diary={detail.selectedDiary} initialMenuOpen={detail.isMenuOpen} onClose={detail.close} />
-      <DiaryCalendarSheet
-        visible={isCalendarOpen}
-        writtenDates={getMyDiaryDates(diaries)}
-        onClose={handleCalendarClose}
-      />
+      <DiaryCalendarSheet visible={isCalendarOpen} onClose={handleCalendarClose} />
     </Screen>
   );
 }

@@ -1,7 +1,7 @@
 import type { DiaryId, RoomId } from '@/src/features/diaries/types';
 
 /**
- * `diaries` 기능의 쿼리 키 팩토리(§11). 일기 · 공유방 · 커뮤니티 피드 키를
+ * `diaries` 기능의 쿼리 키 팩토리(§11). 일기 · 공유방 · 커뮤니티 피드 · 밸런스 게임 키를
  * 여기 한 곳에서 관리한다 — 두 사람이 각자 키를 만들면 무효화(invalidate)가 어긋난다.
  *
  * 무효화할 때는 `all` / `lists()` 같은 상위 키를 넘기면 그 아래가 한 번에 무효화된다.
@@ -14,6 +14,10 @@ export const diaryKeys = {
   detail: (diaryId: DiaryId) => [...diaryKeys.all, 'detail', diaryId] as const,
   /** 일기 하나에 달린 댓글 목록. */
   comments: (diaryId: DiaryId) => [...diaryKeys.detail(diaryId), 'comments'] as const,
+  /** 내 일기 달력 전체의 상위 키. */
+  calendars: () => [...diaryKeys.all, 'calendar'] as const,
+  /** 내 일기 달력 한 달(`GET /api/diaries/calendar?year=&month=`). month 는 1~12. */
+  calendar: (year: number, month: number) => [...diaryKeys.calendars(), { year, month }] as const,
   /** 공유 일기(커뮤니티) 피드. */
   community: () => [...diaryKeys.all, 'community'] as const,
 };
@@ -37,4 +41,9 @@ export const roomKeys = {
   currentQuestion: (roomId: RoomId) => [...roomKeys.questions(roomId), 'current'] as const,
   /** 지난 질문 목록(`GET .../questions`). */
   questionHistory: (roomId: RoomId) => [...roomKeys.questions(roomId), 'history'] as const,
+};
+
+/** 오늘의 밸런스 게임(`/api/daily_questions`). */
+export const balanceGameKeys = {
+  today: ['balance-game', 'today'] as const,
 };

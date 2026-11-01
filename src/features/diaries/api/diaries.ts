@@ -3,6 +3,7 @@ import type { ApiEnvelope } from '@/src/lib/api-envelope';
 
 import type {
   Diary,
+  DiaryCalendarDay,
   DiaryFeedItem,
   DiaryId,
   DiaryCreateRequest,
@@ -29,6 +30,14 @@ export interface MyDiariesParams {
 export async function getMyDiaries({ page, size }: MyDiariesParams): Promise<Diary[]> {
   const { data } = await httpClient.get<ApiEnvelope<Diary[]>>('/api/diaries', {
     params: { page, size },
+  });
+  return data.data;
+}
+
+/** `GET /api/diaries/calendar?year=&month=` — 그달(한국 시간) 내가 일기를 쓴 날, 날짜 오름차순. month 는 1~12. */
+export async function getMyDiaryCalendar(year: number, month: number): Promise<DiaryCalendarDay[]> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryCalendarDay[]>>('/api/diaries/calendar', {
+    params: { year, month },
   });
   return data.data;
 }

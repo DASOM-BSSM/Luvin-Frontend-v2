@@ -28,3 +28,36 @@
 
 - 피드백 추가분이 더 올 수 있음
 - 커밋/PR 은 사용자 확인 후
+
+## 추가: Figma 시안 3개 재반영 (2026-11-01, 미커밋)
+
+받은 시안: 일기 반응 및 댓글(5950:6274) · 일기 삭제 및 수정(6102:2606) · 일기 모아보기(6199:3820).
+반응 고르기 · ⋮ 메뉴 · 달력 틀은 이미 시안대로라 그대로 두고, 다른 곳만 고쳤다.
+
+- `docs/api/openapi.json` 을 백엔드 master 로 교체, `src/types/api-generated.ts` 재생성
+  (pnpm 이 전역에서 깨져 있어 scratchpad 에서 `npx openapi-typescript@7.13.0` 으로 돌림). master 에는 AI 시즌 쪽 변경도 같이 들어 있다
+- 댓글: 응답에 `authorNickname` · `authorBreadType` · `isMine` 이 생겨, 댓글 카드에 빵 그림 + 닉네임 + 몇 분 전(시안 5950:6015)
+- 달력: 새 `GET /api/diaries/calendar?year=&month=` 로 보이는 달마다 받는다(`use-my-diary-calendar`, 키 `diaryKeys.calendar`). 일기 작성 · 수정 · 삭제 때 같이 무효화. 실패하면 다시 시도 문구. 그룹 피드로 칠하던 `getMyDiaryDates` 삭제
+- 달력의 다른 달 날짜는 얼굴 아이콘 자리를 비움(시안은 빈 아이콘)
+
+검증(iOS): tsc 통과. 달력 11월(1일 분홍) · 10월(29일 분홍) 이 API 값으로 칠해짐, 다른 달 날짜 아이콘 없음 확인.
+댓글 카드: 스테이징 Test 그룹 15:43 일기("해장국 맛있다")에 "테스트 댓글"을 달아 확인 — 빵 그림(프레첼) + 닉네임 + "방금 전" + 내용이 나온다. 이 테스트 댓글은 스테이징에 남아 있다. Android 미확인.
+
+## 추가: 밸런스 게임 다시 연결 (2026-11-02, 미커밋 · 미테스트)
+
+백엔드 PR #103(`feat/97`, 아직 열림 · master 미머지 → 스테이징에 없음)의 스펙으로 다시 붙였다. 테스트는 머지 · 스테이징 배포 후에 하기로 함(사용자 결정).
+
+- `docs/api/openapi.json`: 지금 파일(이전 master)에 PR #103 의 `/api/daily_questions/*` 2개 · `BalanceGame*` 스키마 5개 · 태그만 끼워 넣음.
+  PR 머지 후엔 master 파일로 통째로 바꾸면 된다. `api-generated.ts` 재생성(밸런스 게임 부분만 바뀜)
+- LUV-87(64276ec)에서 지운 코드를 되살려 새 스펙에 맞춤
+  - `api/balance-game.ts`: 봉투(`ApiEnvelope`)에서 `data` 를 꺼냄. 답 응답이 결과가 채워진 질문이라 그대로 캐시에 넣음
+  - `hooks/use-today-balance-game.ts` · `use-answer-balance-game.ts`, 키 `balanceGameKeys.today`
+  - `components/balance-game-card.tsx`(O / X 버튼, 예전 그대로) · `balance-game-section.tsx`
+  - 오늘 질문이 없으면(`data: null`) 섹션을 숨김(예전엔 "아직 없어요" 문구)
+  - "N명 응답중"은 고른 뒤에만(서버가 고르기 전엔 0 을 줌)
+  - 409 `DAILY_QUESTION_ALREADY_ANSWERED` → "이미 고른 질문이에요" + 오늘 질문 다시 불러옴. 그 밖은 "답을 보내지 못했어요"
+  - 결과(퍼센트)는 시안이 없어 안 그림
+- `src/app/diaries/index.tsx` 에 `<BalanceGameSection />` 다시 마운트(쫀쫀한 조합들 위)
+- 주의: 스테이징에 API 가 올라가기 전엔 이 섹션이 "오늘의 질문을 불러오지 못했어요" 로 보인다
+
+검증: tsc 통과. 화면 · API 는 미확인(스테이징 배포 후).

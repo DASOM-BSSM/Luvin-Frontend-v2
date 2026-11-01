@@ -150,6 +150,22 @@ export interface DiaryComment {
   /** 한국 시간 ISO-8601. */
   createdAt: string;
   updatedAt: string;
+  /** 작성자 닉네임(계정 닉네임). 탈퇴한 사용자면 null. */
+  authorNickname: string | null;
+  /** 작성자 빵 타입 id(설문 canonical). 설문을 안 했거나 탈퇴했으면 null — `toBreadType` 으로 바꿔 쓴다. */
+  authorBreadType: string | null;
+  isMine: boolean;
+}
+
+/**
+ * `GET /api/diaries/calendar?year=&month=` 의 한 줄 — 내가 일기를 쓴 날 하나. 모든 공유방의 내 일기가
+ * 대상이고, 일기가 없는 날은 오지 않는다.
+ */
+export interface DiaryCalendarDay {
+  /** 한국 시간 "YYYY-MM-DD". */
+  date: string;
+  /** 그날 쓴 일기 id, 작성순(오래된 것 먼저). */
+  diaryIds: DiaryId[];
 }
 
 /** 댓글 작성 · 수정 요청. */
@@ -222,4 +238,42 @@ export interface RoomQuestionHistoryItem {
   status: RoomQuestionStatus;
   createdAt: string;
   answerCount: number;
+}
+
+/** 밸런스 게임 질문 id. */
+export type BalanceGameQuestionId = number;
+
+/** 밸런스 게임 보기 하나(openapi `BalanceGameOption`). */
+export interface BalanceGameOption {
+  optionId: number;
+  content: string;
+}
+
+/** 보기별 결과(openapi `BalanceGameResult`). 결과 화면 시안이 아직 없어 화면에서 쓰지 않는다. */
+export interface BalanceGameResult {
+  optionId: number;
+  content: string;
+  voteCount: number;
+  /** 0~100, 소수 첫째 자리까지. */
+  percentage: number;
+}
+
+/**
+ * 오늘의 밸런스 게임(openapi `BalanceGameView`) — 하루(KST) 1개, 모든 사용자 공통.
+ * `results` · `totalCount` 는 내가 고른 뒤에만 채워진다(고르기 전엔 `[]` · 0).
+ */
+export interface BalanceGame {
+  questionId: BalanceGameQuestionId;
+  question: string;
+  /** 질문 날짜(KST, "2026-11-02"). */
+  questionDate: string;
+  /** 보기 2개. */
+  options: BalanceGameOption[];
+  /** 내가 이미 골랐는지. 답은 바꿀 수 없다. */
+  answered: boolean;
+  /** 내가 고른 optionId. 안 골랐으면 null. */
+  selectedOptionId: number | null;
+  results: BalanceGameResult[];
+  /** 전체 응답 수. 고르기 전에는 0. */
+  totalCount: number;
 }
