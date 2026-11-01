@@ -72,11 +72,6 @@ export function formatHourSlot(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:00`;
 }
 
-/** 월요일을 0 으로 하는 요일 번호(0~6). */
-export function getWeekdayIndex(date: Date): number {
-  return (date.getDay() + 6) % 7;
-}
-
 /** 서버 제목 길이 제한(1~100자). */
 const DIARY_TITLE_MAX_LENGTH = 100;
 

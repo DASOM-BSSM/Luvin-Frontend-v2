@@ -61,7 +61,7 @@ export default function GroupDiaryCard({
 
       {/*
         반응 남기기 버튼. 일기 상세(Figma 5950:6274)에서는 누르면 왼쪽에 이모지 고르기(`reactionPicker`)가
-        펼쳐진다. 홈 · 감정일기 메인 목록에서는 카드 전체를 눌러 상세로 들어간다.
+        펼쳐진다. 홈 · 감정일기 메인 목록도 `ReactableDiaryCard` 로 같은 고르기를 쓴다(LUV-90).
       */}
       <View className="w-full flex-row items-center justify-end gap-[4px]">
         {reactionPicker}
