@@ -3,6 +3,8 @@ import { View } from 'react-native';
 
 interface GameFrameProps {
   children: ReactNode;
+  /** Figma 목업 높이(555)와 다른 게임만 넘긴다. 빵굽기는 한 화면에 들어가도록 더 낮다. */
+  heightClassName?: string;
 }
 
 /**
@@ -14,9 +16,9 @@ interface GameFrameProps {
  * 계획 문서 "엔진 아키텍처" 1번 참고): 스프라이트는 flex로 표현할 수 없어 각 Scene이
  * `relative` 컨테이너 + `absolute` 자식으로 그린다.
  */
-export default function GameFrame({ children }: GameFrameProps) {
+export default function GameFrame({ children, heightClassName = 'h-[555px]' }: GameFrameProps) {
   return (
-    <View className="relative h-[555px] w-[340px] self-center overflow-hidden rounded-[12px] border-4 border-default-bg">
+    <View className={`relative ${heightClassName} w-[340px] self-center overflow-hidden rounded-[12px] border-4 border-default-bg`}>
       {children}
     </View>
   );

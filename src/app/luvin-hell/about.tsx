@@ -8,7 +8,7 @@ import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 const RULES = [
   '01. 오늘의 미션을 완료하면 보상 토큰을 받아요',
   '02. 모은 토큰으로 다음 에피소드를 오픈해요',
-  '03. 난이도에 따라 토큰 양이 달라져요',
+  '03. 토큰은 항상 1개씩 지급돼요',
 ];
 
 /** 미니게임 공통 설명. Figma "미니게임 설명" (6041:2962). */

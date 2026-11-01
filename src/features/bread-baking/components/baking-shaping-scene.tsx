@@ -38,10 +38,17 @@ const ARROW_STYLE = {
 } as const;
 
 function getDoughAsset({ step, shaping }: BakingState): BakingAssetName {
-  if (step === 'roll') return 'shapingRoundDough';
   if (step === 'filling') return 'shapingFlatDough';
-  if (step === 'shape') return SHAPE_STAGES[Math.min(shaping.hits, SHAPE_STAGES.length - 1)];
-  return 'shapingRollComplete';
+  return SHAPE_STAGES[Math.min(shaping.hits, SHAPE_STAGES.length - 1)];
+}
+
+/** Once shaping is done the dough is the same salt bread that goes into the oven (user request). */
+function renderDough(state: BakingState) {
+  if (state.step === 'roll') return <BakingSprite name="dough" rect={bakingLayout.slots.roundDough} />;
+  if (state.step === 'filling' || state.step === 'shape') {
+    return <BakingSprite name={getDoughAsset(state)} rect={bakingLayout.slots.boardDough} />;
+  }
+  return <BakingSprite name="saltBread" rect={bakingLayout.slots.boardSaltBread} />;
 }
 
 export default function BakingShapingScene({ state, enabled, onAction }: BakingShapingSceneProps) {
@@ -59,25 +66,31 @@ export default function BakingShapingScene({ state, enabled, onAction }: BakingS
       ? { ...action, arrows: createShapeArrows(Math.random) } : action);
   }
 
+  function handleSaltMiss() {
+    onAction({ type: 'sprinkle-miss' });
+  }
+
   function handleSwipe(direction: BakingDirection) {
     onAction({ type: 'swipe', direction });
   }
 
   return <>
-    <BakingSprite name="largeBoard" rect={bakingLayout.slots.largeBoard} />
-    <BakingSprite name={getDoughAsset(state)} rect={bakingLayout.slots.boardDough} />
+    <BakingSprite name="board" rect={bakingLayout.slots.board} />
+    {/* Figma 7966:6180 shows the round dough before rolling; later stages use the shaping set. */}
+    {renderDough(state)}
+    {/* Both stay draggable before shaping so salt-before-butter can raise its NOTICE. */}
     {(step === 'roll' || step === 'filling') && <BakingIngredient ingredient="butter" isFilling
-      enabled={enabled && step === 'filling'} onAction={handleFillingAction} />}
-    <BakingIngredient ingredient="salt" isFilling enabled={enabled && step === 'sprinkle'}
-      onAction={onAction} />
+      enabled={enabled} onAction={handleFillingAction} />}
+    <BakingIngredient ingredient="salt" isFilling enabled={enabled && step !== 'shape'}
+      onAction={onAction} onMiss={handleSaltMiss} />
     <BakingSprite name="rollingPin" rect={bakingLayout.slots.rollingPin}
-      workArea={bakingLayout.targets.largeBoard}
+      workArea={bakingLayout.targets.shapingBoard}
       label="밀대로 반죽 밀기" enabled={enabled && step === 'roll'} onTravel={handleRollTravel} />
     {arrow && <View pointerEvents="none"
       style={[ARROW_STYLE, { transform: [{ rotate: ARROW_ROTATIONS[arrow] }] }]}>
       <BakingAsset name="shapingArrow" />
     </View>}
-    {step === 'shape' && <BakingSwipeArea rect={bakingLayout.targets.largeBoard}
+    {step === 'shape' && <BakingSwipeArea rect={bakingLayout.targets.shapingBoard}
       label="화살표 방향으로 반죽 드래그하기" enabled={enabled} onSwipe={handleSwipe} />}
   </>;
 }
