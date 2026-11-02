@@ -13,7 +13,7 @@ import type {
  * 전부 그룹 멤버만(403), 없는 그룹은 404.
  */
 
-/** `GET .../questions/current` — 가장 최근 날짜의 질문. 질문이 한 번도 없으면 null. */
+/** `GET .../questions/current` — 가장 최근 칸(`slotStartAt`)의 질문. 질문이 한 번도 없으면 null. */
 export async function getCurrentRoomQuestion(roomId: RoomId): Promise<RoomQuestion | null> {
   const { data } = await httpClient.get<ApiEnvelope<RoomQuestion | null>>(
     `/api/diary-rooms/${roomId}/questions/current`,
@@ -22,18 +22,41 @@ export async function getCurrentRoomQuestion(roomId: RoomId): Promise<RoomQuesti
 }
 
 /**
- * `POST .../questions` — 202 와 함께 `generating` 질문이 바로 온다. 그룹당 하루(KST) 1개라 이미 있으면
- * 409 `ROOM_QUESTION_ALREADY_EXISTS` 이고, 그때 data 에 그 질문이 담겨 온다(`getExistingQuestion`).
+ * `POST .../questions` — 202 와 함께 `generating` 질문이 바로 온다. 그룹당 KST 정각 칸(예: 09:00~09:59)마다
+ * 1개라 이 칸에 이미 있으면 409 `ROOM_QUESTION_ALREADY_EXISTS` 이고, 그때 data 에 그 질문이 담겨 온다
+ * (`getExistingQuestion`). 칸은 요청한 시각으로 서버가 정한다.
  */
 export async function createRoomQuestion(roomId: RoomId): Promise<RoomQuestion> {
   const { data } = await httpClient.post<ApiEnvelope<RoomQuestion>>(`/api/diary-rooms/${roomId}/questions`);
   return data.data;
 }
 
-/** `GET .../questions` — 지난 질문, 최신순. 답 내용 없이 답 수만 온다. */
-export async function getRoomQuestionHistory(roomId: RoomId): Promise<RoomQuestionHistoryItem[]> {
+/** 지난 질문 한 번에 받는 수 — 서버 최대값. 질문이 칸마다 생겨서 기본값(20)이면 하루치도 못 담는다. */
+const QUESTION_HISTORY_PAGE_SIZE = 50;
+
+/**
+ * `GET .../questions` — 지난 질문, 최신순(`slotStartAt`). 답 내용 없이 답 수만 온다(답은
+ * `getRoomQuestion`). 첫 페이지 50개만 받는다. `date`(KST "YYYY-MM-DD")를 주면 그날 칸만 받는다
+ * (서버 `from` · `to`, 하루 최대 24개) — 달력에서 고른 날을 볼 때 쓴다.
+ */
+export async function getRoomQuestionHistory(
+  roomId: RoomId,
+  date?: string,
+): Promise<RoomQuestionHistoryItem[]> {
   const { data } = await httpClient.get<ApiEnvelope<RoomQuestionHistoryItem[]>>(
     `/api/diary-rooms/${roomId}/questions`,
+    { params: { size: QUESTION_HISTORY_PAGE_SIZE, ...(date ? { from: date, to: date } : {}) } },
+  );
+  return data.data;
+}
+
+/**
+ * `GET .../questions/{questionId}` — 질문 하나(지난 질문 포함). 형태는 current 와 같고, `content` · `myAnswer` ·
+ * `answers` 는 `ready` 일 때만 채워진다. 이 그룹의 질문이 아니면 404 `ROOM_QUESTION_NOT_FOUND`.
+ */
+export async function getRoomQuestion(roomId: RoomId, questionId: RoomQuestionId): Promise<RoomQuestion> {
+  const { data } = await httpClient.get<ApiEnvelope<RoomQuestion>>(
+    `/api/diary-rooms/${roomId}/questions/${questionId}`,
   );
   return data.data;
 }

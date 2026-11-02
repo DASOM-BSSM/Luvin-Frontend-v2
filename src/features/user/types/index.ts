@@ -17,6 +17,8 @@ export interface UserProfile {
   latestSurveyResultId: string | null;
   /** latestSurveyResultId가 본인의 유효한 완료 결과를 가리킬 때만 true. */
   surveyCompleted: boolean;
+  /** 내 빵 이름(예: "쫀쫀한 카스테라") — 감정일기에서 다른 사람에게 보이는 이름과 같다. 설문 전이면 null. */
+  breadName: string | null;
 }
 
 /**

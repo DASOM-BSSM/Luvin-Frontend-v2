@@ -41,6 +41,8 @@ export interface DiaryFeedItem extends Diary {
   liked: boolean;
   /** 작성자 닉네임(닉네임이 없으면 이름). 탈퇴한 사용자면 null. */
   authorNickname: string | null;
+  /** 작성자 빵 이름(서버가 정함, 예: "쫀쫀한 카스테라"). 설문 전 · 탈퇴면 null. 화면 이름은 이걸 쓴다. */
+  authorBreadName: string | null;
   /**
    * 작성자 빵 타입 id(설문 canonical, 예: "salt_bread"). 설문을 안 했거나 탈퇴한 사용자면 null.
    * 화면에서는 `toBreadType` 으로 바꿔 쓴다.
@@ -108,9 +110,13 @@ export interface DiaryRoomMember {
   id: UserId;
   name: string;
   email?: string;
-  /** 이 방에서 쓰는 닉네임. */
+  /** 이 방에서 쓰는 닉네임. 화면에는 쓰지 않고 빵 이름을 쓴다(사용자 결정). */
   nickname?: string | null;
   role?: 'OWNER' | 'MEMBER';
+  /** 빵 이름(예: "쫀쫀한 카스테라"). 설문 전이면 null. */
+  breadName?: string | null;
+  /** 빵 타입 id(`DiaryFeedItem.authorBreadType` 과 같은 값). 설문 전이면 null. */
+  breadType?: string | null;
 }
 
 /** 멤버십 응답(MembershipResponse). 멤버 추가 · 나가기가 돌려준다. */
@@ -152,6 +158,8 @@ export interface DiaryComment {
   updatedAt: string;
   /** 작성자 닉네임(계정 닉네임). 탈퇴한 사용자면 null. */
   authorNickname: string | null;
+  /** 작성자 빵 이름(서버가 정함, 예: "쫀쫀한 카스테라"). 설문 전 · 탈퇴면 null. 화면 이름은 이걸 쓴다. */
+  authorBreadName: string | null;
   /** 작성자 빵 타입 id(설문 canonical). 설문을 안 했거나 탈퇴했으면 null — `toBreadType` 으로 바꿔 쓴다. */
   authorBreadType: string | null;
   isMine: boolean;
@@ -210,6 +218,10 @@ export interface RoomQuestionAnswer {
   answerId: number;
   authorId: UserId;
   authorNickname: string;
+  /** 작성자 빵 타입 id(`DiaryFeedItem.authorBreadType` 과 같은 값). 설문 전 · 탈퇴면 null. */
+  authorBreadType: string | null;
+  /** 작성자 빵 이름(서버가 정함, 예: "쫀쫀한 카스테라"). 설문 전 · 탈퇴면 null. 화면 이름은 이걸 쓴다. */
+  authorBreadName: string | null;
   content: string;
   createdAt: string;
   updatedAt: string;
@@ -219,11 +231,21 @@ export interface RoomQuestionAnswer {
 export interface RoomQuestion {
   questionId: RoomQuestionId;
   roomId: RoomId;
-  /** 질문 날짜(KST, "2026-10-28"). 그룹당 하루 1개. */
+  /** 질문 칸의 날짜(KST, "2026-10-28"). `slotStartAt` 의 날짜와 같다. */
   questionDate: string;
+  /** 질문 칸의 시작 시각(KST 정각, "2026-11-02T09:00:00+09:00"). 그룹당 칸마다 1개, 칸은 이 시각 ~ +1시간. */
+  slotStartAt: string;
   content: string | null;
   status: RoomQuestionStatus;
   createdAt: string;
+  /** 질문을 만든 사람의 계정 닉네임(없으면 이름). 탈퇴했으면 null. */
+  creatorNickname: string | null;
+  /** 질문을 만든 사람의 빵 타입 id(`DiaryFeedItem.authorBreadType` 과 같은 값). 설문 전 · 탈퇴면 null. */
+  creatorBreadType: string | null;
+  /** 질문을 만든 사람의 id — 내가 만든 질문인지 가릴 때 쓴다. */
+  creatorId: UserId | null;
+  /** 질문을 만든 사람의 빵 이름(예: "쫀쫀한 카스테라"). 설문 전 · 탈퇴면 null. */
+  creatorBreadName: string | null;
   /** 내 답. 없으면 null. */
   myAnswer: RoomQuestionAnswer | null;
   /** 멤버들의 답(내 답 포함), 작성순. */
@@ -234,6 +256,8 @@ export interface RoomQuestion {
 export interface RoomQuestionHistoryItem {
   questionId: RoomQuestionId;
   questionDate: string;
+  /** 질문 칸의 시작 시각(KST 정각). */
+  slotStartAt: string;
   content: string | null;
   status: RoomQuestionStatus;
   createdAt: string;
@@ -276,4 +300,23 @@ export interface BalanceGame {
   results: BalanceGameResult[];
   /** 전체 응답 수. 고르기 전에는 0. */
   totalCount: number;
+}
+
+/**
+ * 최근 반응 알림 한 건(openapi `DiaryRecentReaction`) — 내 그룹들의 일기에 다른 사람이 남긴 반응.
+ * 내가 남긴 반응은 서버가 빼고 준다.
+ */
+export interface DiaryRecentReaction {
+  diaryId: DiaryId;
+  roomId: RoomId;
+  emoji: string;
+  /** 반응을 남기거나 바꾼 시각(한국 시간 ISO-8601). */
+  reactedAt: string;
+  reactorId: UserId;
+  /** 반응한 사람의 빵 이름. 설문 전 · 탈퇴면 null. */
+  reactorBreadName: string | null;
+  reactorBreadType: string | null;
+  diaryAuthorId: UserId;
+  /** 일기 쓴 사람의 빵 이름. 설문 전 · 탈퇴면 null. */
+  diaryAuthorBreadName: string | null;
 }

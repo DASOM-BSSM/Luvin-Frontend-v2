@@ -5,11 +5,15 @@ import { answerRoomQuestion, type AnswerQuestionInput } from '@/src/features/dia
 import type { RoomQuestion } from '@/src/features/diaries/types';
 import queryClient from '@/src/lib/query-client';
 
-/** 지금 질문이 바뀐 질문과 같으면 응답으로 바꿔 넣고, 지난 질문 목록(답 수)은 다시 불러온다. */
+/**
+ * 지금 질문이 바뀐 질문과 같으면 응답으로 바꿔 넣고, 그 질문 하나(지난 칸 답 모달)도 바꿔 넣는다.
+ * 지난 질문 목록(답 수)은 다시 불러온다.
+ */
 export function applyQuestionUpdate(question: RoomQuestion) {
   queryClient.setQueryData<RoomQuestion | null>(roomKeys.currentQuestion(question.roomId), (current) =>
     current?.questionId === question.questionId ? question : current,
   );
+  queryClient.setQueryData<RoomQuestion>(roomKeys.question(question.roomId, question.questionId), question);
   return queryClient.invalidateQueries({ queryKey: roomKeys.questionHistory(question.roomId) });
 }
 
