@@ -21,6 +21,8 @@ const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as cons
 interface DiaryCalendarSheetProps {
   visible: boolean;
   onClose: () => void;
+  /** 날짜를 누르면(KST "YYYY-MM-DD") — 감정일기 메인이 그날 화면으로 옮긴다. */
+  onDateSelect?: (date: string) => void;
 }
 
 /** react-native-calendars 의 기본 머리(월 제목 · 화살표 · 요일)는 쓰지 않고 시안대로 직접 그린다. */
@@ -32,9 +34,10 @@ const EmptyHeader = () => null;
  *
  * 일기를 쓴 날은 `GET /api/diaries/calendar` 로 보이는 달마다 받는다 — 모든 그룹의 내 일기가 대상이다.
  * 받는 중이거나 실패하면 모든 날이 회색이고, 실패하면 머리 아래에 다시 시도 문구가 뜬다.
- * 날짜를 눌러 그날 일기를 보는 화면은 시안이 없어 고르기만 된다.
+ * 날짜를 누르면 `onDateSelect` 로 알린다 — 감정일기 메인은 시트를 닫고 그날의 감정일기 메인(질문 · 일기)을
+ * 보여준다(사용자 결정). 지난 질문 목록 대신 여기서 날짜로 찾아간다.
  */
-export default function DiaryCalendarSheet({ visible, onClose }: DiaryCalendarSheetProps) {
+export default function DiaryCalendarSheet({ visible, onClose, onDateSelect }: DiaryCalendarSheetProps) {
   const today = toDateString(new Date());
   const [visibleMonth, setVisibleMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
@@ -55,7 +58,9 @@ export default function DiaryCalendarSheet({ visible, onClose }: DiaryCalendarSh
   }
 
   function handleDayPress(date?: DateData) {
-    if (date) setSelectedDate(date.dateString);
+    if (!date) return;
+    setSelectedDate(date.dateString);
+    onDateSelect?.(date.dateString);
   }
 
   function renderDay(props: Omit<DiaryCalendarDayProps, 'written' | 'selected'>) {
