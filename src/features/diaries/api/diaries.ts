@@ -8,6 +8,7 @@ import type {
   DiaryId,
   DiaryCreateRequest,
   DiaryReactionResult,
+  DiaryRecentReaction,
   DiaryUpdateRequest,
 } from '@/src/features/diaries/types';
 
@@ -78,6 +79,17 @@ export async function reactToDiary({ diaryId, emoji }: ReactToDiaryInput): Promi
     `/api/diaries/${diaryId}/like`,
     { emoji },
   );
+  return data.data;
+}
+
+/**
+ * `GET /api/diaries/reactions/recent?limit=1` — 내 그룹들의 일기에 다른 사람이 남긴 가장 최근 반응(내 반응은 빠진다).
+ * 없으면 빈 배열. `after`(본 알림 다시 안 받기)는 쓰지 않는다 — 홈에 늘 가장 최근 반응 하나를 보여준다.
+ */
+export async function getRecentReactions(): Promise<DiaryRecentReaction[]> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryRecentReaction[]>>('/api/diaries/reactions/recent', {
+    params: { limit: 1 },
+  });
   return data.data;
 }
 
