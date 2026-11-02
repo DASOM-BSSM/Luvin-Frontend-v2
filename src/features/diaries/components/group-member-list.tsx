@@ -5,6 +5,7 @@ import Text from '@/src/components/ui/text';
 import useKickRoomMember from '@/src/features/diaries/hooks/use-kick-room-member';
 import useRoomMembers from '@/src/features/diaries/hooks/use-room-members';
 import type { DiaryRoomMember, RoomId, UserId } from '@/src/features/diaries/types';
+import { resolveAuthorName } from '@/src/features/diaries/utils/feed';
 
 interface GroupMemberListProps {
   roomId: RoomId;
@@ -19,8 +20,20 @@ interface MemberRowProps {
   onRemovePress: (member: DiaryRoomMember) => void;
 }
 
-/** 이 그룹에서 쓰는 닉네임. 닉네임이 없는 멤버(닉네임이 생기기 전에 들어온 멤버)는 계정 이름. */
-const getMemberDisplayName = (member: DiaryRoomMember) => member.nickname ?? member.name;
+/**
+ * 이 그룹에서 쓰는 닉네임. 닉네임이 없는 멤버(닉네임이 생기기 전에 들어온 멤버)는 계정 이름.
+ * 지금은 빵 이름이다 — 실제 이름 · 닉네임은 감정일기에서 쓰지 않는다(사용자 결정, `resolveAuthorName`).
+ */
+const getMemberDisplayName = (member: DiaryRoomMember) =>
+  resolveAuthorName(
+    {
+      isMine: false,
+      nickname: member.name,
+      breadName: member.breadName ?? null,
+      breadType: member.breadType ?? null,
+    },
+    '',
+  );
 
 /** 멤버 한 줄 — 연한 노랑 칸 + (방장일 때) x. Figma 6606:4161. */
 function MemberRow({ member, removable, onRemovePress }: MemberRowProps) {

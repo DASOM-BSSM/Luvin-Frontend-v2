@@ -6,6 +6,8 @@ import { formatRelativeTime } from '@/src/features/diaries/utils/feed';
 
 interface QuestionAnswerItemProps {
   answer: RoomQuestionAnswer;
+  /** 보여줄 이름 — 실제 이름이 아니라 빵 이름이다(utils/feed.ts `resolveAuthorName`). */
+  authorName: string;
   now: Date;
   /** 내 답이면 넘긴다 — 수정 · 삭제 버튼이 붙는다. */
   onEditPress?: () => void;
@@ -14,13 +16,15 @@ interface QuestionAnswerItemProps {
 }
 
 /**
- * 그룹 질문 답 한 장. 이름은 `authorNickname`(계정 닉네임) 그대로 — 그룹 닉네임으로 바꾸지 않는다.
+ * 그룹 질문 답 한 장. 이름은 빵 이름이다 — 계정 닉네임(실제 이름)은 러빈지옥 회차 밖에서 쓰지 않는다
+ * (사용자 결정). 이름은 부르는 쪽이 정해서 넘긴다.
  *
  * [DRAFT] Figma 에 답 목록 시안이 없어 일기 상세의 댓글 카드(5950:6015)와 같은 모양으로 그렸고,
  * 내 답만 테두리를 pink/400 으로 구분했다.
  */
 export default function QuestionAnswerItem({
   answer,
+  authorName,
   now,
   onEditPress,
   onDeletePress,
@@ -37,7 +41,7 @@ export default function QuestionAnswerItem({
       <View className="w-full flex-row items-center justify-between">
         <View className="flex-row items-center gap-[6px]">
           <Text variant="body-xs" className="text-text-primary">
-            {answer.authorNickname}
+            {authorName}
           </Text>
           <Text variant="body-xxs" className="text-text-muted">
             {formatRelativeTime(answer.updatedAt, now)}

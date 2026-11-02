@@ -31,7 +31,7 @@ export interface WriteDiaryFormProps {
   errorMessage?: string;
   /**
    * 내가 마지막으로 일기를 쓴 시각(ms). 1시간이 안 지났으면 버튼에 남은 시간을 보여주고 막는다
-   * (기획: 1시간에 한 번). 수정할 때는 넘기지 않는다.
+   * (기획: 정각 칸마다 한 번 — utils/feed.ts `getCooldownSeconds`). 수정할 때는 넘기지 않는다.
    */
   lastWrittenAt?: number;
   /** 저장은 이 모달이 아니라 부르는 쪽이 한다 — 작성은 useCreateDiary, 수정은 useUpdateDiary. */
