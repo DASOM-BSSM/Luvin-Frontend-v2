@@ -54,16 +54,10 @@ export default function useReportMinigameResult(
     }
 
     hasReportedRef.current = true;
-    playMutation.mutate(
-      { gameId: game.gameId, outcome: phase === 'success' ? 'success' : 'fail' },
-      {
-        onSuccess: (result) => {
-          if (__DEV__) {
-            console.log(`[useReportMinigameResult] gameId=${game.gameId} ${phase} -> reward.token=${result.reward?.token}`);
-          }
-        },
-      },
-    );
+    playMutation.mutate({
+      gameId: game.gameId,
+      outcome: phase === 'success' ? 'success' : 'fail',
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, minigamesQuery.data]);
 }
