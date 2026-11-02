@@ -6,18 +6,22 @@
     },
     "servers": [
         {
-            "url": "https://luvin-api.dasom-bssm.com",
+            "url": "http://localhost:8080",
             "description": "Generated server url"
         }
     ],
     "tags": [
         {
+            "name": "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38",
+            "description": "\uacf5\uc720\ubc29(\uadf8\ub8f9)\ub9c8\ub2e4 AI\uac00 \ub9cc\ub4dc\ub294 \uc2dc\uac04\ub300(KST \uc815\uac01 \uce78)\ubcc4 1\uac1c \uc9c8\ubb38\uacfc \uba64\ubc84\ub4e4\uc758 \ub2f5"
+        },
+        {
             "name": "\uac10\uc815\uc77c\uae30",
             "description": "\uc77c\uae30 \uc791\uc131\u00b7\uc870\ud68c\u00b7\uc218\uc815\u00b7\uc0ad\uc81c, \uc774\ubaa8\uc9c0 \ubc18\uc751, \ub0b4 \ubc29\ub4e4 \ud53c\ub4dc"
         },
         {
-            "name": "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38",
-            "description": "\uacf5\uc720\ubc29(\uadf8\ub8f9)\ub9c8\ub2e4 AI\uac00 \ub9cc\ub4dc\ub294 \ud558\ub8e8 1\uac1c \uc9c8\ubb38\uacfc \uba64\ubc84\ub4e4\uc758 \ub2f5"
+            "name": "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784",
+            "description": "\uac10\uc815\uc77c\uae30 \ud0ed \ud648\uc758 \uc624\ub298\uc758 \ubc38\ub7f0\uc2a4 \uac8c\uc784. \ubaa8\ub4e0 \uc0ac\uc6a9\uc790\uac00 \uac19\uc740 \uc9c8\ubb38\uc5d0 \ubcf4\uae30 2\uac1c \uc911 \ud558\ub098\ub97c \uace0\ub978\ub2e4"
         },
         {
             "name": "AI job \uc9c4\ud589 \uc774\ubca4\ud2b8",
@@ -38,10 +42,6 @@
         {
             "name": "\ub7ec\ube48\uc9c0\uc625 \ud68c\ucc28",
             "description": "\uc7a5\uba74 \ube14\ub85d \ud68c\ucc28(1~10\ud654) \ucf58\ud150\uce20, \uc120\ud0dd, \uc644\ub8cc, 1:1 \uc7a5\uba74 \ud53c\ub4dc\ubc31\u00b7\uc88b\uc544\uc694"
-        },
-        {
-            "name": "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784",
-            "description": "\uac10\uc815\uc77c\uae30 \ud0ed \ud648\uc758 \uc624\ub298\uc758 \ubc38\ub7f0\uc2a4 \uac8c\uc784. \ubaa8\ub4e0 \uc0ac\uc6a9\uc790\uac00 \uac19\uc740 \uc9c8\ubb38\uc5d0 \ubcf4\uae30 2\uac1c \uc911 \ud558\ub098\ub97c \uace0\ub978\ub2e4"
         }
     ],
     "paths": {
@@ -1266,7 +1266,7 @@
                     "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38"
                 ],
                 "summary": "\uc9c0\ub09c \uadf8\ub8f9 \uc9c8\ubb38 \ubaa9\ub85d",
-                "description": "\ucd5c\uc2e0\uc21c. page\ub294 0\ubd80\ud130, size \uae30\ubcf8 20\u00b7\ucd5c\ub300 50. \ub2f5 \uc218(answerCount) \ud3ec\ud568 \u2014 \ub2f5 \ub0b4\uc6a9\uc740 GET current\ucc98\ub7fc \uc0c1\uc138\uac00 \ud544\uc694\ud558\uba74\n\ub530\ub85c \uc694\uccad\ud55c\ub2e4(\uc9c0\uae08\uc740 current\ub9cc \uc0c1\uc138\ub97c \uc900\ub2e4).\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
+                "description": "\ucd5c\uc2e0\uc21c(`slotStartAt`). page\ub294 0\ubd80\ud130, size \uae30\ubcf8 20\u00b7\ucd5c\ub300 50. \ub2f5 \uc218(answerCount) \ud3ec\ud568 \u2014 \ub2f5 \ub0b4\uc6a9\uc740\nGET `/{questionId}`\ub85c \ub530\ub85c \uc694\uccad\ud55c\ub2e4.\n`from`\u00b7`to`(KST \ub0a0\uc9dc `yyyy-MM-dd`, \ub458 \ub2e4 \ud3ec\ud568)\ub97c \uc8fc\uba74 \uadf8 \ub0a0\uc9dc\uc758 \uce78\ub9cc \uc900\ub2e4. \ud55c\ucabd\ub9cc \uc918\ub3c4 \ub41c\ub2e4(\ub2e4\ub978 \ucabd\uc740 \ub05d\uae4c\uc9c0).\n\uc608: `?from=2026-11-02&to=2026-11-02` \u2192 \uadf8\ub0a0 \uce78\ub4e4(\ucd5c\ub300 24\uac1c).\n\n**400 code**: `ROOM_QUESTION_RANGE_INVALID`(\ub0a0\uc9dc \ud615\uc2dd\uc774 \ud2c0\ub838\uac70\ub098 from\uc774 to\ubcf4\ub2e4 \ub4a4)\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
                 "operationId": "getRoomQuestionHistory",
                 "parameters": [
                     {
@@ -1276,6 +1276,26 @@
                         "schema": {
                             "type": "integer",
                             "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "\uc774 \ub0a0\uc9dc(KST)\ubd80\ud130, \ud3ec\ud568",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "\uc774 \ub0a0\uc9dc(KST)\uae4c\uc9c0, \ud3ec\ud568",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
                         }
                     },
                     {
@@ -1306,6 +1326,22 @@
                             "*/*": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ApiResponseListRoomQuestionHistoryItem"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "code: ROOM_QUESTION_RANGE_INVALID(\ub0a0\uc9dc \ud615\uc2dd\uc774 \ud2c0\ub838\uac70\ub098 from\uc774 to\ubcf4\ub2e4 \ub4a4)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "data": null,
+                                    "message": "from\uc740 to\ubcf4\ub2e4 \ub2a6\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+                                    "code": "ROOM_QUESTION_RANGE_INVALID"
                                 }
                             }
                         }
@@ -1349,7 +1385,7 @@
                     "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38"
                 ],
                 "summary": "\uadf8\ub8f9 \uc9c8\ubb38 \uc0dd\uc131",
-                "description": "\uadf8\ub8f9 \uba64\ubc84\uba74 \ub204\uad6c\ub098 \ub204\ub97c \uc218 \uc788\ub2e4. \uadf8\ub8f9\ub2f9 \ud558\ub8e8(KST \uc790\uc815 \uae30\uc900) 1\uac1c.\n**\ube44\ub3d9\uae30**: \ubc14\ub85c 202\uc640 \ud568\uaed8 `status: generating`\uc778 \uc9c8\ubb38\uc744 \ub3cc\ub824\uc900\ub2e4. 1~3\ucd08 \uac04\uaca9\uc73c\ub85c GET current\ub97c \ub2e4\uc2dc \uc694\uccad\ud574\uc11c\n`ready`(content\u00b7answers \ucc44\uc6cc\uc9d0)\ub098 `failed`\ub97c \ud655\uc778\ud55c\ub2e4. `failed`\uba74 \uc774 API\ub97c \ub2e4\uc2dc \ub20c\ub7ec \uc7ac\uc2dc\ub3c4\ud560 \uc218 \uc788\ub2e4.\nAI\uc5d0\ub294 \uadf8\ub8f9 \uc774\ub984\u00b7\uba64\ubc84 \uc218\u00b7\ucd5c\uadfc \uc9c8\ubb38\ub9cc \ub118\uae30\uace0 \uc77c\uae30 \ubcf8\ubb38\uc740 \ub118\uae30\uc9c0 \uc54a\ub294\ub2e4.\n\n**409 code**\n- `ROOM_QUESTION_ALREADY_EXISTS`: \uc624\ub298 \uc9c8\ubb38\uc774 \uc774\ubbf8 \uc788\ub2e4(\uc0dd\uc131 \uc911 \ud3ec\ud568). data\uc5d0 \uadf8 \uc9c8\ubb38(QuestionView)\uc774 \ub2f4\uae34\ub2e4\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
+                "description": "\uadf8\ub8f9 \uba64\ubc84\uba74 \ub204\uad6c\ub098 \ub204\ub97c \uc218 \uc788\ub2e4. \uadf8\ub8f9\ub2f9 KST \uc815\uac01 \uce78(\uc608: 09:00~09:59)\ub9c8\ub2e4 1\uac1c.\n\uce78\uc740 \uc774 API\ub97c \ubd80\ub978 \uc2dc\uac01\uc744 KST \uc815\uac01\uc73c\ub85c \ub0b4\ub9b0 \uac83\uc774\uace0, \uc751\ub2f5 `slotStartAt`\uc5d0 \ub2f4\uae34\ub2e4(\uc608: 09:42\uc5d0 \ub204\ub974\uba74 `09:00:00+09:00`).\n**\ube44\ub3d9\uae30**: \ubc14\ub85c 202\uc640 \ud568\uaed8 `status: generating`\uc778 \uc9c8\ubb38\uc744 \ub3cc\ub824\uc900\ub2e4. 1~3\ucd08 \uac04\uaca9\uc73c\ub85c GET current\ub97c \ub2e4\uc2dc \uc694\uccad\ud574\uc11c\n`ready`(content\u00b7answers \ucc44\uc6cc\uc9d0)\ub098 `failed`\ub97c \ud655\uc778\ud55c\ub2e4. `failed`\uba74 \uc774 API\ub97c \ub2e4\uc2dc \ub20c\ub7ec \uc7ac\uc2dc\ub3c4\ud560 \uc218 \uc788\ub2e4.\nAI\uc5d0\ub294 \uadf8\ub8f9 \uc774\ub984\u00b7\uba64\ubc84 \uc218\u00b7\ucd5c\uadfc \uc9c8\ubb38\ub9cc \ub118\uae30\uace0 \uc77c\uae30 \ubcf8\ubb38\uc740 \ub118\uae30\uc9c0 \uc54a\ub294\ub2e4.\n\n**409 code**\n- `ROOM_QUESTION_ALREADY_EXISTS`: \uc774 \uce78\uc758 \uc9c8\ubb38\uc774 \uc774\ubbf8 \uc788\ub2e4(\uc0dd\uc131 \uc911 \ud3ec\ud568). data\uc5d0 \uadf8 \uc9c8\ubb38(QuestionView)\uc774 \ub2f4\uae34\ub2e4\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
                 "operationId": "create",
                 "parameters": [
                     {
@@ -1374,7 +1410,7 @@
                         }
                     },
                     "409": {
-                        "description": "code: ROOM_QUESTION_ALREADY_EXISTS. \uc624\ub298 \uc9c8\ubb38\uc774 \uc774\ubbf8 \uc788\ub2e4(\uc0dd\uc131 \uc911 \ud3ec\ud568). data\uc5d0 \uadf8 \uc9c8\ubb38",
+                        "description": "code: ROOM_QUESTION_ALREADY_EXISTS. \uc774 \uce78\uc758 \uc9c8\ubb38\uc774 \uc774\ubbf8 \uc788\ub2e4(\uc0dd\uc131 \uc911 \ud3ec\ud568). data\uc5d0 \uadf8 \uc9c8\ubb38",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1541,6 +1577,97 @@
                                     "data": null,
                                     "message": "\uc544\uc9c1 \uc9c8\ubb38\uc774 \uc900\ube44\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.",
                                     "code": "ROOM_QUESTION_NOT_READY"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/daily_questions/{questionId}/answer": {
+            "post": {
+                "tags": [
+                    "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784"
+                ],
+                "summary": "\ubc38\ub7f0\uc2a4 \uac8c\uc784 \ubcf4\uae30 \uace0\ub974\uae30",
+                "description": "body `{ selectedOption }` \u2014 \uace0\ub978 \ubcf4\uae30\uc758 optionId. \ud55c \uc0ac\ub78c\ub2f9 \uc9c8\ubb38 \ud558\ub098\uc5d0 1\ubc88\uc774\uace0 **\ubc14\uafc0 \uc218 \uc5c6\ub2e4**.\n\uc751\ub2f5\uc740 \uacb0\uacfc(results\u00b7totalCount)\uac00 \ucc44\uc6cc\uc9c4 \uc9c8\ubb38\uc774\ub2e4(GET today\uc640 \uac19\uc740 \ud615\uc2dd).\n\n**400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption \ub204\ub77d, \uc5c6\ub294 optionId, \ub2e4\ub978 \uc9c8\ubb38\uc758 \ubcf4\uae30)\n**404 code**: `DAILY_QUESTION_NOT_FOUND`(\uc5c6\ub294 questionId)\n**409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(\uc774\ubbf8 \uace0\ub984)\n",
+                "operationId": "answerBalanceGame",
+                "parameters": [
+                    {
+                        "name": "questionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BalanceGameAnswerRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBalanceGameView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "code: DAILY_QUESTION_INVALID_OPTION(selectedOption \ub204\ub77d, \uc5c6\ub294 optionId, \ub2e4\ub978 \uc9c8\ubb38\uc758 \ubcf4\uae30)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "data": null,
+                                    "message": "\uc774 \uc9c8\ubb38\uc758 \ubcf4\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4.",
+                                    "code": "DAILY_QUESTION_INVALID_OPTION"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "code: DAILY_QUESTION_NOT_FOUND(\uc5c6\ub294 questionId)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "data": null,
+                                    "message": "\ubc38\ub7f0\uc2a4 \uac8c\uc784 \uc9c8\ubb38\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+                                    "code": "DAILY_QUESTION_NOT_FOUND"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "code: DAILY_QUESTION_ALREADY_ANSWERED(\uc774\ubbf8 \uace0\ub984. \ub2f5\uc740 \ubc14\uafc0 \uc218 \uc5c6\ub2e4)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "data": null,
+                                    "message": "\uc774\ubbf8 \ub2f5\ud55c \uc9c8\ubb38\uc785\ub2c8\ub2e4.",
+                                    "code": "DAILY_QUESTION_ALREADY_ANSWERED"
                                 }
                             }
                         }
@@ -2000,8 +2127,8 @@
                 "tags": [
                     "\uac1c\ubc1c \uc804\uc6a9"
                 ],
-                "summary": "AI \uc2dc\uc98c \ucd08\uae30\ud654(\uc2dc\uc98c \uc0ad\uc81c)",
-                "description": "\ub0b4 AI \uc2dc\uc98c\uc744 **\uc2dc\uc98c \ud589\uae4c\uc9c0 \ubaa8\ub450 \uc9c0\uc6b4\ub2e4**. \uc9c4\ud589 \uc911\uc774\ub4e0 \uc644\ub8cc\ud588\ub4e0 \uac19\uace0, \uc2dc\uc98c\uc774 \uc5ec\ub7ec \uac1c\uba74 \uc804\ubd80 \uc9c0\uc6b4\ub2e4.\n\uacc4\uc815\u00b7\uc124\ubb38 \uacb0\uacfc\uc640 \ube75 \uc720\ud615\u00b7\uac10\uc815\uc77c\uae30\u00b7\uacf5\uc720\ubc29\uc740 \ub0a8\ub294\ub2e4.\n\n- \uc9c0\uc6b0\ub294 \uac83: \ud68c\ucc28 \ubcf8\ubb38\u00b7\uc120\ud0dd \uacb0\uacfc \uc7a5\uba74\u00b7\uc120\ud0dd \uae30\ub85d\u00b7\uc5f4\ub9b0 \ud68c\ucc28\u00b7\ud68c\ucc28 \uc644\ub8cc \uc0c1\ud0dc, 1:1 \uc7a5\uba74 \uc88b\uc544\uc694\u00b7\ud53c\ub4dc\ubc31(\ud559\uc2b5 \uc785\ub825 \ud3ec\ud568),\n  \ud68c\ucc28 \uc815\ub9ac \uae30\ub85d\u00b7\uad00\uacc4 \uae30\ub85d\u00b7\ud68c\ucc28 \ucabd\uc9c0\u00b7\uc2dc\uc98c \ud3b8\uc9c0\u00b7\ucd5c\uc885 \ub9ac\ud3ec\ud2b8, \ucd9c\uc5f0\uc9c4, \uc0c8 \uc2dc\uc98c \uc124\uc815, \uc2dc\uc98c \uc0dd\uc131 \uc785\ub825\n- \uadf8 \uc2dc\uc98c\ub4e4\uc5d0\uc11c 4~10\ud654\ub97c \uc5f4\uba70 \uc4f4 \ud1a0\ud070\uc740 \ub3cc\ub824\uc900\ub2e4(`refundedTokens`, \ub0b4\uc5ed\uc740 REWARD \"\ub7ec\ube48\uc9c0\uc625 \uc2dc\uc98c \ucd08\uae30\ud654 \ud658\ubd88\").\n- \ucd08\uae30\ud654 \uc804\uc5d0 \ub3cc\ub358 \ud68c\ucc28 \uc0dd\uc131\u00b7\uc644\ub8cc\u00b7\uc120\ud0dd \uacb0\uacfc \uc0dd\uc131\uc740 \uc2dc\uc98c\uc774 \uc5c6\uc5b4\uc838 \uacb0\uacfc\ub97c \ubc84\ub9b0\ub2e4.\n- \uc2dc\uc98c\uc774 \uc5c6\uc73c\uba74 \uc544\ubb34\uac83\ub3c4 \ud558\uc9c0 \uc54a\uace0 200(`deletedSeasons` 0).\n\n\ucd08\uae30\ud654 \ub4a4: `GET /api/ai/seasons/me`\ub294 404 `SEASON_NOT_FOUND` \u2192 `POST /api/ai/seasons/from-survey`\n(`surveyResultId`\ub294 \ucd5c\uc2e0 \uc124\ubb38 \uacb0\uacfc)\ub85c \uc0c8 \uc2dc\uc98c \u2192 `GET /api/ai/seasons/episodes/1/content`\ub85c 1\ud654\ubd80\ud130 \uc2dc\uc791.\n",
+                "summary": "AI \uc2dc\uc98c \ucd08\uae30\ud654(\uc2dc\uc98c \uc0ad\uc81c, \ud1a0\ud070 \ud658\ubd88)",
+                "description": "\ud14c\uc2a4\ud2b8\uc6a9. \uc571\uc758 \uc2dc\uc98c \ucd08\uae30\ud654 \ubc84\ud2bc\uc740 \uc815\uc2dd \uacbd\ub85c `POST /api/ai/seasons/reset`(\ud658\ubd88 \uc5c6\uc74c)\uc744 \uc4f4\ub2e4.\n\uc774 \uacbd\ub85c\ub294 \uadf8\uc640 \uac19\uace0, \uc4f4 \ud1a0\ud070\uc744 \ub3cc\ub824\uc8fc\ub294 \uac83\ub9cc \ub2e4\ub974\ub2e4.\n\n\ub0b4 AI \uc2dc\uc98c\uc744 **\uc2dc\uc98c \ud589\uae4c\uc9c0 \ubaa8\ub450 \uc9c0\uc6b4\ub2e4**. \uc9c4\ud589 \uc911\uc774\ub4e0 \uc644\ub8cc\ud588\ub4e0 \uac19\uace0, \uc2dc\uc98c\uc774 \uc5ec\ub7ec \uac1c\uba74 \uc804\ubd80 \uc9c0\uc6b4\ub2e4.\n\uacc4\uc815\u00b7\uc124\ubb38 \uacb0\uacfc\uc640 \ube75 \uc720\ud615\u00b7\uac10\uc815\uc77c\uae30\u00b7\uacf5\uc720\ubc29\uc740 \ub0a8\ub294\ub2e4.\n\n- \uc9c0\uc6b0\ub294 \uac83: \ud68c\ucc28 \ubcf8\ubb38\u00b7\uc120\ud0dd \uacb0\uacfc \uc7a5\uba74\u00b7\uc120\ud0dd \uae30\ub85d\u00b7\uc5f4\ub9b0 \ud68c\ucc28\u00b7\ud68c\ucc28 \uc644\ub8cc \uc0c1\ud0dc, 1:1 \uc7a5\uba74 \uc88b\uc544\uc694\u00b7\ud53c\ub4dc\ubc31(\ud559\uc2b5 \uc785\ub825 \ud3ec\ud568),\n  \ud68c\ucc28 \uc815\ub9ac \uae30\ub85d\u00b7\uad00\uacc4 \uae30\ub85d\u00b7\ud68c\ucc28 \ucabd\uc9c0\u00b7\uc2dc\uc98c \ud3b8\uc9c0\u00b7\ucd5c\uc885 \ub9ac\ud3ec\ud2b8, \ucd9c\uc5f0\uc9c4, \uc0c8 \uc2dc\uc98c \uc124\uc815, \uc2dc\uc98c \uc0dd\uc131 \uc785\ub825\n- \uadf8 \uc2dc\uc98c\ub4e4\uc5d0\uc11c 4~10\ud654\ub97c \uc5f4\uba70 \uc4f4 \ud1a0\ud070\uc740 \ub3cc\ub824\uc900\ub2e4(`refundedTokens`, \ub0b4\uc5ed\uc740 REWARD \"\ub7ec\ube48\uc9c0\uc625 \uc2dc\uc98c \ucd08\uae30\ud654 \ud658\ubd88\").\n- \ucd08\uae30\ud654 \uc804\uc5d0 \ub3cc\ub358 \ud68c\ucc28 \uc0dd\uc131\u00b7\uc644\ub8cc\u00b7\uc120\ud0dd \uacb0\uacfc \uc0dd\uc131\uc740 \uc2dc\uc98c\uc774 \uc5c6\uc5b4\uc838 \uacb0\uacfc\ub97c \ubc84\ub9b0\ub2e4.\n- \uc2dc\uc98c\uc774 \uc5c6\uc73c\uba74 \uc544\ubb34\uac83\ub3c4 \ud558\uc9c0 \uc54a\uace0 200(`deletedSeasons` 0).\n\n\ucd08\uae30\ud654 \ub4a4: `GET /api/ai/seasons/me`\ub294 404 `SEASON_NOT_FOUND` \u2192 `POST /api/ai/seasons/from-survey`\n(`surveyResultId`\ub294 \ucd5c\uc2e0 \uc124\ubb38 \uacb0\uacfc)\ub85c \uc0c8 \uc2dc\uc98c \u2192 `GET /api/ai/seasons/episodes/1/content`\ub85c 1\ud654\ubd80\ud130 \uc2dc\uc791.\n",
                 "operationId": "resetSeasons",
                 "responses": {
                     "200": {
@@ -3208,13 +3335,101 @@
                 }
             }
         },
+        "/api/diary-rooms/{roomId}/questions/{questionId}": {
+            "get": {
+                "tags": [
+                    "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38"
+                ],
+                "summary": "\uadf8\ub8f9 \uc9c8\ubb38 \uc0c1\uc138",
+                "description": "\uc9c8\ubb38 \ud558\ub098(\uc9c0\ub09c \uc9c8\ubb38 \ud3ec\ud568). \uc751\ub2f5\uc740 GET current\uc640 \uac19\uc740 \ud615\ud0dc\ub2e4(content\u00b7myAnswer\u00b7answers\ub294 `status: ready`\uc77c \ub54c\ub9cc).\n\n**404 code**: `ROOM_QUESTION_NOT_FOUND`(\uc774 \uadf8\ub8f9\uc758 \uc9c8\ubb38\uc774 \uc544\ub2d8)\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
+                "operationId": "getRoomQuestion",
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "questionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseRoomQuestionView"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8. code: ROOM_FORBIDDEN",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "example": {
+                                    "success": false,
+                                    "data": null,
+                                    "message": "\uacf5\uc720\ubc29 \uba64\ubc84\ub9cc \uc774\uc6a9\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+                                    "code": "ROOM_FORBIDDEN"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "code: ROOM_NOT_FOUND(\uc5c6\ub294 \uadf8\ub8f9) \ub610\ub294 ROOM_QUESTION_NOT_FOUND(\uc774 \uadf8\ub8f9\uc758 \uc9c8\ubb38\uc774 \uc544\ub2d8)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponse"
+                                },
+                                "examples": {
+                                    "ROOM_NOT_FOUND": {
+                                        "description": "ROOM_NOT_FOUND",
+                                        "value": {
+                                            "success": false,
+                                            "data": null,
+                                            "message": "\uacf5\uc720\ubc29\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+                                            "code": "ROOM_NOT_FOUND"
+                                        }
+                                    },
+                                    "ROOM_QUESTION_NOT_FOUND": {
+                                        "description": "ROOM_QUESTION_NOT_FOUND",
+                                        "value": {
+                                            "success": false,
+                                            "data": null,
+                                            "message": "\uc9c8\ubb38\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+                                            "code": "ROOM_QUESTION_NOT_FOUND"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/diary-rooms/{roomId}/questions/current": {
             "get": {
                 "tags": [
                     "\uac10\uc815\uc77c\uae30 \uadf8\ub8f9 \uc9c8\ubb38"
                 ],
                 "summary": "\uc9c0\uae08 \uadf8\ub8f9 \uc9c8\ubb38",
-                "description": "\uac00\uc7a5 \ucd5c\uadfc \ub0a0\uc9dc\uc758 \uc9c8\ubb38. \uc9c8\ubb38\uc774 \ud55c \ubc88\ub3c4 \uc5c6\uc73c\uba74 `data: null`.\ncontent\u00b7myAnswer\u00b7answers\ub294 `status: ready`\uc77c \ub54c\ub9cc \ucc44\uc6cc\uc9c4\ub2e4. answers\ub294 \ub0b4 \ub2f5\uc744 \ud3ec\ud568\ud55c \uba64\ubc84 \ub2f5(\uc791\uc131\uc21c)\uc774\ub2e4.\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
+                "description": "\uac00\uc7a5 \ucd5c\uadfc \uce78(`slotStartAt`)\uc758 \uc9c8\ubb38. \uc9c8\ubb38\uc774 \ud55c \ubc88\ub3c4 \uc5c6\uc73c\uba74 `data: null`.\ncontent\u00b7myAnswer\u00b7answers\ub294 `status: ready`\uc77c \ub54c\ub9cc \ucc44\uc6cc\uc9c4\ub2e4. answers\ub294 \ub0b4 \ub2f5\uc744 \ud3ec\ud568\ud55c \uba64\ubc84 \ub2f5(\uc791\uc131\uc21c)\uc774\ub2e4.\n`creatorNickname`\u00b7`creatorBreadType`\uc740 \uc9c8\ubb38\uc744 \ub9cc\ub4e0 \uc0ac\ub78c(\uc2e4\ud328 \ud6c4 \ub2e4\uc2dc \ub204\ub974\uba74 \ub2e4\uc2dc \ub204\ub978 \uc0ac\ub78c)\uc774\uace0 \ud0c8\ud1f4\ud588\uc73c\uba74 null.\n**\uacf5\ud1b5 \uc624\ub958**: 404 `ROOM_NOT_FOUND`(\uc5c6\ub294 \uadf8\ub8f9) / 403 `ROOM_FORBIDDEN`(\uadf8\ub8f9 \uba64\ubc84\uac00 \uc544\ub2d8)\n",
                 "operationId": "getCurrent",
                 "parameters": [
                     {
@@ -3266,6 +3481,28 @@
                                     "data": null,
                                     "message": "\uacf5\uc720\ubc29\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
                                     "code": "ROOM_NOT_FOUND"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/daily_questions/today": {
+            "get": {
+                "tags": [
+                    "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784"
+                ],
+                "summary": "\uc624\ub298\uc758 \ubc38\ub7f0\uc2a4 \uac8c\uc784",
+                "description": "\ud558\ub8e8(KST \uc790\uc815 \uae30\uc900) 1\uac1c, \ubaa8\ub4e0 \uc0ac\uc6a9\uc790\uc5d0\uac8c \uac19\uc740 \uc9c8\ubb38\uc774\ub2e4. \ubbf8\ub9ac \uc900\ube44\ud574 \ub454 \ubaa9\ub85d\uc5d0\uc11c \ub0a0\uc9dc\ubcc4\ub85c \uace0\ub978\ub2e4.\nanswered\u00b7selectedOptionId\ub294 \uc694\uccad\ud55c \uc0ac\uc6a9\uc790 \uae30\uc900\uc774\ub2e4.\n**results\u00b7totalCount\ub294 \ub0b4\uac00 \uace0\ub978 \ub4a4\uc5d0\ub9cc \ucc44\uc6cc\uc9c4\ub2e4** \u2014 \uace0\ub974\uae30 \uc804\uc5d0\ub294 `results: []`, `totalCount: 0`.\n\uc624\ub298 \uc9c8\ubb38\uc774 \uc5c6\uc73c\uba74 `data: null`(200)\uc774\ub2e4. \uc774\ub54c\ub294 \uc139\uc158\uc744 \uc228\uae34\ub2e4.\n",
+                "operationId": "getTodayBalanceGame",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBalanceGameView"
                                 }
                             }
                         }
@@ -3912,90 +4149,42 @@
                 }
             }
         },
-        "/api/daily_questions/{questionId}/answer": {
-            "post": {
+        "/api/diaries/reactions/recent": {
+            "get": {
                 "tags": [
-                    "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784"
+                    "\uac10\uc815\uc77c\uae30"
                 ],
-                "summary": "\ubc38\ub7f0\uc2a4 \uac8c\uc784 \ubcf4\uae30 \uace0\ub974\uae30",
-                "description": "body `{ selectedOption }` \u2014 \uace0\ub978 \ubcf4\uae30\uc758 optionId. \ud55c \uc0ac\ub78c\ub2f9 \uc9c8\ubb38 \ud558\ub098\uc5d0 1\ubc88\uc774\uace0 **\ubc14\uafc0 \uc218 \uc5c6\ub2e4**.\n\uc751\ub2f5\uc740 \uacb0\uacfc(results\u00b7totalCount)\uac00 \ucc44\uc6cc\uc9c4 \uc9c8\ubb38\uc774\ub2e4(GET today\uc640 \uac19\uc740 \ud615\uc2dd).\n\n**400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption \ub204\ub77d, \uc5c6\ub294 optionId, \ub2e4\ub978 \uc9c8\ubb38\uc758 \ubcf4\uae30)\n**404 code**: `DAILY_QUESTION_NOT_FOUND`(\uc5c6\ub294 questionId)\n**409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(\uc774\ubbf8 \uace0\ub984)\n",
-                "operationId": "answerBalanceGame",
+                "summary": "\ucd5c\uadfc \ubc18\uc751 \uc54c\ub9bc",
+                "description": "\ub0b4\uac00 \ubc29\uc7a5\uc774\uac70\ub098 \uba64\ubc84\uc778 \uacf5\uc720\ubc29\ub4e4\uc758 \uc77c\uae30\uc5d0 \ub0a8\uae34 \ubc18\uc751, \ucd5c\uc2e0\uc21c(\uac10\uc815\uc77c\uae30 \ud648 \"\ucac0\ucac0\ud55c \uc870\ud569\ub4e4\" \ub9e8 \uc704 \uce74\ub4dc:\n\"{reactorBreadName}\ub2d8\uc774 {diaryAuthorBreadName}\ub2d8\uc758 \uc77c\uae30\uc5d0 '{emoji}' \ubc18\uc751\uc744 \ud588\uc2b5\ub2c8\ub2e4.\").\n\n- \ub0b4\uac00 \ub0a8\uae34 \ubc18\uc751\uc740 \ube7c\uace0, \ub0b4 \uc77c\uae30\uc5d0 \ub2e4\ub978 \uc0ac\ub78c\uc774 \ub0a8\uae34 \ubc18\uc751\uc740 \ud3ec\ud568\ud55c\ub2e4.\n- limit: 1~20(\uae30\ubcf8 1). after(ISO-8601 \uc2dc\uac01, \uc120\ud0dd): \uc774 \uc2dc\uac01\ubcf4\ub2e4 \ub4a4\uc758 \ubc18\uc751\ub9cc \u2014 \uc571\uc774 \ub9c8\uc9c0\ub9c9\uc73c\ub85c \ubcf8 \ubc18\uc751\uc758\n  reactedAt\uc744 \uc800\uc7a5\ud574 \ub450\uace0 \ub118\uae30\uba74 \uc774\ubbf8 \ubcf8 \uc54c\ub9bc\uc744 \ub2e4\uc2dc \ubc1b\uc9c0 \uc54a\ub294\ub2e4(\uc11c\ubc84\uc5d0 \uc77d\uc74c \uc0c1\ud0dc\ub294 \uc5c6\ub2e4).\n- reactedAt\uc740 \ubc18\uc751\uc744 \ub0a8\uae30\uac70\ub098 \ub2e4\ub978 \uc774\ubaa8\uc9c0\ub85c \ubc14\uafbc \uc2dc\uac01\uc774\ub2e4. \ubc18\uc751\uc744 \ucde8\uc18c\ud558\uba74 \ubaa9\ub85d\uc5d0\uc11c \ube60\uc9c4\ub2e4.\n- \ube75 \uc774\ub984\uc740 \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null\uc774\ub2e4. \uc5c6\uc73c\uba74 \ube48 \ubc30\uc5f4.\n",
+                "operationId": "getRecentReactions",
                 "parameters": [
                     {
-                        "name": "questionId",
-                        "in": "path",
-                        "required": true,
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
                         "schema": {
                             "type": "integer",
-                            "format": "int64"
+                            "format": "int32",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
                         }
                     }
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/BalanceGameAnswerRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseBalanceGameView"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "code: DAILY_QUESTION_INVALID_OPTION(selectedOption \ub204\ub77d, \uc5c6\ub294 optionId, \ub2e4\ub978 \uc9c8\ubb38\uc758 \ubcf4\uae30)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiErrorResponse"
-                                },
-                                "example": {
-                                    "success": false,
-                                    "data": null,
-                                    "message": "\uc774 \uc9c8\ubb38\uc758 \ubcf4\uae30\uac00 \uc544\ub2d9\ub2c8\ub2e4.",
-                                    "code": "DAILY_QUESTION_INVALID_OPTION"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "code: DAILY_QUESTION_NOT_FOUND(\uc5c6\ub294 questionId)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiErrorResponse"
-                                },
-                                "example": {
-                                    "success": false,
-                                    "data": null,
-                                    "message": "\ubc38\ub7f0\uc2a4 \uac8c\uc784 \uc9c8\ubb38\uc744 \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
-                                    "code": "DAILY_QUESTION_NOT_FOUND"
-                                }
-                            }
-                        }
-                    },
-                    "409": {
-                        "description": "code: DAILY_QUESTION_ALREADY_ANSWERED(\uc774\ubbf8 \uace0\ub984. \ub2f5\uc740 \ubc14\uafc0 \uc218 \uc5c6\ub2e4)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApiErrorResponse"
-                                },
-                                "example": {
-                                    "success": false,
-                                    "data": null,
-                                    "message": "\uc774\ubbf8 \ub2f5\ud55c \uc9c8\ubb38\uc785\ub2c8\ub2e4.",
-                                    "code": "DAILY_QUESTION_ALREADY_ANSWERED"
+                                    "$ref": "#/components/schemas/ApiResponseListDiaryRecentReaction"
                                 }
                             }
                         }
@@ -4003,21 +4192,21 @@
                 }
             }
         },
-        "/api/daily_questions/today": {
-            "get": {
+        "/api/ai/seasons/reset": {
+            "post": {
                 "tags": [
-                    "\uac10\uc815\uc77c\uae30 \ubc38\ub7f0\uc2a4 \uac8c\uc784"
+                    "ai-season-controller"
                 ],
-                "summary": "\uc624\ub298\uc758 \ubc38\ub7f0\uc2a4 \uac8c\uc784",
-                "description": "\ud558\ub8e8(KST \uc790\uc815 \uae30\uc900) 1\uac1c, \ubaa8\ub4e0 \uc0ac\uc6a9\uc790\uc5d0\uac8c \uac19\uc740 \uc9c8\ubb38\uc774\ub2e4. \ubbf8\ub9ac \uc900\ube44\ud574 \ub454 \ubaa9\ub85d\uc5d0\uc11c \ub0a0\uc9dc\ubcc4\ub85c \uace0\ub978\ub2e4.\nanswered\u00b7selectedOptionId\ub294 \uc694\uccad\ud55c \uc0ac\uc6a9\uc790 \uae30\uc900\uc774\ub2e4.\n**results\u00b7totalCount\ub294 \ub0b4\uac00 \uace0\ub978 \ub4a4\uc5d0\ub9cc \ucc44\uc6cc\uc9c4\ub2e4** \u2014 \uace0\ub974\uae30 \uc804\uc5d0\ub294 `results: []`, `totalCount: 0`.\n\uc624\ub298 \uc9c8\ubb38\uc774 \uc5c6\uc73c\uba74 `data: null`(200)\uc774\ub2e4. \uc774\ub54c\ub294 \uc139\uc158\uc744 \uc228\uae34\ub2e4.\n",
-                "operationId": "getTodayBalanceGame",
+                "summary": "\uc2dc\uc98c \ucd08\uae30\ud654",
+                "description": "\ub0b4 AI \uc2dc\uc98c\uc744 **\uc2dc\uc98c \ud589\uae4c\uc9c0 \ubaa8\ub450 \uc9c0\uc6b0\uace0** \ucc98\uc74c\ubd80\ud130 \ub2e4\uc2dc \uc2dc\uc791\ud558\uac8c \ud55c\ub2e4. \uc9c4\ud589 \uc911\uc774\ub4e0 \uc644\ub8cc\ud588\ub4e0 \uac19\uace0, \uc2dc\uc98c\uc774 \uc5ec\ub7ec \uac1c\uba74\n\uc9c0\ub09c \uc2dc\uc98c\uae4c\uc9c0 \uc804\ubd80 \uc9c0\uc6b4\ub2e4. \uacc4\uc815\u00b7\uc124\ubb38 \uacb0\uacfc\uc640 \ube75 \uc720\ud615\u00b7\uac10\uc815\uc77c\uae30\u00b7\uacf5\uc720\ubc29\u00b7\ud1a0\ud070\uc740 \ub0a8\ub294\ub2e4.\n\n- \uc9c0\uc6b0\ub294 \uac83: \ud68c\ucc28 \ubcf8\ubb38\u00b7\uc120\ud0dd \uacb0\uacfc \uc7a5\uba74\u00b7\uc120\ud0dd \uae30\ub85d\u00b7\uc5f4\ub9b0 \ud68c\ucc28\u00b7\ud68c\ucc28 \uc644\ub8cc \uc0c1\ud0dc, 1:1 \uc7a5\uba74 \uc88b\uc544\uc694\u00b7\ud53c\ub4dc\ubc31,\n  \ud68c\ucc28 \uc815\ub9ac \uae30\ub85d\u00b7\uad00\uacc4 \uae30\ub85d\u00b7\ud68c\ucc28 \ucabd\uc9c0\u00b7\uc2dc\uc98c \ud3b8\uc9c0\u00b7\ucd5c\uc885 \ub9ac\ud3ec\ud2b8, \ucd9c\uc5f0\uc9c4, \uc0c8 \uc2dc\uc98c \uc124\uc815, \uc2dc\uc98c \uc0dd\uc131 \uc785\ub825\n- 4~10\ud654\ub97c \uc5f4\uba70 \uc4f4 \ud1a0\ud070\uc740 **\ub3cc\ub824\uc8fc\uc9c0 \uc54a\ub294\ub2e4**(`refundedTokens`\ub294 \ud56d\uc0c1 0, `tokenBalance`\ub294 \ud604\uc7ac \uc794\uc561).\n  \uc0c8 \uc2dc\uc98c\uc5d0\uc11c\ub3c4 4\ud654\ubd80\ud130 \ub2e4\uc2dc \ud1a0\ud070\uc744 \uc4f4\ub2e4.\n- \ucd08\uae30\ud654 \uc804\uc5d0 \ub3cc\ub358 \ud68c\ucc28 \uc0dd\uc131\u00b7\uc644\ub8cc\u00b7\uc120\ud0dd \uacb0\uacfc \uc0dd\uc131\uc740 \uc2dc\uc98c\uc774 \uc5c6\uc5b4\uc838 \uacb0\uacfc\ub97c \ubc84\ub9b0\ub2e4.\n- \uc2dc\uc98c\uc774 \uc5c6\uc73c\uba74 \uc544\ubb34\uac83\ub3c4 \ud558\uc9c0 \uc54a\uace0 200(`deletedSeasons` 0).\n\n\ucd08\uae30\ud654 \ub4a4: `GET /api/ai/seasons/me`\ub294 404 `SEASON_NOT_FOUND` \u2192 `POST /api/ai/seasons/from-survey`\n(`surveyResultId`\ub294 \ucd5c\uc2e0 \uc124\ubb38 \uacb0\uacfc)\ub85c \uc0c8 \uc2dc\uc98c \u2192 `GET /api/ai/seasons/episodes/1/content`\ub85c 1\ud654\ubd80\ud130 \uc2dc\uc791.\n",
+                "operationId": "resetMySeasons",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ApiResponseBalanceGameView"
+                                    "$ref": "#/components/schemas/ApiResponseAiSeasonResetView"
                                 }
                             }
                         }
@@ -4287,6 +4476,10 @@
                     },
                     "isMine": {
                         "type": "boolean"
+                    },
+                    "authorBreadName": {
+                        "type": "string",
+                        "description": "\uc791\uc131\uc790 \ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
                     }
                 }
             },
@@ -4738,7 +4931,7 @@
                     },
                     "data": {
                         "$ref": "#/components/schemas/RoomQuestionView",
-                        "description": "\uc774\ubbf8 \uc788\ub294 \uc624\ub298 \uc9c8\ubb38(\uc0dd\uc131 \uc911 \ud3ec\ud568)"
+                        "description": "\uc774\ubbf8 \uc788\ub294 \uc774 \uce78\uc758 \uc9c8\ubb38(\uc0dd\uc131 \uc911 \ud3ec\ud568)"
                     },
                     "message": {
                         "type": "string"
@@ -4775,6 +4968,14 @@
                     "updatedAt": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "authorBreadType": {
+                        "type": "string",
+                        "description": "\uc791\uc131\uc790 \ube75 \ud0c0\uc785 id(DiaryFeedItem.authorBreadType\uacfc \uac19\uc740 \uac12). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
+                    },
+                    "authorBreadName": {
+                        "type": "string",
+                        "description": "\uc791\uc131\uc790 \ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
                     }
                 }
             },
@@ -4792,7 +4993,13 @@
                     "questionDate": {
                         "type": "string",
                         "format": "date",
-                        "description": "\uc774 \uc9c8\ubb38\uc758 \ub0a0\uc9dc(KST). \uadf8\ub8f9\ub2f9 \ud558\ub8e8 1\uac1c"
+                        "description": "\uc774 \uc9c8\ubb38 \uce78\uc758 \ub0a0\uc9dc(KST). slotStartAt\uc758 \ub0a0\uc9dc\uc640 \uac19\ub2e4"
+                    },
+                    "slotStartAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "\uc774 \uc9c8\ubb38\uc758 \uce78 \uc2dc\uc791 \uc2dc\uac01(KST \uc815\uac01, +09:00). \uadf8\ub8f9\ub2f9 \uce78\ub9c8\ub2e4 1\uac1c. \uce78\uc740 slotStartAt ~ +1\uc2dc\uac04",
+                        "example": "2026-11-02T09:00:00+09:00"
                     },
                     "content": {
                         "type": "string"
@@ -4810,6 +5017,14 @@
                         "type": "string",
                         "format": "date-time"
                     },
+                    "creatorNickname": {
+                        "type": "string",
+                        "description": "\uc9c8\ubb38\uc744 \ub9cc\ub4e0 \uc0ac\ub78c\uc758 \ub2c9\ub124\uc784(\uacc4\uc815 \ub2c9\ub124\uc784, \uc5c6\uc73c\uba74 \uc774\ub984). \ud0c8\ud1f4\ud588\uc73c\uba74 null"
+                    },
+                    "creatorBreadType": {
+                        "type": "string",
+                        "description": "\uc9c8\ubb38\uc744 \ub9cc\ub4e0 \uc0ac\ub78c\uc758 \ube75 \ud0c0\uc785 id(DiaryFeedItem.authorBreadType\uacfc \uac19\uc740 \uac12). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
+                    },
                     "myAnswer": {
                         "$ref": "#/components/schemas/RoomQuestionAnswerItem",
                         "description": "\ub0b4 \ub2f5. \uc5c6\uc73c\uba74 null"
@@ -4820,6 +5035,15 @@
                         "items": {
                             "$ref": "#/components/schemas/RoomQuestionAnswerItem"
                         }
+                    },
+                    "creatorId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "\uc9c8\ubb38\uc744 \ub9cc\ub4e0 \uc0ac\ub78c\uc758 id. \ub0b4\uac00 \ub9cc\ub4e0 \uc9c8\ubb38\uc778\uc9c0 \uc54c \ub54c \uc4f4\ub2e4"
+                    },
+                    "creatorBreadName": {
+                        "type": "string",
+                        "description": "\uc9c8\ubb38\uc744 \ub9cc\ub4e0 \uc0ac\ub78c\uc758 \ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
                     }
                 }
             },
@@ -4847,6 +5071,114 @@
                         "type": "string",
                         "description": "1~200\uc790(\uc55e\ub4a4 \uacf5\ubc31 \uc81c\uc678). \uc544\ub2c8\uba74 400 ROOM_ANSWER_INVALID",
                         "maxLength": 200
+                    }
+                }
+            },
+            "BalanceGameAnswerRequest": {
+                "type": "object",
+                "properties": {
+                    "selectedOption": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "\uace0\ub978 \ubcf4\uae30\uc758 optionId. \uc5c6\uac70\ub098 \uc774 \uc9c8\ubb38\uc758 \ubcf4\uae30\uac00 \uc544\ub2c8\uba74 400 DAILY_QUESTION_INVALID_OPTION"
+                    }
+                }
+            },
+            "BalanceGameOption": {
+                "type": "object",
+                "properties": {
+                    "optionId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "content": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BalanceGameResult": {
+                "type": "object",
+                "properties": {
+                    "optionId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "content": {
+                        "type": "string"
+                    },
+                    "voteCount": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "\uc774 \ubcf4\uae30\ub97c \uace0\ub978 \uc0ac\ub78c \uc218"
+                    },
+                    "percentage": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "\uc804\uccb4 \uc911 \ube44\uc728(0~100, \uc18c\uc218 \uccab\uc9f8 \uc790\ub9ac\uae4c\uc9c0)",
+                        "example": 62.5
+                    }
+                }
+            },
+            "BalanceGameView": {
+                "type": "object",
+                "properties": {
+                    "questionId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "question": {
+                        "type": "string",
+                        "description": "\uc9c8\ubb38 \ubb38\uc7a5"
+                    },
+                    "questionDate": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "\uc774 \uc9c8\ubb38\uc758 \ub0a0\uc9dc(KST). \ud558\ub8e8 1\uac1c, \ubaa8\ub4e0 \uc0ac\uc6a9\uc790 \uacf5\ud1b5"
+                    },
+                    "options": {
+                        "type": "array",
+                        "description": "\ubcf4\uae30 2\uac1c",
+                        "items": {
+                            "$ref": "#/components/schemas/BalanceGameOption"
+                        }
+                    },
+                    "answered": {
+                        "type": "boolean",
+                        "description": "\ub0b4\uac00 \uc774\ubbf8 \uace8\ub790\ub294\uc9c0"
+                    },
+                    "selectedOptionId": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "\ub0b4\uac00 \uace0\ub978 optionId. \uc548 \uace8\ub790\uc73c\uba74 null"
+                    },
+                    "results": {
+                        "type": "array",
+                        "description": "\ubcf4\uae30\ubcc4 \uacb0\uacfc(options\uc640 \uac19\uc740 \uc21c\uc11c). \uace0\ub974\uae30 \uc804\uc5d0\ub294 \ube48 \ubaa9\ub85d",
+                        "items": {
+                            "$ref": "#/components/schemas/BalanceGameResult"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "\uc804\uccb4 \uc751\ub2f5 \uc218. \uace0\ub974\uae30 \uc804\uc5d0\ub294 0"
+                    }
+                }
+            },
+            "ApiResponseBalanceGameView": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/BalanceGameView"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
                     }
                 }
             },
@@ -6260,6 +6592,10 @@
                     "learningEnabled": {
                         "type": "boolean",
                         "description": "\uac10\uc815\uc77c\uae30 \ud559\uc2b5 \ub3d9\uc758. \ub044\uba74 \uc77c\uae30\u00b7\ub313\uae00\u00b7\uadf8\ub8f9 \ub2f5\uc744 \ub0b4 \ube75 \ud559\uc2b5\uc5d0 \uc4f0\uc9c0 \uc54a\ub294\ub2e4"
+                    },
+                    "breadName": {
+                        "type": "string",
+                        "description": "\ub0b4 \ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uac10\uc815\uc77c\uae30\uc5d0\uc11c \ub2e4\ub978 \uc0ac\ub78c\uc5d0\uac8c \ubcf4\uc774\ub294 \uc774\ub984\uacfc \uac19\ub2e4. \uc124\ubb38 \uc804\uc774\uba74 null"
                     }
                 }
             },
@@ -6639,6 +6975,12 @@
                         "type": "string",
                         "format": "date"
                     },
+                    "slotStartAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "\uc774 \uc9c8\ubb38\uc758 \uce78 \uc2dc\uc791 \uc2dc\uac01(KST \uc815\uac01, +09:00)",
+                        "example": "2026-11-02T09:00:00+09:00"
+                    },
                     "content": {
                         "type": "string"
                     },
@@ -6703,6 +7045,14 @@
                             "OWNER",
                             "MEMBER"
                         ]
+                    },
+                    "breadName": {
+                        "type": "string",
+                        "description": "\ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uc124\ubb38 \uc804\uc774\uba74 null"
+                    },
+                    "breadType": {
+                        "type": "string",
+                        "description": "\ube75 \ud0c0\uc785 id(DiaryFeedItem.authorBreadType\uacfc \uac19\uc740 \uac12). \uc124\ubb38 \uc804\uc774\uba74 null"
                     }
                 }
             },
@@ -6777,6 +7127,10 @@
                     "updatedAt": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "authorBreadName": {
+                        "type": "string",
+                        "description": "\uc791\uc131\uc790 \ube75 \uc774\ub984(\uc608: \"\ucac0\ucac0\ud55c \uce74\uc2a4\ud14c\ub77c\"). \uc124\ubb38 \uc804\u00b7\ud0c8\ud1f4\uba74 null"
                     }
                 }
             },
@@ -7449,110 +7803,60 @@
                     }
                 }
             },
-            "BalanceGameAnswerRequest": {
-                "type": "object",
-                "properties": {
-                    "selectedOption": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "\uace0\ub978 \ubcf4\uae30\uc758 optionId. \uc5c6\uac70\ub098 \uc774 \uc9c8\ubb38\uc758 \ubcf4\uae30\uac00 \uc544\ub2c8\uba74 400 DAILY_QUESTION_INVALID_OPTION"
-                    }
-                }
-            },
-            "BalanceGameOption": {
-                "type": "object",
-                "properties": {
-                    "optionId": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "content": {
-                        "type": "string"
-                    }
-                }
-            },
-            "BalanceGameResult": {
-                "type": "object",
-                "properties": {
-                    "optionId": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "content": {
-                        "type": "string"
-                    },
-                    "voteCount": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "\uc774 \ubcf4\uae30\ub97c \uace0\ub978 \uc0ac\ub78c \uc218"
-                    },
-                    "percentage": {
-                        "type": "number",
-                        "format": "double",
-                        "description": "\uc804\uccb4 \uc911 \ube44\uc728(0~100, \uc18c\uc218 \uccab\uc9f8 \uc790\ub9ac\uae4c\uc9c0)",
-                        "example": 62.5
-                    }
-                }
-            },
-            "BalanceGameView": {
-                "type": "object",
-                "properties": {
-                    "questionId": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "question": {
-                        "type": "string",
-                        "description": "\uc9c8\ubb38 \ubb38\uc7a5"
-                    },
-                    "questionDate": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "\uc774 \uc9c8\ubb38\uc758 \ub0a0\uc9dc(KST). \ud558\ub8e8 1\uac1c, \ubaa8\ub4e0 \uc0ac\uc6a9\uc790 \uacf5\ud1b5"
-                    },
-                    "options": {
-                        "type": "array",
-                        "description": "\ubcf4\uae30 2\uac1c",
-                        "items": {
-                            "$ref": "#/components/schemas/BalanceGameOption"
-                        }
-                    },
-                    "answered": {
-                        "type": "boolean",
-                        "description": "\ub0b4\uac00 \uc774\ubbf8 \uace8\ub790\ub294\uc9c0"
-                    },
-                    "selectedOptionId": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "\ub0b4\uac00 \uace0\ub978 optionId. \uc548 \uace8\ub790\uc73c\uba74 null"
-                    },
-                    "results": {
-                        "type": "array",
-                        "description": "\ubcf4\uae30\ubcc4 \uacb0\uacfc(options\uc640 \uac19\uc740 \uc21c\uc11c). \uace0\ub974\uae30 \uc804\uc5d0\ub294 \ube48 \ubaa9\ub85d",
-                        "items": {
-                            "$ref": "#/components/schemas/BalanceGameResult"
-                        }
-                    },
-                    "totalCount": {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "\uc804\uccb4 \uc751\ub2f5 \uc218. \uace0\ub974\uae30 \uc804\uc5d0\ub294 0"
-                    }
-                }
-            },
-            "ApiResponseBalanceGameView": {
+            "ApiResponseListDiaryRecentReaction": {
                 "type": "object",
                 "properties": {
                     "success": {
                         "type": "boolean"
                     },
                     "data": {
-                        "$ref": "#/components/schemas/BalanceGameView"
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DiaryRecentReaction"
+                        }
                     },
                     "message": {
                         "type": "string"
                     },
                     "code": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DiaryRecentReaction": {
+                "type": "object",
+                "properties": {
+                    "diaryId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "roomId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "emoji": {
+                        "type": "string"
+                    },
+                    "reactedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "reactorId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "reactorBreadName": {
+                        "type": "string"
+                    },
+                    "reactorBreadType": {
+                        "type": "string",
+                        "description": "\ubc18\uc751\ud55c \uc0ac\ub78c\uc758 \ube75 \ud0c0\uc785 id(DiaryFeedItem.authorBreadType\uacfc \uac19\uc740 \uac12)"
+                    },
+                    "diaryAuthorId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "diaryAuthorBreadName": {
                         "type": "string"
                     }
                 }
