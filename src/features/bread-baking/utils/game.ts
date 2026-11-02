@@ -1,6 +1,6 @@
 import type {
-  BakingAction, BakingDrop, BakingIngredient, BakingOvenResult, BakingOvenZone, BakingRect,
-  BakingState, BakingStep,
+  BakingAction, BakingDrop, BakingIngredient, BakingNotice, BakingOvenResult, BakingOvenZone,
+  BakingRect, BakingState, BakingStep,
 } from '@/src/features/bread-baking/types';
 import {
   createShaping, isShapeDone, judgeShapeSwipe,
@@ -19,7 +19,10 @@ export const BAKING_RULES = {
   /** Earliest green start, so the marker always travels a while before the window. */
   ovenGreenMinStart: 0.3,
   toolTravel: 120,
-  resultHoldMs: 750,
+  /** Salt must travel this far before a release off the dough counts as a miss, not a tap. */
+  missTravel: 20,
+  /** A baked loaf stays on the tray this long, clock paused, before its note appears. */
+  resultHoldMs: 1_000,
 } as const;
 
 /**
@@ -38,7 +41,7 @@ export const BAKING_STEPS: readonly BakingStep[] = [
 export function createBakingState(): BakingState {
   return { phase: 'ready', step: 'prepare', remainingMs: BAKING_RULES.durationMs,
     bakedCount: 0, ovenElapsedMs: 0, ovenResult: null,
-    ovenGreenStart: BAKING_RULES.ovenGreenMinStart, shaping: createShaping([]) };
+    ovenGreenStart: BAKING_RULES.ovenGreenMinStart, shaping: createShaping([]), notice: null };
 }
 
 export function isMixingStep(step: BakingStep): boolean {
@@ -52,6 +55,39 @@ export function getExpectedIngredient(step: BakingStep): BakingIngredient | null
     return step as BakingIngredient;
   }
   return null;
+}
+
+/** Which NOTICE a wrong ingredient drop shows on each step; steps without a Figma notice ignore it. */
+const WRONG_INGREDIENT_NOTICES: Partial<Record<BakingStep, BakingNotice>> = {
+  flour: 'flour-first',
+  eggs: 'mix-flour-eggs',
+  'mix-first': 'mix-flour-eggs',
+  butter: 'butter-first',
+  water: 'mix-butter-water',
+  'mix-second': 'mix-butter-water',
+  salt: 'salt-first',
+  sugar: 'salt-first',
+  yeast: 'salt-first',
+  roll: 'butter-filling',
+  filling: 'butter-filling',
+};
+
+export function getWrongIngredientNotice(step: BakingStep): BakingNotice | null {
+  return WRONG_INGREDIENT_NOTICES[step] ?? null;
+}
+
+/** A burnt or raw loaf waits on its FAIL note (Figma 7962:6094/6101) until the player taps it. */
+export function isOvenFailShown({ step, ovenResult }: BakingState): boolean {
+  return step === 'serve' && ovenResult !== null && ovenResult !== 'baked';
+}
+
+/**
+ * A baked loaf's note (Figma 8025:3848 layout, user copy) shows once the loaf has sat on the tray
+ * for `resultHoldMs`; it waits for a tap like the FAIL note.
+ */
+export function isBakedNoticeShown({ phase, step, ovenResult, ovenElapsedMs }: BakingState): boolean {
+  return phase === 'playing' && step === 'serve' && ovenResult === 'baked'
+    && ovenElapsedMs >= BAKING_RULES.resultHoldMs;
 }
 
 /** Maps a 0–1 random draw to this try's green start, keeping both orange bands on the gauge. */
@@ -88,35 +124,48 @@ function advance(state: BakingState): BakingState {
   return nextStep ? { ...state, step: nextStep, ovenElapsedMs: 0, ovenResult: null } : state;
 }
 
-/** Pure state machine: out-of-order ingredients/tools and terminal-state input are ignored. */
+/**
+ * Pure state machine: an out-of-order ingredient raises its NOTICE (if Figma has one), while
+ * out-of-order tools and terminal-state input are ignored.
+ */
 export function bakingReducer(state: BakingState, action: BakingAction): BakingState {
   if (action.type === 'restart') return createBakingState();
   if (action.type === 'start') {
     return state.phase === 'ready' ? { ...state, phase: 'playing', step: 'flour' } : state;
   }
   if (state.phase !== 'playing') return state;
+  if (state.notice) return action.type === 'dismiss-notice' ? { ...state, notice: null } : state;
   if (action.type === 'tick') {
     if (!Number.isFinite(action.elapsedMs) || action.elapsedMs <= 0) return state;
+    if (isOvenFailShown(state) || isBakedNoticeShown(state)) return state;
+    // The baked loaf is shown off with the clock paused (user feedback: it passed too fast).
+    // The last loaf ends the mission only after that, so its SUCCESS note doesn't hide it.
+    if (state.step === 'serve') {
+      const ovenElapsedMs = state.ovenElapsedMs + action.elapsedMs;
+      const isMissionDone = ovenElapsedMs >= BAKING_RULES.resultHoldMs
+        && state.bakedCount >= BAKING_RULES.targetCount;
+      return { ...state, ovenElapsedMs, phase: isMissionDone ? 'success' : 'playing' };
+    }
     const remainingMs = Math.max(0, state.remainingMs - action.elapsedMs);
     if (remainingMs === 0) return { ...state, remainingMs, phase: 'fail' };
     // Preparing the empty bowl is automatic, including an already-mounted pre-fix game.
     if (state.step === 'prepare') return { ...state, remainingMs, step: 'flour' };
     const ovenElapsedMs = state.step === 'bake' ? state.ovenElapsedMs + action.elapsedMs : 0;
-    if (state.step === 'serve') {
-      const holdMs = state.ovenElapsedMs + action.elapsedMs;
-      return holdMs >= BAKING_RULES.resultHoldMs
-        ? { ...state, remainingMs, ovenElapsedMs: 0, step: 'flour', ovenResult: null }
-        : { ...state, remainingMs, ovenElapsedMs: holdMs };
-    }
     // Letting the marker reach the end restarts this loaf; completed loaves remain counted.
-    // The burnt loaf is held like a finished one so the player sees why it restarted.
+    // The burnt loaf waits on its FAIL note, like an early pull.
     if (state.step === 'bake' && ovenElapsedMs >= BAKING_RULES.ovenGaugeMs) {
       return { ...state, remainingMs, ovenElapsedMs: 0, step: 'serve', ovenResult: 'burnt' };
     }
     return { ...state, remainingMs, ovenElapsedMs };
   }
+  if (action.type === 'sprinkle-miss') {
+    return state.step === 'sprinkle' ? { ...state, notice: 'sprinkle-salt' } : state;
+  }
   if (action.type === 'ingredient') {
-    if (getExpectedIngredient(state.step) !== action.ingredient) return state;
+    if (getExpectedIngredient(state.step) !== action.ingredient) {
+      const notice = getWrongIngredientNotice(state.step);
+      return notice ? { ...state, notice } : state;
+    }
     if (state.step !== 'filling') return advance(state);
     // Shaping starts right after the butter, so its first arrows must arrive with the drop.
     return action.arrows ? { ...advance(state), shaping: createShaping(action.arrows) } : state;
@@ -128,9 +177,10 @@ export function bakingReducer(state: BakingState, action: BakingAction): BakingS
     return isShapeDone(shaping) ? advance({ ...state, shaping }) : { ...state, shaping };
   }
   if (action.type === 'shape-retry') {
-    // A failed round keeps the dough and butter; only the arrows start over.
+    // A failed round restarts the whole shaping part from rolling (user request, 2026-11-01);
+    // the next butter drop brings fresh arrows.
     return state.step === 'shape' && state.shaping.failed
-      ? { ...state, shaping: createShaping(action.arrows) } : state;
+      ? { ...state, step: 'roll', shaping: createShaping([]) } : state;
   }
   if (action.type === 'load') {
     return state.step === 'load' ? { ...advance(state), ovenGreenStart: action.greenStart } : state;
@@ -140,9 +190,8 @@ export function bakingReducer(state: BakingState, action: BakingAction): BakingS
     if (state.step !== 'bake') return state;
     const ovenResult = judgeOvenPull(getOvenProgress(state.ovenElapsedMs), state.ovenGreenStart);
     if (ovenResult !== 'baked') return { ...state, step: 'serve', ovenElapsedMs: 0, ovenResult };
-    const bakedCount = state.bakedCount + 1;
-    return { ...state, step: 'serve', ovenElapsedMs: 0, bakedCount, ovenResult: 'baked',
-      phase: bakedCount >= BAKING_RULES.targetCount ? 'success' : 'playing' };
+    return { ...state, step: 'serve', ovenElapsedMs: 0, bakedCount: state.bakedCount + 1,
+      ovenResult: 'baked' };
   }
   if (action.type === 'serve') {
     if (state.step !== 'serve') return state;

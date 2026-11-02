@@ -1,7 +1,7 @@
 import { bakingLayout } from '@/src/constants/typography';
 import BakingSprite from '@/src/features/bread-baking/components/baking-sprite';
 import type { BakingAction, BakingDrop, BakingIngredient } from '@/src/features/bread-baking/types';
-import { isDropInside } from '@/src/features/bread-baking/utils/game';
+import { BAKING_RULES, isDropInside } from '@/src/features/bread-baking/utils/game';
 
 const LABELS: Record<BakingIngredient, string> = {
   flour: '밀가루', eggs: '계란', water: '물', butter: '버터',
@@ -13,14 +13,17 @@ interface BakingIngredientProps {
   enabled: boolean;
   onAction: (action: BakingAction) => void;
   isFilling?: boolean;
+  /** Released off its target after a real drag (not a tap). */
+  onMiss?: () => void;
 }
 
 export default function BakingIngredient({
-  ingredient, enabled, onAction, isFilling = false,
+  ingredient, enabled, onAction, isFilling = false, onMiss,
 }: BakingIngredientProps) {
   function handleDrop(drop: BakingDrop) {
-    const target = isFilling ? bakingLayout.targets.largeBoard : bakingLayout.targets.bowl;
+    const target = isFilling ? bakingLayout.targets.shapingBoard : bakingLayout.targets.bowl;
     if (isDropInside(drop, target)) onAction({ type: 'ingredient', ingredient });
+    else if (drop.distance >= BAKING_RULES.missTravel) onMiss?.();
   }
 
   const boardRect = ingredient === 'salt'

@@ -15,9 +15,12 @@ interface BakingOvenSceneProps {
   onAction: (action: BakingAction) => void;
 }
 
-/** Baked/burnt: Figma 7975:2356. An early pull returns the salted dough from shaping unchanged. */
+/**
+ * Figma 7966:6239: the unbaked salt bread waits on the tray before baking, and an early pull
+ * returns it unchanged. Baked/burnt: Figma 7975:2356.
+ */
 const RESULT_ASSETS = {
-  baked: 'bakedBread', burnt: 'burntBread', raw: 'shapingRollSalted',
+  baked: 'bakedBread', burnt: 'burntBread', raw: 'saltBread',
 } as const satisfies Record<string, BakingAssetName>;
 
 const { oven } = bakingLayout.targets;
@@ -29,8 +32,6 @@ const OVEN_PRESS_STYLE = {
 export default function BakingOvenScene({ state, enabled, onAction }: BakingOvenSceneProps) {
   const isBaking = state.step === 'bake';
   const result = state.step === 'serve' ? state.ovenResult : null;
-  // Unbaked dough (before baking, or pulled out raw) uses the shaping dough's own slot.
-  const isDough = result === null || result === 'raw';
 
   function handleBreadDrop(drop: BakingDrop) {
     if (state.step === 'load' && isDropInside(drop, oven)) {
@@ -56,8 +57,8 @@ export default function BakingOvenScene({ state, enabled, onAction }: BakingOven
         progress={getOvenProgress(state.ovenElapsedMs)} />
     </View>}
     <BakingSprite name="tray" rect={bakingLayout.slots.tray} />
-    {!isBaking && <BakingSprite key={state.step} name={result ? RESULT_ASSETS[result] : 'shapingRollSalted'}
-      rect={isDough ? bakingLayout.slots.trayDough : bakingLayout.slots.saltBread}
+    {!isBaking && <BakingSprite key={state.step} name={result ? RESULT_ASSETS[result] : 'saltBread'}
+      rect={bakingLayout.slots.saltBread}
       label="반죽을 오븐으로 옮기기"
       enabled={enabled && state.step === 'load'} onDrop={handleBreadDrop} />}
     {isBaking && <Pressable accessibilityRole="button" accessibilityLabel="오븐을 눌러 빵 꺼내기"

@@ -1,17 +1,18 @@
 import { useEffect, useReducer, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { BAKING_RULES, bakingReducer, createBakingState } from '@/src/features/bread-baking/utils/game';
-import { createShapeArrows } from '@/src/features/bread-baking/utils/shaping';
+import {
+  BAKING_RULES, bakingReducer, createBakingState, isBakedNoticeShown, isOvenFailShown,
+} from '@/src/features/bread-baking/utils/game';
 
 /** Lifecycle only; rules and stage transitions live in the pure reducer. */
 export default function useBakingGame(isScreenActive: boolean) {
   const [state, dispatch] = useReducer(bakingReducer, undefined, createBakingState);
   const [isForeground, setIsForeground] = useState(AppState.currentState === 'active');
-  const [isHelpVisible, setIsHelpVisible] = useState(false);
   const [isExitVisible, setIsExitVisible] = useState(false);
   const isRunning = state.phase === 'playing' && isScreenActive && isForeground
-    && !isHelpVisible && !isExitVisible && !state.shaping.failed;
+    && !isExitVisible && !state.shaping.failed && !state.notice && !isOvenFailShown(state)
+    && !isBakedNoticeShown(state);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -35,12 +36,13 @@ export default function useBakingGame(isScreenActive: boolean) {
 
   function handleStart() { dispatch({ type: 'start' }); }
   function handleRestart() { dispatch({ type: 'restart' }); }
-  function handleHelpOpen() { setIsHelpVisible(true); }
-  function handleHelpClose() { setIsHelpVisible(false); }
   function handleExitOpen() { setIsExitVisible(true); }
   function handleExitClose() { setIsExitVisible(false); }
-  function handleShapeRetry() { dispatch({ type: 'shape-retry', arrows: createShapeArrows(Math.random) }); }
+  function handleNoticeClose() { dispatch({ type: 'dismiss-notice' }); }
+  // Closing a FAIL or baked note sends the loaf off like a finished one and starts the next from flour.
+  function handleOvenResultClose() { dispatch({ type: 'serve' }); }
+  function handleShapeRetry() { dispatch({ type: 'shape-retry' }); }
 
-  return { state, dispatch, isRunning, isHelpVisible, isExitVisible, handleStart,
-    handleRestart, handleHelpOpen, handleHelpClose, handleExitOpen, handleExitClose, handleShapeRetry };
+  return { state, dispatch, isRunning, isExitVisible, handleStart, handleRestart,
+    handleExitOpen, handleExitClose, handleNoticeClose, handleOvenResultClose, handleShapeRetry };
 }
