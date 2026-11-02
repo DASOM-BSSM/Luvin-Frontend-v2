@@ -11,9 +11,6 @@ import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
-import CreateQuestionCard from '@/src/features/home/components/create-question-card';
-import DiaryPreviewCard from '@/src/features/home/components/diary-preview-card';
-import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 import EpisodeCardSkeleton from '@/src/features/home/components/episode-card-skeleton';
 import EpisodeEmptyCard from '@/src/features/home/components/episode-empty-card';
 import EpisodeThumbnailCard from '@/src/features/home/components/episode-thumbnail-card';
@@ -21,6 +18,8 @@ import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
+import GroupFeedSection from '@/src/features/diaries/components/group-feed-section';
+import type { RoomId } from '@/src/features/diaries/types';
 import InfernoNoticeModal from '@/src/features/inferno/components/inferno-notice-modal';
 import NextSeasonNoticeModal from '@/src/features/inferno/components/next-season-notice-modal';
 import {
@@ -33,12 +32,9 @@ import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progres
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
 import { isProfileRequiredError } from '@/src/features/inferno/utils/is-profile-required-error';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
-import type { DiaryPreview } from '@/src/features/home/types';
 import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
 
-// API 연동 전. 이 상수를 값으로 채우면 감정일기가 쌓인 상태가 된다.
 // 내 반죽은 useBreadStore, 이번주 에피소드는 useInfernoStore 에서 나온다.
-const DIARY_PREVIEW: DiaryPreview | null = null;
 
 export default function HomeScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -182,6 +178,10 @@ export default function HomeScreen() {
     router.push('/diaries');
   }
 
+  function handleDiaryGroupPress(roomId: RoomId) {
+    router.push({ pathname: '/diaries/groups/[roomId]', params: { roomId } });
+  }
+
   function handleProfilePress() {
     router.push('/my-page');
   }
@@ -231,19 +231,13 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <View className="w-full flex-col items-start gap-[12px]">
-          {/* 그룹 이름 같은 제목은 감정일기를 시작한 뒤에만 의미가 있어, 홈에서는 항상 섹션 이름을 쓴다
-              (Figma "메인-우린" 5726:2556, 리뷰 LUV-83). */}
-          <SectionHeader title="Emodi 감정일기" />
-          {DIARY_PREVIEW ? (
-            <>
-              <DiaryPreviewCard diary={DIARY_PREVIEW} />
-              <CreateQuestionCard />
-            </>
-          ) : (
-            <DiaryStartCard onStartPress={handleDiaryStartPress} />
-          )}
-        </View>
+        {/* 감정일기 탭과 같은 섹션(LUV-90): 그룹이 없으면 "Emodi 감정일기" + 시작하기 카드, 있으면
+            "쫀쫀한 조합들" + 최신 그룹 일기 카드(반응 가능) + 그 그룹으로 가는 바로가기. */}
+        <GroupFeedSection
+          shortcutLabel="감정일기 바로가기→"
+          onStartPress={handleDiaryStartPress}
+          onGroupPress={handleDiaryGroupPress}
+        />
       </ScrollView>
 
       <View className="pb-[10px]">

@@ -4,11 +4,10 @@ import { Pressable, View } from 'react-native';
 import GroupIcon from '@/src/assets/icons/GroupIcon';
 import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
-import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
+import ReactableDiaryCard from '@/src/features/diaries/components/reactable-diary-card';
 import useCommunityDiaries from '@/src/features/diaries/hooks/use-community-diaries';
 import useMyRooms from '@/src/features/diaries/hooks/use-my-rooms';
 import type { RoomId } from '@/src/features/diaries/types';
-import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
 import DiaryStartCard from '@/src/features/home/components/diary-start-card';
 
 const SECTION_TITLE = '쫀쫀한 조합들';
@@ -21,16 +20,17 @@ interface SectionShellProps {
 }
 
 interface GroupSectionShellProps extends SectionShellProps {
+  shortcutLabel: string;
   /** "바로가기→"를 누르면. */
   onShortcutPress: () => void;
 }
 
-const SectionShell = ({ children, onShortcutPress }: GroupSectionShellProps) => (
+const SectionShell = ({ children, shortcutLabel, onShortcutPress }: GroupSectionShellProps) => (
   <View className="w-full flex-col items-start gap-[12px]">
     <SectionHeader
       title={SECTION_TITLE}
       icon={<GroupIcon />}
-      actionLabel="바로가기→"
+      actionLabel={shortcutLabel}
       onActionPress={onShortcutPress}
     />
     {children}
@@ -52,6 +52,8 @@ const NotStartedShell = ({ children }: SectionShellProps) => (
  * 그룹이 하나도 없으면(감정일기 시작 전) 그룹 이름 같은 "쫀쫀한 조합들" 대신 "Emodi 감정일기" 제목과
  * "감정일기 시작하기" 카드를 보여준다(리뷰 LUV-83). 그룹은 있는데 일기가 없으면 안내 문구를 쓴다.
  *
+ * 카드의 반응 버튼(☺+)으로 바로 이모지 반응을 남길 수 있다(LUV-90 피드백).
+ *
  * Figma 의 "○○님이 ○○님의 일기에 반응을 했습니다" 알림 카드는 이번 범위 밖이라 뺐다.
  * 로딩 · 에러 상태는 시안이 없어 다른 화면(bread/oven)과 같은 글자 안내로 둔다.
  */
@@ -60,9 +62,15 @@ interface GroupFeedSectionProps {
   onStartPress: () => void;
   /** "바로가기→"를 누르면 그 그룹의 감정일기 메인으로 간다. */
   onGroupPress: (roomId: RoomId) => void;
+  /** 바로가기 문구. 앱 홈은 "감정일기 바로가기→" 를 쓴다. */
+  shortcutLabel?: string;
 }
 
-export default function GroupFeedSection({ onStartPress, onGroupPress }: GroupFeedSectionProps) {
+export default function GroupFeedSection({
+  onStartPress,
+  onGroupPress,
+  shortcutLabel = '바로가기→',
+}: GroupFeedSectionProps) {
   const roomsQuery = useMyRooms();
   const feedQuery = useCommunityDiaries();
   const latestDiary = feedQuery.data?.[0];
@@ -113,7 +121,7 @@ export default function GroupFeedSection({ onStartPress, onGroupPress }: GroupFe
 
   if (!latestDiary) {
     return (
-      <SectionShell onShortcutPress={handleShortcutPress}>
+      <SectionShell shortcutLabel={shortcutLabel} onShortcutPress={handleShortcutPress}>
         <Text variant="body-s" className="text-text-muted">
           아직 그룹에 올라온 일기가 없어요
         </Text>
@@ -122,8 +130,9 @@ export default function GroupFeedSection({ onStartPress, onGroupPress }: GroupFe
   }
 
   return (
-    <SectionShell onShortcutPress={handleShortcutPress}>
-      <GroupDiaryCard diary={toGroupDiaryPreview(latestDiary)} />
+    <SectionShell shortcutLabel={shortcutLabel} onShortcutPress={handleShortcutPress}>
+      {/* 다른 일기가 맨 위로 오면 펼쳐 둔 이모지 고르기가 넘어가지 않게 새로 그린다. */}
+      <ReactableDiaryCard key={latestDiary.diaryId} diary={latestDiary} />
     </SectionShell>
   );
 }

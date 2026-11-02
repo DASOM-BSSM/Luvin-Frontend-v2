@@ -46,3 +46,17 @@ export function getKstDateString(now: Date): string {
 export function isTodayQuestion(question: RoomQuestion, now: Date): boolean {
   return question.questionDate === getKstDateString(now);
 }
+
+/**
+ * 감정일기 메인 칸 막대에서 칠할 칸(0부터) — 그룹의 몇 번째 질문인지. 첫 질문이면 첫 칸이고, 칸을
+ * 다 채우면 다시 첫 칸부터. 질문은 하루 1개라 날짜 수로 센다(실패 후 다시 만든 것도 한 번).
+ * 질문이 아직 없으면 undefined(모두 회색).
+ */
+export function getQuestionProgressIndex(
+  history: RoomQuestionHistoryItem[],
+  segmentCount: number,
+): number | undefined {
+  const questionCount = new Set(history.map((item) => item.questionDate)).size;
+  if (questionCount === 0) return undefined;
+  return (questionCount - 1) % segmentCount;
+}

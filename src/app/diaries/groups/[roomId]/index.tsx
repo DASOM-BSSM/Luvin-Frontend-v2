@@ -13,13 +13,15 @@ import GroupMainHeader from '@/src/features/diaries/components/group-main-header
 import GroupQuestionSection from '@/src/features/diaries/components/group-question-section';
 import SegmentedProgress from '@/src/features/diaries/components/segmented-progress';
 import useDiaryDetail from '@/src/features/diaries/hooks/use-diary-detail';
+import useQuestionHistory from '@/src/features/diaries/hooks/use-question-history';
 import useRoom from '@/src/features/diaries/hooks/use-room';
 import useRoomDiaries from '@/src/features/diaries/hooks/use-room-diaries';
 import { isRoomUnavailableError } from '@/src/features/diaries/utils/errors';
-import { getLastWrittenAt, getMyDiaryDates, getWeekdayIndex } from '@/src/features/diaries/utils/feed';
+import { getLastWrittenAt } from '@/src/features/diaries/utils/feed';
+import { getQuestionProgressIndex } from '@/src/features/diaries/utils/question';
 
-/** 시안의 칸 막대 수(일주일). */
-const WEEK_LENGTH = 7;
+/** 시안의 칸 막대 수. */
+const PROGRESS_SEGMENT_COUNT = 7;
 
 /**
  * 감정일기 메인 = 그룹 안의 일기 피드. Figma "감정일기 메인 - 제민"(질문 없음 6263:5614 · 질문
@@ -28,7 +30,7 @@ const WEEK_LENGTH = 7;
  * 그룹 질문("Q. ...")은 `GroupQuestionSection` 이 `GET /api/diary-rooms/{roomId}/questions/current` 로
  * 받아 상태(없음 · 만드는 중 · 실패 · 있음)별로 그린다.
  *
- * NOTE: 칸 막대는 무엇을 나타내는지 정해지지 않아 우선 오늘 요일(월=첫 칸)을 칠한다.
+ * 칸 막대는 그룹의 몇 번째 질문인지를 칠한다 — 첫 질문이면 첫 칸(LUV-90 피드백).
  *
  * 그룹 이름은 `GET /api/diary-rooms/{roomId}` 로 받는다. 없는 방이거나 내가 멤버가 아니면(404 · 403)
  * "그룹을 찾을 수 없어요"를, 그 밖의 실패는 다시 시도 문구를 보여준다.
@@ -47,6 +49,7 @@ export default function GroupMainScreen() {
   const [isWriteOpen, setIsWriteOpen] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const detail = useDiaryDetail(diaries);
+  const questionHistory = useQuestionHistory(roomId, true).data ?? [];
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -95,7 +98,10 @@ export default function GroupMainScreen() {
             onCalendarPress={handleCalendarPress}
             onSettingsPress={handleSettingsPress}
           />
-          <SegmentedProgress count={WEEK_LENGTH} activeIndex={getWeekdayIndex(new Date())} />
+          <SegmentedProgress
+            count={PROGRESS_SEGMENT_COUNT}
+            activeIndex={getQuestionProgressIndex(questionHistory, PROGRESS_SEGMENT_COUNT)}
+          />
         </View>
 
         {isRoomUnavailable ? (
@@ -132,11 +138,7 @@ export default function GroupMainScreen() {
         onClose={handleWriteClose}
       />
       <DiaryDetailModal diary={detail.selectedDiary} initialMenuOpen={detail.isMenuOpen} onClose={detail.close} />
-      <DiaryCalendarSheet
-        visible={isCalendarOpen}
-        writtenDates={getMyDiaryDates(diaries)}
-        onClose={handleCalendarClose}
-      />
+      <DiaryCalendarSheet visible={isCalendarOpen} onClose={handleCalendarClose} />
     </Screen>
   );
 }
