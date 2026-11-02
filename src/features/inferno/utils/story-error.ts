@@ -4,6 +4,7 @@
 import axios from 'axios';
 
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
+import type { AiInsufficientTokensView } from '@/src/features/inferno/api/story-types';
 
 export const STORY_ERROR_CODES = [
   'AGE_REQUIRED',
@@ -15,6 +16,8 @@ export const STORY_ERROR_CODES = [
   'CONTENT_NOT_READY',
   'CHOICE_REQUIRED',
   'CHOICE_ALREADY_MADE',
+  /** 선택 결과 장면을 아직 만드는 중이거나 실패해서 회차를 완료할 수 없다(스펙 2026-10-30). */
+  'CHOICE_RESULT_NOT_READY',
   'STORY_GENERATION_FAILED',
   /** [DRAFT] 회차 열기(토큰). 4화 이상을 아직 열지 않았다. */
   'EPISODE_NOT_UNLOCKED',
@@ -34,7 +37,18 @@ export function getStoryErrorCode(error: unknown): StoryErrorCode | null {
   return isStoryErrorCode(code) ? code : null;
 }
 
-/** 회차 생성이 60초를 넘겼을 때. 다시 시도 버튼으로 이어진다. */
+/**
+ * 409 `INSUFFICIENT_TOKENS` 에 실려 온 지금 잔액. 다른 오류거나 값이 없으면 null.
+ * 회차 열기 화면의 보유 토큰을 다시 요청하지 않고 이 값으로 맞춘다.
+ */
+export function getInsufficientTokenBalance(error: unknown): number | null {
+  if (!axios.isAxiosError<{ code?: string; data?: AiInsufficientTokensView | null }>(error)) return null;
+  const body = error.response?.data;
+  if (body?.code !== 'INSUFFICIENT_TOKENS') return null;
+  return typeof body.data?.balance === 'number' ? body.data.balance : null;
+}
+
+/** 회차 생성이 대기 상한(use-episode-content 의 POLL_LIMIT_MS, 4분)을 넘겼을 때. 다시 시도 버튼으로 이어진다. */
 export class EpisodeGenerationTimeoutError extends Error {
   constructor() {
     super('Episode generation timed out');
@@ -53,7 +67,7 @@ export function describeEpisodeError(error: unknown): {
     return { message: 'episodeGenerationTimeout', action: 'retry' };
   switch (getStoryErrorCode(error)) {
     case 'AGE_REQUIRED':
-      return { message: 'ageRequired', action: 'age' };
+      return { message: 'ageGenderRequired', action: 'age' };
     case 'STORY_NOT_STARTED':
       return { message: 'storyNotStarted', action: 'first' };
     case 'PREVIOUS_EPISODE_NOT_COMPLETED':

@@ -44,6 +44,8 @@ interface InfernoFinalMatchSceneProps {
    * 끝나면(시계가 끝 시각이면) 구운 빵 1페이지가 된다. 넘기지 않으면 반죽 그대로인 정지 화면이다.
    */
   reveal?: SharedValue<number>;
+  /** 혼자 흐름 리포트. 상대 없이 내 빵만 서고, 이름 자리에 내 빵 이름을 쓴다. */
+  solo?: boolean;
 }
 
 interface RevealLayerProps {
@@ -96,6 +98,7 @@ export default function InfernoFinalMatchScene({
   tendencyLabel,
   waitMessage,
   reveal,
+  solo = false,
 }: InfernoFinalMatchSceneProps) {
   const isWaiting = !partner && waitMessage !== undefined;
 
@@ -132,7 +135,12 @@ export default function InfernoFinalMatchScene({
           </RevealLayer>
         ) : (
           <RevealLayer reveal={reveal}>
-            <InfernoFinalMatchNames partner={partner} summaryLine={summaryLine} tendencyLabel={tendencyLabel} />
+            <InfernoFinalMatchNames
+              partner={partner}
+              headline={solo ? mine.name : undefined}
+              summaryLine={summaryLine}
+              tendencyLabel={tendencyLabel}
+            />
           </RevealLayer>
         )}
       </View>

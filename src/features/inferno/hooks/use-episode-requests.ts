@@ -5,10 +5,12 @@
  * - `CHOICE_REQUIRED`(완료): 선택 블록으로 돌아간다.
  * - `PREVIOUS_EPISODE_NOT_COMPLETED`(완료): 이전 회차 시작 화면으로 보낸다.
  * - `CHOICE_ALREADY_MADE`(선택): use-episode-choice 가 이미 한 결과로 진행한다.
+ * - `CHOICE_RESULT_NOT_READY`(완료): 선택 결과 장면이 준비될 때까지 기다렸다가 한 번만 다시 보낸다.
  */
 import { router } from 'expo-router';
 
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
+import { settleChoiceResult } from '@/src/features/inferno/api/story';
 import useCompleteEpisode from '@/src/features/inferno/hooks/use-complete-episode';
 import useEpisodeChoice from '@/src/features/inferno/hooks/use-episode-choice';
 import type { ChoicePoint } from '@/src/features/inferno/types/story';
@@ -60,9 +62,14 @@ export default function useEpisodeRequests({
           router.replace(infernoIntroHref(Math.max(1, order - 1)));
         else if (code === 'CONTENT_NOT_READY' && !retried)
           void reloadContent().then(() => submitCompletion(true));
+        else if (code === 'CHOICE_RESULT_NOT_READY' && !retried)
+          void settleChoiceResult(order).then(() => submitCompletion(true), handleChoiceSettleFailed);
       },
     });
   }
+
+  // 기다리다 실패하면 완료 실패 안내(다시 시도)가 이미 떠 있으므로 따로 할 일은 없다.
+  function handleChoiceSettleFailed() {}
 
   return { choice, completion, submitChoice, submitCompletion };
 }

@@ -24,7 +24,8 @@ export type SceneBlock =
   | { id: string; type: 'transition'; text: string }
   | (Dialogue & { type: 'group' | 'pair' })
   // 인터뷰는 화면 위에 질문을 띄우고, 아래에 답하는 빵과 자막을 둔다.
-  | (Dialogue & { type: 'interview'; question: string })
+  /** 인터뷰. breadId 는 질문 대상 빵(답은 내 빵이 한다). */
+  | (Dialogue & { type: 'interview'; breadId: string })
   | (Dialogue & {
       type: 'messenger';
       roomName: string;

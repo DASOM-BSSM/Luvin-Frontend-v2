@@ -29,6 +29,8 @@ export interface StoryMessage extends InfernoChatMessage {
   read: boolean;
   typing: boolean;
   deletedAfterSend: boolean;
+  /** messenger 메시지 옆 시각(서버 `sentAtLabel`, 예: "오후 4시 50분"). 없으면 null. */
+  sentAtLabel: string | null;
 }
 
 interface DialogueBlock {
@@ -66,6 +68,8 @@ export interface EpisodeIntro {
 
 export interface StageCastMember {
   breadId: string;
+  /** 내 빵인지. 내 빵은 서버 이름·그림 대신 내 반죽 프로필을 쓴다(map-story.ts). */
+  isMine?: boolean;
   name: string;
   type: BreadType;
   role: string;
@@ -91,6 +95,11 @@ export interface EpisodeContent {
   blocks: StoryBlock[];
   /** 이미 완료한 회차면 다시 보기 모드. */
   completed: boolean;
+  /**
+   * 생성 회차. 생성 중에도 확정된 블록이 먼저 오는데, 서버가 이어서 만들지 못해 처음부터 다시 만들면 1 오른다.
+   * 바뀌면 앞서 받은 블록은 버리고 처음부터 다시 재생한다.
+   */
+  revision: number;
   /** 메시지 id → 남긴 피드백 글. */
   feedbacks: Record<string, string>;
   likedMessageIds: string[];
@@ -119,6 +128,14 @@ export interface StoryState {
   unlockedOrders: number[];
   /** [DRAFT] 4화 이상을 처음 열 때 드는 토큰 수(서버 값). 아직 모르면 null. */
   episodeTokenCost: number | null;
+  /** 서버가 정리 중인 회차 완료(비동기). 끝나면 null 이 되고 completedOrders 에 들어간다. */
+  completion: StoryCompletion | null;
+}
+
+export interface StoryCompletion {
+  order: number;
+  status: 'completing' | 'failed';
+  errorCode: string | null;
 }
 
 export interface ChoiceSubmission {

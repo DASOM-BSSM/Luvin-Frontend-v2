@@ -10,3 +10,4 @@ import type { InfernoEpisode } from '@/src/features/inferno/types';
 export function findInfernoEpisode(order: number): InfernoEpisode | undefined {
   return INFERNO_EPISODES.find((episode) => episode.order === order);
 }
+

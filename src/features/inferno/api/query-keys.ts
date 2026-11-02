@@ -12,7 +12,7 @@ export const partnerLetterKeys = {
   unread: ['ai-season', 'letters', 'unread'] as const,
 };
 
-/** [DRAFT] 새 10화 회차 본문. 시즌은 사용자마다 하나라 회차 번호만으로 구분한다. */
+/** [DRAFT] 새 10화 회차 본문. 진행 중인 시즌은 하나라 회차 번호만으로 구분한다(시즌이 바뀌면 all 로 비운다). */
 export const storyKeys = {
   all: ['ai-season', 'story'] as const,
   content: (order: number) => ['ai-season', 'story', 'content', order] as const,

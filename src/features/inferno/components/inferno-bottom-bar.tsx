@@ -6,7 +6,7 @@ import Text from '@/src/components/ui/text';
 const DEFAULT_SKIP_LABEL = '에피소드 스킵하기';
 
 interface InfernoBottomBarProps {
-  /** 예: "Episode 01 :: 안녕하세요 소금빵입니다!" */
+  /** 예: "Episode 01 :: 첫 만남" */
   label: string;
   /**
    * 오른쪽 문구. 회차마다 다르다(ep0 "에피소드 스킵하기", ep1 "잠시 나가기").

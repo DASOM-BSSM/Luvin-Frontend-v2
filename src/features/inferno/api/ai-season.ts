@@ -1,11 +1,19 @@
 import httpClient from '@/src/lib/http-client';
 import type { ApiEnvelope } from '@/src/lib/api-envelope';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
-import { mockGetSeasonReport, mockSeasonStory } from '@/src/features/inferno/api/mocks/story-mock';
+import {
+  mockGetSeasonReport,
+  mockSeasonStory,
+  resetMockServer,
+} from '@/src/features/inferno/api/mocks/story-mock';
 import { isStoryMock } from '@/src/features/inferno/api/story';
 import { COMPLETED_SEASON_STATUS } from '@/src/features/inferno/constants/season';
 
 import type { AiReportView, AiSeasonStatusView } from '@/src/features/inferno/api/ai-season-types';
+import type { components } from '@/src/types/api-generated';
+
+/** 시즌 초기화 응답: 지운 시즌 수, 돌려받은 토큰, 지금 잔액. */
+type AiSeasonResetView = components['schemas']['AiSeasonResetView'];
 
 /**
  * `POST /api/ai/seasons/from-survey`. 서버가 이미 저장한 설문 결과(resultId)로 시즌을
@@ -30,6 +38,46 @@ export async function createSeasonFromSurvey(surveyResultId: string): Promise<Ai
   return data.data;
 }
 
+/**
+ * [DRAFT] `POST /api/ai/seasons/next`. 10화까지 끝낸 사용자가 다음 시즌을 연다(사용자 결정 — 시즌은
+ * 이제 여러 개다). 스펙 2026-10-30 부터 동작한다(그 전엔 deprecated, 409 SEASON_COMPLETED).
+ * `clientRequestId` 는 같은 요청이 두 번 와도 시즌이 두 개 생기지 않게 서버가 쓰는 멱등 키다.
+ * `surveyResultId` 를 빼면 서버가 최신 설문 결과를 쓴다.
+ * 목 모드면 목 서버 진행도를 처음으로 되돌린다.
+ */
+export async function startNextSeason(
+  surveyResultId: string | undefined,
+  clientRequestId: string,
+): Promise<AiSeasonStatusView> {
+  if (isStoryMock) {
+    resetMockServer();
+    return getSeasonStatus();
+  }
+
+  const { data } = await httpClient.post<ApiEnvelope<AiSeasonStatusView>>('/api/ai/seasons/next', {
+    surveyResultId,
+    clientRequestId,
+  });
+  return data.data;
+}
+
+/**
+ * [DRAFT] 개발 전용 시즌 초기화(`POST /api/dev/ai/seasons/current/story/reset`). 시즌 행까지 모두 지운다
+ * (진행 중이든 완료했든). 계정·설문 결과·감정일기·공유방은 남고, 4~10화를 열며 쓴 토큰은 돌려받는다.
+ * dev·staging 서버에만 경로가 있다. 목 모드면 목 서버를 처음으로 되돌린다.
+ */
+export async function resetSeasons(): Promise<AiSeasonResetView> {
+  if (isStoryMock) {
+    resetMockServer();
+    return { deletedSeasons: 1, refundedTokens: 0 };
+  }
+
+  const { data } = await httpClient.post<ApiEnvelope<AiSeasonResetView>>(
+    '/api/dev/ai/seasons/current/story/reset',
+  );
+  return data.data;
+}
+
 /** `GET /api/ai/seasons/me`. 목 모드(api/story.ts 의 isStoryMock)면 목 시즌을 돌려준다. */
 export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
   if (isStoryMock) {
@@ -38,7 +86,7 @@ export async function getSeasonStatus(): Promise<AiSeasonStatusView> {
       seasonId: 'mock-season',
       revision: 1,
       currentEpisode: mock.story.currentOrder ?? 1,
-      status: mock.completed ? COMPLETED_SEASON_STATUS : 'ACTIVE',
+      status: mock.completed ? COMPLETED_SEASON_STATUS : 'IN_PROGRESS',
       characters: mock.characters,
       episodeFormat: 'blocks',
       story: mock.story,

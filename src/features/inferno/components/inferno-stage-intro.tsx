@@ -8,7 +8,6 @@
 import { Pressable, View } from 'react-native';
 
 import BreadCluster from '@/src/components/bread-cluster';
-import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
 import { okMallangBHeroStyle } from '@/src/constants/typography';
 
@@ -18,21 +17,23 @@ import { okMallangBHeroStyle } from '@/src/constants/typography';
  */
 const CLUSTER_CLASS = 'h-[168px] w-[234px]';
 
+/**
+ * 제목·캡션 프레임 폭. 시안은 322 인데 서버가 주는 캡션(부제목)이 시안 문구보다 길어서 여러 줄로
+ * 꺾였다. 사용자 요청으로 400 까지 넓혔다(Figma 와 다른 의도적 이탈). 빵 묶음 234 + 간격 40 을 더해도
+ * 작은 가로 화면(약 740)에 들어간다.
+ */
+const TEXT_FRAME_CLASS = 'w-[400px]';
+
 interface InfernoStageIntroProps {
   title: string;
   subtitle: string;
-  /** 다시 볼 때만 건너뛰기를 보여준다. */
-  skippable: boolean;
   onNext: () => void;
-  onSkip: () => void;
 }
 
 export default function InfernoStageIntro({
   title,
   subtitle,
-  skippable,
   onNext,
-  onSkip,
 }: InfernoStageIntroProps) {
   return (
     <Pressable
@@ -41,7 +42,7 @@ export default function InfernoStageIntro({
       className="flex-1 flex-row items-center justify-center gap-[40px]"
       onPress={onNext}
     >
-      <View className="w-[322px] flex-col items-center gap-[8px]">
+      <View className={`${TEXT_FRAME_CLASS} flex-col items-center gap-[8px]`}>
         <Text className="text-center text-pink-500" style={okMallangBHeroStyle}>
           {title}
         </Text>
@@ -52,9 +53,6 @@ export default function InfernoStageIntro({
           <Text variant="body-xs" className="text-center text-text-muted">
             탭하여 계속하기
           </Text>
-          {skippable ? (
-            <Button label="소개 건너뛰기" variant="outline" onPress={onSkip} />
-          ) : null}
         </View>
       </View>
       <BreadCluster state="dough" jumping className={CLUSTER_CLASS} />

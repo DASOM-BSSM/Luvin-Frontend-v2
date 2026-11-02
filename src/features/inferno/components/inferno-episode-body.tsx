@@ -14,6 +14,7 @@ import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episo
 import InfernoEpisodeBlocker from '@/src/features/inferno/components/inferno-episode-blocker';
 import InfernoEpisodeDoneModal from '@/src/features/inferno/components/inferno-episode-done-modal';
 import InfernoSeasonReportGate from '@/src/features/inferno/components/inferno-season-report-gate';
+import useDoneModalGate from '@/src/features/inferno/hooks/use-done-modal-gate';
 import useEpisodePlayback from '@/src/features/inferno/hooks/use-episode-playback';
 import useSeasonCast from '@/src/features/inferno/hooks/use-season-cast';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
@@ -26,6 +27,7 @@ const EMPTY_EPISODE = new Error('Empty episode');
 const NO_IDS: string[] = [];
 const NO_FEEDBACKS: Record<string, string> = {};
 const FALLBACK_MINE = { type: DEFAULT_BREAD_TYPE, name: '' };
+
 
 export default function InfernoEpisodeBody({
   order,
@@ -55,17 +57,30 @@ export default function InfernoEpisodeBody({
     onPreviousPress,
     onNextPress,
     tokenCost,
+    loaderActive,
     handleUnlocked,
     handleLoaderExitComplete,
     handleLeavePress,
+    handleLeaveFromModal,
+    leaving,
+    handleModalGone,
     handleSelect,
+    handleChoiceNext,
     handleFinishPress,
     handleShowReport,
     handleRetry,
-    handleIntroDone,
+    handleIntroNext,
+    introStep,
     handleCloseDone,
   } = useEpisodePlayback(order, sessionKey);
+  const doneGate = useDoneModalGate(done, block?.type === 'choice', handleCloseDone);
   const episode = findInfernoEpisode(order) ?? { order, title: '' };
+
+  // 투표 모달이 닫히면: 회차가 끝났으면 종료 모달을, 나가는 중이면 나가기를 이어서 한다.
+  function handleChoiceModalDismiss() {
+    doneGate.handleChoiceModalDismiss();
+    if (leaving) handleModalGone();
+  }
   const seasonCast = useSeasonCast(sessionKey, order, content.data?.stageIntro?.cast);
 
   if (report && story.data)
@@ -94,24 +109,29 @@ export default function InfernoEpisodeBody({
           order={order}
           content={content.data}
           tokenCost={tokenCost}
-          isGenerating={content.isGenerating}
-          skippable={readOnly}
+          isGenerating={loaderActive}
           onUnlocked={handleUnlocked}
           onLoaderExitComplete={handleLoaderExitComplete}
-          onIntroDone={handleIntroDone}
+          introStep={introStep}
+          onIntroNext={handleIntroNext}
         />
       ) : !block ? (
         <InfernoEpisodeBlocker
           order={order}
           isLoading={content.isPending && content.fetchStatus !== 'idle'}
-          isGenerating={content.isGenerating}
-          error={content.error ?? (content.data?.status === 'ready' ? EMPTY_EPISODE : null)}
+          isGenerating={content.isGenerating || flow.waiting}
+          error={
+            content.error ??
+            (content.data?.status === 'ready' && !flow.waiting ? EMPTY_EPISODE : null)
+          }
           onRetry={handleRetry}
           onShowReport={handleShowReport}
         />
       ) : (
         <InfernoBlockPlayer
-          key={`${block.id}:${flow.line}`}
+          // 톡방은 줄이 바뀌어도 다시 마운트하지 않는다. 다시 마운트하면 스크롤이 맨 위로 돌아갔다가
+          // 내려가서, 1:1 대화처럼 아래로 이어 내려가지 않는다(InfernoMessengerScene 이 줄마다 연출을 다시 건다).
+          key={block.type === 'messenger' ? block.id : `${block.id}:${flow.line}`}
           order={order}
           block={block}
           likedMessageIds={content.data?.likedMessageIds ?? NO_IDS}
@@ -124,10 +144,13 @@ export default function InfernoEpisodeBody({
           recorded={recorded}
           readOnly={readOnly}
           pending={choice.isPending}
-          pendingId={choice.isPending ? choice.variables.breadId : undefined}
           onDone={flow.markReady}
           onNext={flow.next}
           onSelect={handleSelect}
+          onChoiceNext={handleChoiceNext}
+          ended={done || leaving}
+          onChoiceModalDismiss={handleChoiceModalDismiss}
+          onLeave={handleLeaveFromModal}
         />
       )}
       {choice.isError && getStoryErrorCode(choice.error) !== 'CHOICE_ALREADY_MADE' ? (
@@ -136,12 +159,13 @@ export default function InfernoEpisodeBody({
         </Text>
       ) : null}
       <InfernoEpisodeDoneModal
-        visible={done}
+        visible={doneGate.visible && !leaving}
         isLastEpisode={isLastEpisode}
         isSaving={completion.isPending}
         hasFailed={completion.isError}
         onFinishPress={handleFinishPress}
-        onClose={handleCloseDone}
+        onClose={doneGate.handleClose}
+        onDismiss={handleModalGone}
       />
     </InfernoEpisodeFrame>
   );

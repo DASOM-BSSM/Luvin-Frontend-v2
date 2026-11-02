@@ -69,7 +69,7 @@ export default function InfernoEpisodeStateView({
         <Button label="이전 회차로 가기" onPress={handlePreviousPress} />
       ) : null}
       {action === 'report' ? <Button label="최종 리포트 보기" onPress={onShowReport} /> : null}
-      {action === 'age' ? <Button label="나이·성별 입력하기" onPress={onAgeRequired} /> : null}
+      {action === 'age' ? <Button label="마이페이지" onPress={onAgeRequired} /> : null}
     </View>
   );
 }

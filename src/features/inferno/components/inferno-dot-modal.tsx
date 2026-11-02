@@ -11,6 +11,8 @@ interface InfernoDotModalProps {
   closeLabel: string;
   /** 바깥을 누르거나 안드로이드 뒤로가기를 했을 때. */
   onClose: () => void;
+  /** 완전히 닫힌 뒤(iOS 닫힘 애니메이션 끝) 불린다. 다른 모달을 이어서 띄울 때 쓴다. */
+  onDismiss?: () => void;
   children: ReactNode;
 }
 
@@ -26,6 +28,7 @@ export default function InfernoDotModal({
   minWidthClass,
   closeLabel,
   onClose,
+  onDismiss,
   children,
 }: InfernoDotModalProps) {
   return (
@@ -38,6 +41,7 @@ export default function InfernoDotModal({
       // 실제로 죽는 것을 확인했다. 안드로이드에는 없는 제약이라 그쪽만 보면 놓친다).
       supportedOrientations={['portrait', 'landscape']}
       onRequestClose={onClose}
+      onDismiss={onDismiss}
     >
       <Pressable
         accessibilityRole="button"

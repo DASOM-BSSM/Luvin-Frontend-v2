@@ -2,6 +2,7 @@
  * [DRAFT] `러빈지옥 회차` 태그 DTO. openapi 에서 생성된 타입(src/types/api-generated.ts)을
  * 이름만 짧게 다시 내보낸다 — 직접 손으로 옮기지 않아서 스펙이 바뀌면 재생성만 하면 된다(§19).
  */
+import type { AiCharacterView } from '@/src/features/inferno/api/ai-season-types';
 import type { components } from '@/src/types/api-generated';
 
 type Schemas = components['schemas'];
@@ -13,6 +14,8 @@ export type AiStoryParticipantView = Schemas['AiStoryParticipantView'];
 export type AiStageIntroView = Schemas['AiStageIntroView'];
 export type AiStoryStateView = Schemas['AiStoryStateView'];
 export type AiChoiceOutcomeView = Schemas['AiChoiceOutcomeView'];
+/** 선택 결과 장면 생성 상태(`choice`). 선택 응답과 `GET /me` 의 `story.choice` 에 온다. */
+export type AiChoiceStatusView = Schemas['AiChoiceStatusView'];
 export type AiChoiceHttpRequest = Schemas['AiChoiceHttpRequest'];
 export type AiStoryFeedbackHttpRequest = Schemas['AiStoryFeedbackHttpRequest'];
 export type AiStoryFeedbackView = Schemas['AiStoryFeedbackView'];
@@ -20,32 +23,18 @@ export type AiStoryLikeHttpRequest = Schemas['AiStoryLikeHttpRequest'];
 export type AiMessageLikeView = Schemas['AiMessageLikeView'];
 
 /**
- * [DRAFT] 시즌 출연진(`characters[]`)에 백엔드가 넣어 줄 예정인 반죽 특징 한 줄. 아직 openapi 에
- * 없어서 선택 필드로만 덧붙인다. 스펙에 들어오면 이 타입을 지우고 생성 타입을 그대로 쓸 것.
+ * 시즌 출연진(`characters[]`). 반죽 특징 한 줄(`description`)이 openapi 에 들어와서(라이브 스펙
+ * 2026-10-26) 따로 덧붙이던 선택 필드를 없앴다. 이름은 부르는 곳이 많아 그대로 둔다.
  */
-export type AiCharacterWithDescription = Schemas['AiCharacterView'] & {
-  description?: string | null;
-};
+export type AiCharacterWithDescription = AiCharacterView;
 export type PartnerLetterView = Schemas['PartnerLetterView'];
 
 /**
- * [DRAFT] 회차 열기(토큰) 필드. 계약 v3 0장 "토큰 정책". 백엔드가 아직 만드는 중이라 openapi 에
- * 없다 — openapi 에 확정되면 이 타입과 api/story.ts 의 unlockEpisode 만 맞춰 고친다.
+ * `POST .../episodes/{order}/unlock` 응답. 1~3화나 이미 연 회차면 차감 없이 `unlocked: true`.
+ * 시즌 상태는 들어 있지 않아서 열고 나면 `GET /me` 를 다시 받는다. 열어 둔 회차(`unlockedOrders`)와
+ * 토큰 수(`episodeTokenCost`)는 `AiStoryStateView` 에 있다.
  */
-export interface AiStoryUnlockFields {
-  /** 열어 둔 회차(무료 회차 포함 여부는 서버가 정한다). */
-  unlockedOrders?: number[];
-  /** 4화 이상을 처음 열 때 드는 토큰 수. 앱에 하드코딩하지 않는다. */
-  episodeTokenCost?: number;
-}
+export type AiEpisodeUnlockView = Schemas['AiEpisodeUnlockView'];
 
-/**
- * [DRAFT] `POST .../episodes/{order}/unlock` 응답(계약 v3). 1~3화나 이미 연 회차면 차감 없이
- * `unlocked: true`. 시즌 상태는 들어 있지 않아서 열고 나면 `GET /me` 를 다시 받는다.
- */
-export interface AiEpisodeUnlockView {
-  order?: number;
-  unlocked?: boolean;
-  /** 열고 난 뒤 남은 토큰. */
-  tokenBalance?: number;
-}
+/** 409 `INSUFFICIENT_TOKENS` 의 `data`: 필요한 토큰(`required`)과 지금 잔액(`balance`). */
+export type AiInsufficientTokensView = Schemas['AiInsufficientTokensView'];

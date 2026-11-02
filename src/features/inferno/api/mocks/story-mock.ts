@@ -22,6 +22,8 @@ import {
 import { SCENE_CAST } from '@/src/features/inferno/api/mocks/scene-cast';
 import {
   EPISODE_SITUATIONS,
+  EPISODE_TRANSITIONS,
+  LETTER_MESSAGES,
   EPISODE_TITLES,
   STAGE_ROLES,
   STAGE_TITLES,
@@ -36,13 +38,13 @@ import type {
   AiStoryMessageView,
   AiStoryParticipantView,
   AiStoryStateView,
-  AiStoryUnlockFields,
   AiEpisodeUnlockView,
   PartnerLetterView,
 } from '@/src/features/inferno/api/story-types';
 import type { AiReportView } from '@/src/features/inferno/api/ai-season-types';
 import type { InfernoParticipant } from '@/src/features/inferno/types';
 import type {
+  ChoiceRecord,
   ChoicePoint,
   SceneBlock,
   SceneSeasonState,
@@ -74,24 +76,63 @@ interface MockServer {
   feedbacks: AiStoryFeedbackView[];
   unlocked: number[];
   tokens: number;
-  /** 회차를 끝낼 때마다 한 통씩 쌓이는 쪽지. 서버처럼 `partnerName` 은 비워 둔다. */
+  /** 회차를 끝낼 때마다 한 통씩 쌓이는 쪽지. 계약 v5 처럼 `partnerName` 을 채운다. */
   letters: PartnerLetterView[];
   readLetterIds: number[];
 }
 
-const server: MockServer = {
+/**
+ * 목 서버 상태는 globalThis 에 둔다. 모듈 변수로 두면 목 파일을 고칠 때마다 Fast Refresh 가 이 모듈을
+ * 다시 실행해서 진행도(요청·완료·열린 회차)가 통째로 비었다 — 앱 캐시에는 본문이 남아 있어 끝까지 봤는데
+ * 완료가 409 `CONTENT_NOT_READY` 로 실패했다(사용자 지적). 앱을 완전히 다시 불러오면 지금처럼 비워진다.
+ */
+const MOCK_SERVER_KEY = '__luvinStoryMockServer';
+
+/** `EXPO_PUBLIC_MOCK_ALL_FREE=true` 면 1~10화를 처음부터 다 열어 둔다(토큰 없이 레이아웃 확인용). */
+const MOCK_ALL_FREE = process.env.EXPO_PUBLIC_MOCK_ALL_FREE === 'true';
+/**
+ * `EXPO_PUBLIC_MOCK_START_ORDER=N` 이면 N화부터 시작한다 — 1~(N-1)화는 끝낸 것으로, 그 사이 선택은 전부
+ * 첫 후보(카스테라) 수락으로 채운다(6화 고백 수락이면 연애 흐름). 비우거나 1 이면 처음부터.
+ */
+const MOCK_START_ORDER = Math.min(10, Math.max(1, parseNumber(process.env.EXPO_PUBLIC_MOCK_START_ORDER) ?? 1));
+const ALL_ORDERS = Array.from({ length: 10 }, (_, index) => index + 1);
+
+function startChoices(): ChoiceRecord[] {
+  return Object.entries(CHOICE_ORDERS)
+    .filter(([order]) => Number(order) < MOCK_START_ORDER)
+    .map(([order, pointId]) => ({ pointId, order: Number(order), breadId: 'castella', accepted: true, reason: '' }));
+}
+const mockGlobal = globalThis as typeof globalThis & { [MOCK_SERVER_KEY]?: MockServer };
+/** 처음 상태. 탈퇴하면 이 상태로 되돌린다(resetMockServer). */
+function initialMockServer(): MockServer {
+  return {
   age: parseNumber(process.env.EXPO_PUBLIC_MOCK_AGE),
   setting: null,
-  season: { route: null, choices: [], rejectCount: {} },
-  completed: [],
+  season: {
+    route: MOCK_START_ORDER > 6 ? 'romance' : null,
+    choices: startChoices(),
+    rejectCount: {},
+  },
+  completed: ALL_ORDERS.filter((order) => order < MOCK_START_ORDER),
   requested: [],
   likes: [],
   feedbacks: [],
-  unlocked: [...MOCK_FREE_ORDERS],
+  unlocked: MOCK_ALL_FREE ? [...ALL_ORDERS] : [...MOCK_FREE_ORDERS],
   tokens: parseNumber(process.env.EXPO_PUBLIC_MOCK_TOKENS) ?? DEFAULT_MOCK_TOKENS,
   letters: [],
   readLetterIds: [],
-};
+  };
+}
+
+const server: MockServer = (mockGlobal[MOCK_SERVER_KEY] ??= initialMockServer());
+
+/**
+ * 목 서버 진행도를 처음 상태로 되돌린다. 목 진행도는 계정과 상관없이 앱 메모리에만 있어서, 계정을 탈퇴해도
+ * 남아 있던 회차가 그대로 이어졌다(사용자 지적). 실제 서버 모드에서는 부르지 않는다.
+ */
+export function resetMockServer() {
+  Object.assign(server, initialMockServer());
+}
 
 const scenario = () => process.env.EXPO_PUBLIC_MOCK_SCENARIO ?? 'default';
 
@@ -111,8 +152,14 @@ function mockError(status: number, code: string | null): AxiosError {
   });
 }
 
-/** 목 빵 id(`castella` 등) → 고정 uuid. 실제 서버처럼 화면에는 uuid 만 보이게 한다. */
-const uuidByMockId = new Map<string, string>();
+/**
+ * 목 빵 id(`castella` 등) → 고정 uuid. 실제 서버처럼 화면에는 uuid 만 보이게 한다.
+ * 목 서버 상태처럼 globalThis 에 둔다 — 모듈 변수면 Fast Refresh 때마다 번호가 다시 매겨져서, 전에 만든
+ * 쪽지의 partnerId 가 출연진(characters)과 맞지 않아 "From." 뒤 이름이 비었다.
+ */
+const UUID_MAP_KEY = '__luvinStoryMockUuids';
+const uuidGlobal = globalThis as typeof globalThis & { [UUID_MAP_KEY]?: Map<string, string> };
+const uuidByMockId: Map<string, string> = (uuidGlobal[UUID_MAP_KEY] ??= new Map<string, string>());
 function uuidFor(mockId: string): string {
   const existing = uuidByMockId.get(mockId);
   if (existing) return existing;
@@ -177,7 +224,7 @@ function toBlock(block: SceneBlock): AiSceneBlockView {
   };
   if (block.type === 'messenger') return { ...base, messenger: { kind: block.kind, roomName: block.roomName } };
   if (block.type === 'interview')
-    return { ...base, interview: { breadId: uuidFor(block.messages[0]?.participantId ?? '') } };
+    return { ...base, interview: { breadId: uuidFor(block.breadId) } };
   if (block.type === 'choice_result')
     return {
       ...base,
@@ -198,7 +245,7 @@ function statusText(mockId: string): string {
   return picks.length > 0 ? '친해짐' : '알아가는 중';
 }
 
-function storyState(): AiStoryStateView & AiStoryUnlockFields {
+function storyState(): AiStoryStateView {
   const confession = server.season.choices.find((choice) => choice.pointId === 3);
   return {
     setting: server.setting ?? undefined,
@@ -238,13 +285,14 @@ export function mockSeasonStory() {
 }
 
 function blocksFor(order: number) {
-  return buildEpisodeContent(order, server.season).blocks;
+  return buildEpisodeContent(order, server.season, server.setting ?? undefined).blocks;
 }
 
 export async function mockGetEpisodeContent(order: number): Promise<AiEpisodeContentView> {
   await wait();
   if (order < 1 || order > LAST_ORDER) throw mockError(400, null);
-  if (order === 1 && !server.setting) {
+  // 배경은 처음 받는 회차에서 한 번 정한다. 보통 1화지만 START_ORDER 로 중간부터 시작하면 그 회차다.
+  if (!server.setting && (order === 1 || order === MOCK_START_ORDER)) {
     if (server.age === null) throw mockError(409, 'AGE_REQUIRED');
     // 시즌 처음 1화를 요청할 때 한 번만 정한다. 나이를 바꿔도 이 시즌 배경은 그대로다.
     server.setting = settingForAge(server.age, Math.random());
@@ -378,17 +426,30 @@ export function mockTokenBalance(): number {
 }
 
 /** 회차 쪽지를 보내는 빵: 연애 흐름이면 상대, 아니면 친구. */
+/**
+ * 쪽지 발신 빵(계약 v5 7장 "회차 쪽지 발신자"). 그 회차 첫 1:1 장면의 상대, 1:1 이 혼자(독백)였으면 친구.
+ * 10화는 연애 흐름이면 연인, 혼자 흐름이면 친구.
+ */
+function letterSenderId(order: number): string {
+  if (order === LAST_ORDER) {
+    const confession = server.season.choices.find((choice) => choice.pointId === 3);
+    return server.season.route === 'romance' && confession?.breadId ? confession.breadId : 'friend';
+  }
+  const pair = blocksFor(order).find((block) => block.type === 'pair');
+  const partner =
+    pair && 'participants' in pair ? pair.participants.find((person) => !person.isMine) : undefined;
+  return partner?.id ?? 'friend';
+}
+
 function mockLetter(order: number): PartnerLetterView {
-  const confession = server.season.choices.find((choice) => choice.pointId === 3);
-  const senderId =
-    server.season.route === 'romance' && confession?.breadId ? confession.breadId : 'friend';
+  const senderId = letterSenderId(order);
+  const sender = SCENE_CAST.find((person) => person.id === senderId);
+  const place = EPISODE_TRANSITIONS[server.setting ?? 'school'][order] ?? '';
   return {
     letterId: order,
     partnerId: uuidFor(senderId),
-    message:
-      order === LAST_ORDER
-        ? '같은 시간을 함께 보내줘서 고마워. 네 속도로 지내도 괜찮아.'
-        : `${order}화 이야기 고마웠어. 다음 이야기에서도 편하게 이야기하자.`,
+    partnerName: sender?.name ?? '',
+    message: LETTER_MESSAGES[order]?.(place) ?? '',
   };
 }
 

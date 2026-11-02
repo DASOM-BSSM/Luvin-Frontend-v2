@@ -9,7 +9,6 @@ import InfernoPairScene from '@/src/features/inferno/components/inferno-pair-sce
 import InfernoNarrationLine from '@/src/features/inferno/components/inferno-narration-line';
 import InfernoTransitionScene from '@/src/features/inferno/components/inferno-transition-scene';
 import type { AiCharacterWithDescription } from '@/src/features/inferno/api/story-types';
-import { INTERVIEW_QUESTIONS } from '@/src/features/inferno/constants/episode-copy';
 import type {
   ChoiceHistory,
   ChoiceOutcome,
@@ -17,7 +16,7 @@ import type {
   StoryBlock,
   StoryParticipant,
 } from '@/src/features/inferno/types/story';
-import { hasRejected, isPairWithPartner } from '@/src/features/inferno/utils/story-playlist';
+import { isPairWithPartner } from '@/src/features/inferno/utils/story-playlist';
 
 export default function InfernoBlockPlayer({
   order,
@@ -32,10 +31,13 @@ export default function InfernoBlockPlayer({
   recorded,
   readOnly,
   pending,
-  pendingId,
   onDone,
   onNext,
   onSelect,
+  onChoiceNext,
+  onLeave,
+  ended,
+  onChoiceModalDismiss,
 }: {
   order: number;
   block: StoryBlock;
@@ -54,10 +56,17 @@ export default function InfernoBlockPlayer({
   recorded?: ChoiceOutcome;
   readOnly: boolean;
   pending: boolean;
-  pendingId?: string | null;
   onDone: () => void;
   onNext: () => void;
   onSelect: (id: string | null) => void;
+  /** 이미 투표한 결과 모달의 "다음으로". 투표 뒤에는 회차를 끝낸다(use-episode-playback). */
+  onChoiceNext: () => void;
+  /** 회차에서 나간다(이미 끝낸 회차의 투표 결과 모달 "에피소드 나가기"). */
+  onLeave: () => void;
+  /** 회차가 끝나 종료 모달을 띄울 차례. 선택 장면의 모달을 먼저 닫게 한다. */
+  ended: boolean;
+  /** 선택 장면의 모달이 완전히 닫혔을 때(iOS). */
+  onChoiceModalDismiss: () => void;
 }) {
   if (block.type === 'transition')
     return <InfernoTransitionScene text={block.text} onNext={onNext} />;
@@ -69,8 +78,11 @@ export default function InfernoBlockPlayer({
         recorded={recorded}
         readOnly={readOnly}
         pending={pending}
-        pendingId={pendingId}
         onSelect={onSelect}
+        onNext={onChoiceNext}
+        onLeave={onLeave}
+        ended={ended}
+        onModalDismiss={onChoiceModalDismiss}
       />
     );
   if (block.type === 'pair' && isPairWithPartner(block))
@@ -93,6 +105,7 @@ export default function InfernoBlockPlayer({
       <InfernoGroupScene
         id={block.id}
         participants={block.participants}
+        episodeCast={cast}
         message={message}
         stageCast={stageCast}
         characters={characters}
@@ -100,21 +113,15 @@ export default function InfernoBlockPlayer({
       />
     );
   if (block.type === 'interview') {
-    const participant =
+    // 질문은 내 빵에 대해 묻고, 답은 인터뷰 대상 빵(breadId)이 한다(Figma 7884:4592).
+    const subject =
+      block.participants.find((person) => person.isMine) ?? cast.find((person) => person.isMine);
+    const answerer =
       block.participants.find((person) => person.id === block.breadId) ??
       block.participants.find((person) => person.id === message.participantId);
-    if (participant)
+    if (subject && answerer)
       return (
-        <InfernoInterviewScene
-          question={
-            hasRejected(choices, block.breadId)
-              ? INTERVIEW_QUESTIONS.rejected
-              : INTERVIEW_QUESTIONS.default
-          }
-          participant={participant}
-          message={message}
-          onDone={onDone}
-        />
+        <InfernoInterviewScene subject={subject} answerer={answerer} message={message} onDone={onDone} />
       );
   }
   return (

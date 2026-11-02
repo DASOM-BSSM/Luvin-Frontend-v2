@@ -41,9 +41,11 @@ export default function PartnerLetterPaper({
           <Text variant="body-m" className="text-center text-default-black">
             {letter.message}
           </Text>
-          <Text variant="body-s" className="text-center text-text-muted">
-            {`From. ${letter.partnerName}`}
-          </Text>
+          {letter.partnerName ? (
+            <Text variant="body-s" className="text-center text-text-muted">
+              {`From. ${letter.partnerName}`}
+            </Text>
+          ) : null}
         </>
       );
     }

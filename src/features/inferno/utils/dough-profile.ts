@@ -21,7 +21,7 @@ export interface DoughProfile {
  * 대화 참가자 → 소개. 모든 회차에서 1화와 똑같이 관계·특징을 보여준다(사용자 결정).
  *
  * - 관계: 1화 무대 소개 출연진(시즌 단위로 저장해 둔 stageIntro.cast) → 참가자 stageRole → 내 빵이면 "나".
- * - 특징: 서버 시즌 출연진 `characters[].description`(백엔드 요청 중)이 있으면 그 값이 먼저,
+ * - 특징: 서버 시즌 출연진 `characters[].description`(라이브 스펙 반영)이 있으면 그 값이 먼저,
  *   없으면 1화 무대 소개의 description. 시즌 출연진 `characterId` 는 참가자 `breadId` 와 같은 값이다
  *   (계약 v3 "출연진", 쪽지 partnerId ↔ characterId).
  */

@@ -1,12 +1,11 @@
-/** [DRAFT] Existing report scenes and bake animation preserved after episode ten. */
+/**
+ * [DRAFT] 10화 뒤 최종 리포트. 최종 매칭(굽기 연출) → 행동 분석 → 시즌 마무리 세 페이지다.
+ * 하이라이트 페이지는 뺐다(사용자 결정). 굽기 연출은 연애·혼자 흐름 모두 튼다 — 혼자 흐름은 내 빵만 구워진다.
+ */
 import { useState } from 'react';
-import { View } from 'react-native';
-import BreadCharacter from '@/src/assets/images/BreadCharacter';
-import Text from '@/src/components/ui/text';
 import InfernoAnalysisScene from '@/src/features/inferno/components/inferno-analysis-scene';
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoFinalMatchReveal from '@/src/features/inferno/components/inferno-final-match-reveal';
-import InfernoHighlightScene from '@/src/features/inferno/components/inferno-highlight-scene';
 import InfernoWrapUpScene from '@/src/features/inferno/components/inferno-wrap-up-scene';
 import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
 import useInfernoEp5Flow from '@/src/features/inferno/hooks/use-inferno-ep5-flow';
@@ -36,7 +35,11 @@ export default function InfernoSeasonReportScreen({
   const page = useSceneSeasonStore((state) => state.sessions[sessionKey]?.reportPage ?? 0);
   const save = useSceneSeasonStore((state) => state.saveReport);
   const flow = useInfernoEp5Flow(readOnly ? 0 : page, readOnly);
-  const [baking, setBaking] = useState(!readOnly && page === 0 && !solo);
+  const [baking, setBaking] = useState(!readOnly && page === 0);
+  function handleBakeComplete() {
+    setBaking(false);
+  }
+
   function leave() {
     if (!readOnly) save(sessionKey, flow.pageIndex);
     exit.leave();
@@ -56,29 +59,16 @@ export default function InfernoSeasonReportScreen({
       onNextPress={baking ? undefined : flow.goNext}
     >
       {flow.pageIndex === 0 ? (
-        solo ? (
-          <View className="flex-1 items-center justify-center gap-[12px]">
-            <Text variant="heading-h3" className="text-pink-500">
-              RESULT
-            </Text>
-            <BreadCharacter type={mine.type} state="baked" className="h-[100px] w-[150px]" />
-            <Text variant="body-m" className="text-text-primary">
-              {summary.finalMatch.summaryLine}
-            </Text>
-          </View>
-        ) : (
-          <InfernoFinalMatchReveal
-            mine={mine}
-            partner={summary.finalMatch.profile}
-            summaryLine={summary.finalMatch.summaryLine}
-            isPlaying={baking}
-            onComplete={() => setBaking(false)}
-          />
-        )
+        <InfernoFinalMatchReveal
+          mine={mine}
+          partner={solo ? undefined : summary.finalMatch.profile}
+          summaryLine={summary.finalMatch.summaryLine}
+          isPlaying={baking}
+          onComplete={handleBakeComplete}
+          solo={solo}
+        />
       ) : flow.pageIndex === 1 ? (
         <InfernoAnalysisScene report={summary.report} />
-      ) : flow.pageIndex === 2 ? (
-        <InfernoHighlightScene highlights={summary.highlights} />
       ) : (
         <InfernoWrapUpScene onEndSeasonPress={finish} />
       )}

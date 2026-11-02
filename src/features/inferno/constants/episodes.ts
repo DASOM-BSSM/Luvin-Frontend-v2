@@ -13,27 +13,23 @@ export const INFERNO_TAGLINE = '낯선 온도를 만나는 반죽들의 이야�
  * 에피소드를 추가하거나 제목을 고칠 일이 생기면 이 배열만 건드리면 된다.
  *
  * 가이드 회차(ep0)는 없앴다(사용자 결정). 러빈지옥은 늘 1화부터 시작한다.
+ *
+ * 회차 이름은 홈 카드·시작 화면·회차 하단 바·오븐 목록 어디서나 이 목록 하나만 쓴다(사용자 결정 — 화면마다
+ * 이름이 다르면 안 된다). 홈 카드에 한 줄로 들어가야 해서 12자 이내. 예전 제목("안녕하세요 소금빵입니다!" 등)은
+ * 소금빵·옛 5화 줄거리를 전제로 해서 내 반죽과 상관없는 중립 제목으로 바꿨다. 서버 회차 소개(intro)의 문구는
+ * 이름으로 쓰지 않는다.
  */
 export const INFERNO_EPISODES: readonly InfernoEpisode[] = [
-  { order: 1, title: '안녕하세요 소금빵입니다!' },
-  { order: 2, title: '우리의 단톡방' },
-  { order: 3, title: '처음 둘만 남은 날' },
-  { order: 4, title: '함께 준비하는 축제' },
-  { order: 5, title: '서로 다른 마음의 속도' },
+  { order: 1, title: '첫 만남' },
+  { order: 2, title: '단톡방이 생겼다' },
+  { order: 3, title: '둘만 남은 날' },
+  { order: 4, title: '다 같이 준비' },
+  { order: 5, title: '그날의 연락' },
   { order: 6, title: '마음을 전하는 날' },
-  { order: 7, title: '조금 멀어진 우리' },
-  { order: 8, title: '엇갈린 약속' },
-  { order: 9, title: '다시 이야기할 시간' },
-  { order: 10, title: '같은 오븐에 남은 마음' },
-];
-
-/** [DRAFT] Existing five-episode server seasons keep their original numbering and titles. */
-export const LEGACY_INFERNO_EPISODES: readonly InfernoEpisode[] = [
-  { order: 1, title: '안녕하세요 소금빵입니다!' },
-  { order: 2, title: '우리 조금 잘 맞는 것 같아요' },
-  { order: 3, title: '미니게임으로 사랑을 쟁취하세요!' },
-  { order: 4, title: '계속 알아가고 싶어요' },
-  { order: 5, title: '최종 결과를 공유해요' },
+  { order: 7, title: '멀어진 거리' },
+  { order: 8, title: '엇갈린 마음' },
+  { order: 9, title: '다시 이야기할 때' },
+  { order: 10, title: '시즌의 끝' },
 ];
 
 /**

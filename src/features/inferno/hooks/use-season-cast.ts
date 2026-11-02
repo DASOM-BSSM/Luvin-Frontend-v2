@@ -12,6 +12,7 @@
 import { useEffect } from 'react';
 
 import type { AiCharacterWithDescription } from '@/src/features/inferno/api/story-types';
+import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
 import useEpisodeContent from '@/src/features/inferno/hooks/use-episode-content';
 import { readStageCast, useStageCastStore } from '@/src/features/inferno/store/stage-cast-store';
@@ -32,6 +33,7 @@ export default function useSeasonCast(
   const first = useEpisodeContent(FIRST_ORDER, needsFirst);
   const fetchedCast = first.data?.stageIntro?.cast;
   const status = useAiSeasonStatus();
+  const myProfile = useBreadStore((state) => state.profile);
 
   // 받은 출연진을 시즌 단위로 남겨 둔다. 서버 응답을 기기 저장소로 옮기는 일이라 effect 에서 한다.
   const toSave = currentCast?.length ? currentCast : fetchedCast;
@@ -39,8 +41,14 @@ export default function useSeasonCast(
     if (toSave?.length) save(seasonKey, toSave);
   }, [seasonKey, toSave, save]);
 
+  const stageCast = currentCast?.length ? currentCast : stored.length ? stored : (fetchedCast ?? []);
   return {
-    stageCast: currentCast?.length ? currentCast : stored.length ? stored : (fetchedCast ?? []),
+    // 기기에 저장해 둔 출연진도 내 빵은 지금 내 반죽 프로필로 보여준다(저장 뒤 프로필이 바뀌었을 수 있다).
+    stageCast: myProfile
+      ? stageCast.map((member) =>
+          member.isMine ? { ...member, name: myProfile.name, type: myProfile.type } : member,
+        )
+      : stageCast,
     characters: (status.data?.characters ?? NO_CHARACTERS) satisfies AiCharacterWithDescription[],
   };
 }

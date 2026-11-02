@@ -4,7 +4,7 @@ import type { BreadType } from '@/src/assets/images/BreadCharacter';
 export interface InfernoEpisode {
   /** 1 이면 "Episode 01" 로 보여준다. 목록의 키 역할도 한다. */
   order: number;
-  /** 시작 화면 하단 바에 들어가는 제목. 예: "안녕하세요 소금빵입니다!" */
+  /** 회차 이름. 홈·시작 화면·하단 바·오븐 어디서나 같다. 예: "첫 만남" */
   title: string;
 }
 
@@ -247,6 +247,7 @@ export interface InfernoSeasonSummary {
 
 /** 펼친 쪽지. */
 export interface InfernoPartnerLetter {
-  partnerName: string;
+  /** 보낸 빵 이름("형용사 + 빵 종류"). 알 수 없으면 null — 화면은 "From." 줄을 그리지 않는다. */
+  partnerName: string | null;
   message: string;
 }

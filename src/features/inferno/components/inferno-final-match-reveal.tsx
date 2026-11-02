@@ -20,6 +20,11 @@ interface InfernoFinalMatchRevealProps {
   isPlaying: boolean;
   /** 연출이 끝났을 때. 화면은 그대로 1페이지로 남는다. */
   onComplete: () => void;
+  /**
+   * 혼자 흐름. 상대 없이 내 빵 혼자 구워진다 — 기다릴 상대가 없어서 연출은 바로 빵이 되는 장면까지 간다.
+   * 예전에는 혼자 흐름이면 굽기 연출 없이 구운 빵 그림만 보여서 연출이 사라진 것처럼 보였다(사용자 지적).
+   */
+  solo?: boolean;
 }
 
 /**
@@ -39,6 +44,7 @@ export default function InfernoFinalMatchReveal({
   waitMessage,
   isPlaying,
   onComplete,
+  solo = false,
 }: InfernoFinalMatchRevealProps) {
   const [hasSwapped, setHasSwapped] = useState(!isPlaying);
 
@@ -46,7 +52,12 @@ export default function InfernoFinalMatchReveal({
     setHasSwapped(true);
   }
 
-  const time = useBakeClock({ isPlaying, isReleased: partner !== undefined, onSwap: handleSwap, onComplete });
+  const time = useBakeClock({
+    isPlaying,
+    isReleased: solo || partner !== undefined,
+    onSwap: handleSwap,
+    onComplete,
+  });
 
   return (
     <InfernoFinalMatchScene
@@ -57,6 +68,7 @@ export default function InfernoFinalMatchReveal({
       tendencyLabel={tendencyLabel}
       waitMessage={hasSwapped ? undefined : waitMessage}
       reveal={time}
+      solo={solo}
     />
   );
 }

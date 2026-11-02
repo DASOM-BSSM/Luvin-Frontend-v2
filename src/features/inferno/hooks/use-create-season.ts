@@ -12,8 +12,11 @@ import queryClient from '@/src/lib/query-client';
 export default function useCreateSeason() {
   return useMutation({
     mutationFn: (surveyResultId: string) => createSeasonFromSurvey(surveyResultId),
-    onSuccess: (status) => {
-      queryClient.setQueryData(aiSeasonKeys.status, status);
+    // 응답으로 시즌 캐시를 갈아끼우지 않고 `GET /me` 를 다시 받는다. 갈아끼우면 목 모드(진행도는 목 서버,
+    // 시즌 생성은 실제 서버)에서 실제 서버의 빈 진행도가 덮여서 홈이 "진행 중인 에피소드가 없어요"로
+    // 돌아갔다(사용자 지적). 진행도의 기준은 늘 `GET /me` 하나다.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: aiSeasonKeys.status });
     },
   });
 }

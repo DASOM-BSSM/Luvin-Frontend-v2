@@ -4,6 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { clearAccessToken } from "@/src/features/auth/lib/token-storage";
 import { useAuthStore } from "@/src/features/auth/store/auth-store";
 import { useBreadStore } from "@/src/features/bread/store/bread-store";
+import { resetMockServer } from "@/src/features/inferno/api/mocks/story-mock";
+import { isStoryMock } from "@/src/features/inferno/api/story";
 import { useInfernoStore } from "@/src/features/inferno/store/inferno-store";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import { useProfileSettingsStore } from "@/src/features/my-page/store/profile-settings-store";
@@ -39,8 +41,10 @@ export default function useDeleteAccount() {
       // 다시 가입하면 처음부터 시작해야 한다.
       useInfernoStore.getState().forgetCurrentUser();
       useProfileSettingsStore.getState().setNickname("");
-      useProfileSettingsStore.getState().setGender("female");
+      useProfileSettingsStore.getState().clearGender();
       useTokenStore.getState().setBalance(0);
+      // 목 모드면 목 서버 진행도도 처음으로 — 목 진행도는 계정과 상관없이 앱 메모리에 있다.
+      if (isStoryMock) resetMockServer();
       queryClient.clear();
     },
   });

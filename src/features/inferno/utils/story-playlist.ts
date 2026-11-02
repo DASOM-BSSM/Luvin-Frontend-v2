@@ -3,6 +3,7 @@
  */
 import type {
   ChoiceHistory,
+  StageCastMember,
   StoryBlock,
   StoryParticipant,
 } from '@/src/features/inferno/types/story';
@@ -60,4 +61,65 @@ export function feedbackTargets(block: StoryBlock) {
 /** 회차 화면 바탕. 앞을 가리는 화면·선택·인터뷰는 쪽지 위에, 나머지 대화는 흰 바탕에 그린다. */
 export function frameSurface(hasGate: boolean, block: StoryBlock | undefined): 'note' | 'plain' {
   return hasGate || block?.type === 'choice' || block?.type === 'interview' ? 'note' : 'plain';
+}
+
+/**
+ * 전체대화 위 반죽 칩에 늘어놓을 출연진. 대화 블록마다 참가자 목록이 달라도 시즌 출연진 수는
+ * 그대로 보여야 해서(사용자 결정) 블록 참가자가 아니라 시즌 전체를 쓴다.
+ *
+ * 순서: 1화 무대 소개 출연진(시즌 단위로 저장) → 이번 회차에만 나오는 빵 → 지금 블록에만 있는 빵.
+ * 같은 빵이 회차 참가자에 있으면 그쪽 값(내 빵 여부, 내 빵 그림)을 쓴다.
+ */
+export function seasonChipCast(
+  stageCast: StageCastMember[],
+  episodeCast: StoryParticipant[],
+  blockParticipants: StoryParticipant[],
+): StoryParticipant[] {
+  const known = new Map<string, StoryParticipant>();
+  [...episodeCast, ...blockParticipants].forEach((person) => {
+    if (!known.has(person.id)) known.set(person.id, person);
+  });
+  const result = new Map<string, StoryParticipant>();
+  stageCast.forEach((member) => {
+    result.set(
+      member.breadId,
+      known.get(member.breadId) ?? {
+        id: member.breadId,
+        name: member.name,
+        type: member.type,
+        isMine: false,
+        stageRole: member.role || null,
+      },
+    );
+  });
+  known.forEach((person, id) => {
+    if (!result.has(id)) result.set(id, person);
+  });
+  return [...result.values()];
+}
+
+/** 목록을 n 개씩 줄로 나눈다. 1화 등장인물 소개를 3명씩 두 줄로 놓을 때 쓴다. */
+export function chunkRows<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let index = 0; index < items.length; index += size) rows.push(items.slice(index, index + size));
+  return rows;
+}
+
+/** Introduce 한 장에 놓는 인원. Figma Introduce 한 장이 세 마리다. */
+export const INTRO_CAST_PAGE_SIZE = 3;
+
+/** 1화 소개 한 장: 무대 제목, 또는 등장인물 세 명씩. */
+export type IntroStep = { kind: 'stage' } | { kind: 'cast'; members: StageCastMember[] };
+
+/** 1화 소개 순서. 무대 제목 → 등장인물(세 명씩 여러 장). 서버가 주지 않은 단계는 빠진다. */
+export function introStepsOf(
+  stageIntro: { cast: StageCastMember[] } | null | undefined,
+): IntroStep[] {
+  if (!stageIntro) return [];
+  return [
+    { kind: 'stage' },
+    ...chunkRows(stageIntro.cast, INTRO_CAST_PAGE_SIZE).map(
+      (members): IntroStep => ({ kind: 'cast', members }),
+    ),
+  ];
 }

@@ -1,8 +1,6 @@
 /** [DRAFT] 오븐 회차 목록. 시즌은 사용자마다 하나라 지금 시즌의 회차만 보여준다(사용자 결정). */
-import type { BreadProfile } from '@/src/features/home/types';
 import { formatEpisodeLabel } from '@/src/features/home/utils/format-episode';
 import type { StoryState } from '@/src/features/inferno/types/story';
-import { getBreadFlavorName } from '@/src/features/inferno/utils/character-persona';
 import { episodeAccess } from '@/src/features/inferno/utils/episode-unlock';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 import type { SeasonEpisodeItem } from '@/src/features/oven/components/season-card';
@@ -16,14 +14,11 @@ export function toEpisodeOrders(lastOrder: number): number[] {
   return Array.from({ length: count }, (_, index) => count - index);
 }
 
-/** ep1 제목은 내 반죽 이름이 들어간 인사말이라 회차 목록에서도 그렇게 보여준다. */
-const GREETING_EPISODE_ORDER = 1;
-
-function resolveEpisodeTitle(order: number, myProfile: BreadProfile): string | undefined {
-  if (order === GREETING_EPISODE_ORDER) {
-    return `안녕하세요 ${getBreadFlavorName(myProfile.type)}입니다!`;
-  }
-
+/**
+ * 회차 이름은 홈 카드·시작 화면과 같은 목록(constants/episodes.ts)을 쓴다(사용자 결정 — 화면마다 이름이
+ * 다르면 안 된다). 예전에는 1화만 "안녕하세요 ○○입니다!" 인사말로 바꿔 보여줘서 홈의 "첫 만남"과 달랐다.
+ */
+function resolveEpisodeTitle(order: number): string | undefined {
   return findInfernoEpisode(order)?.title;
 }
 
@@ -36,11 +31,10 @@ export function accessBadge(order: number, story: StoryState | undefined): strin
 
 export function toSeasonEpisodes(
   orders: number[],
-  myProfile: BreadProfile,
   story?: StoryState,
 ): SeasonEpisodeItem[] {
   return orders.flatMap((order) => {
-    const title = resolveEpisodeTitle(order, myProfile);
+    const title = resolveEpisodeTitle(order);
     return title
       ? [{ order, label: formatEpisodeLabel(order), body: title, badge: accessBadge(order, story) }]
       : [];

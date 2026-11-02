@@ -8,9 +8,10 @@
  * 모달이 상하 바까지 덮으므로 넘어가는 길은 버튼 하나다.
  */
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
+import { breakAtPunctuation } from '@/src/features/inferno/utils/format';
 
-/** Figma 7856:3965. */
-const TITLE = 'REBAKE';
+/** Figma 7856:3965. 시안은 "REBAKE" 지만 "BAKING" 으로 바꿨다(사용자 결정). */
+const TITLE = 'BAKING';
 /** Figma 7856:3967. */
 const ACTION_LABEL = '1:1 대화하기';
 
@@ -32,7 +33,7 @@ export default function InfernoTransitionScene({
       visible
       minWidthClass="min-w-[344px]"
       title={TITLE}
-      message={text}
+      message={breakAtPunctuation(text)}
       actionLabel={ACTION_LABEL}
       onActionPress={onNext}
       onClose={handleClose}

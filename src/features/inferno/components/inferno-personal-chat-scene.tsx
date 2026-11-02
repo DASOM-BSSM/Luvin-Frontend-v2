@@ -107,13 +107,14 @@ export default function InfernoPersonalChatScene({
       <ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentContainerClassName="flex-col pr-[40px]"
+        // Figma 1:1 대화(5379:3570): 대화 칸은 폭 450, 오른쪽 여백 50(가로 874 화면에서 x 374~824).
+        contentContainerClassName="flex-col items-end pr-[50px]"
         showsVerticalScrollIndicator={false}
         onContentSizeChange={handleContentSizeChange}
       >
         <View className="h-[25px]" />
 
-        <View className="w-full flex-col gap-[20px]">
+        <View className="w-[450px] max-w-full flex-col gap-[20px]">
           {visibleMessages.map((message, index) => {
             const participant = participants.find(({ id }) => id === message.participantId);
 

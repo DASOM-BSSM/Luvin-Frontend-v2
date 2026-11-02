@@ -3,8 +3,10 @@
  * 서버가 주는 `code` 를 여기 문구로 바꿔 보여준다.
  */
 export const ERROR_MESSAGES = {
-  /** 시즌 생성 시 서버가 `409 PROFILE_REQUIRED` 로 막을 때 — 성별이 아직 설정되지 않았다. */
-  profileRequired: '러빈지옥을 시작하려면 먼저 성별을 설정해야 해요',
+  /** Figma `모달-우린` (6602:3956). 나이·성별 없이 러빈지옥에 들어가려 할 때. */
+  ageGenderRequired: '나이와 성별을 먼저 설정해주세요!',
+  /** 러빈지옥에 들어가기 전 시즌 확인(`POST /from-survey`)이나 설문 결과 조회가 실패했을 때. */
+  infernoEnterFailed: '러빈지옥을 열지 못했어요. 다시 시도해주세요',
   /** EP5 이후 최종 매칭 상대가 보낸 쪽지 본문을 받지 못했을 때. */
   partnerLetterFailed: '쪽지를 펼치지 못했어요. 다시 시도해주세요',
   /** "나의 빵에게" 피드백 저장 실패. 서버 code 가 아직 정해지지 않아 하나로 묶는다. */
@@ -17,13 +19,15 @@ export const ERROR_MESSAGES = {
   previousEpisodeRequired: '이전 회차를 먼저 끝내주세요',
   episodeNotReleased: '아직 공개되지 않은 회차예요',
   seasonCompleted: '이번 시즌은 끝났어요. 최종 리포트와 지난 회차만 볼 수 있어요',
+  /** [DRAFT] "새로운 시즌 만들기"(`POST /api/ai/seasons/next`) 실패. */
+  newSeasonFailed: '새 시즌을 열지 못했어요. 다시 시도해주세요',
+  /** [DRAFT] 개발 전용 시즌 초기화 실패. 운영 서버에는 경로가 없어서 404 도 여기로 온다. */
+  seasonResetFailed: '시즌을 초기화하지 못했어요. 다시 시도해주세요',
   choiceFailed: '선택을 전하지 못했어요. 다시 시도해주세요',
   completeFailed: '회차를 마치지 못했어요. 다시 시도해주세요',
-  ageRequired: '나이와 성별을 알려주면 이야기의 무대가 정해져요',
   reportLoadFailed: '최종 리포트를 불러오지 못했어요. 다시 시도해주세요',
   insufficientTokens: '토큰이 부족해요',
   unlockFailed: '회차를 열지 못했어요. 다시 시도해주세요',
-  ageSaveFailed: '나이와 성별을 저장하지 못했어요. 다시 시도해주세요',
   /** 그룹 참여 — 초대코드가 틀렸을 때(서버 404). */
   invalidInviteCode: '초대코드가 올바르지 않아요. 다시 확인해주세요',
   /** 그룹 참여 — 최대 인원이 다 찼을 때(서버 409 `DIARY_ROOM_FULL`). */

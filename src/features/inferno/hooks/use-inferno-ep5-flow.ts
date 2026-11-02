@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-/** 본문 네 페이지. 공통 회차 시작 카드는 `/inferno?order=5`에서 표시한다. */
-const PAGE_COUNT = 4;
+/** 리포트 세 페이지(최종 매칭 → 행동 분석 → 시즌 마무리). 하이라이트 페이지는 뺐다(사용자 결정). */
+const PAGE_COUNT = 3;
 
 export interface InfernoEp5Flow {
   pageIndex: number;
@@ -11,7 +11,7 @@ export interface InfernoEp5Flow {
 }
 
 /**
- * ep5 페이지 이동. 최종 매칭 → 행동 분석 → 하이라이트 → 시즌 마무리 순이다.
+ * 리포트 페이지 이동. 최종 매칭 → 행동 분석 → 시즌 마무리 순이다.
  *
  * "잠시 나가기" 로 나갔다 들어오면 보던 페이지에서 이어 본다(사용자 결정: 모든 회차가 이어보기).
  * 예전에는 단순 리포트라 1페이지부터 봐도 된다고 보고 이어보기를 두지 않았다.

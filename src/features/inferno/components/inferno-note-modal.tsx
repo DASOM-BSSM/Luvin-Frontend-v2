@@ -24,6 +24,10 @@ interface InfernoNoteModalProps {
   message: string;
   actionLabel: string;
   onActionPress: () => void;
+  /** 버튼을 막는다. 서버 요청이 오가는 동안 다시 누르지 못하게 할 때 쓴다(§11). */
+  isActionDisabled?: boolean;
+  /** 완전히 닫힌 뒤(iOS) 불린다. iOS 는 모달 두 개를 겹쳐 띄우지 못해서, 다음 모달은 이걸 기다린다. */
+  onDismiss?: () => void;
   /** 바깥을 누르거나 안드로이드 뒤로가기를 했을 때. */
   onClose: () => void;
 }
@@ -50,7 +54,9 @@ export default function InfernoNoteModal({
   message,
   actionLabel,
   onActionPress,
+  isActionDisabled = false,
   onClose,
+  onDismiss,
 }: InfernoNoteModalProps) {
   return (
     <InfernoDotModal
@@ -58,6 +64,7 @@ export default function InfernoNoteModal({
       minWidthClass={minWidthClass}
       closeLabel={`${title} 닫기`}
       onClose={onClose}
+      onDismiss={onDismiss}
     >
       <View className="flex-col items-center gap-[20px]">
         <View className="flex-col items-stretch gap-[4px] self-stretch">
@@ -70,7 +77,12 @@ export default function InfernoNoteModal({
         </View>
         {/* `notice` 가 아니라 `noticeFit` — 폭이 글에 맞춰 정해지는 상자라 `w-full` 버튼을 쓰면
             상자가 최대 폭까지 늘어난다(Button 의 noticeFit 주석 참고). */}
-        <Button label={actionLabel} variant="noticeFit" onPress={onActionPress} />
+        <Button
+          label={actionLabel}
+          variant="noticeFit"
+          disabled={isActionDisabled}
+          onPress={onActionPress}
+        />
       </View>
     </InfernoDotModal>
   );
