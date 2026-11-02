@@ -114,7 +114,7 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: theme.colors.default.bg },
           }}
         />
-        {/* EP5 이후 앱을 다시 열면 어느 화면으로 열리든 가장 먼저 뜨는 쪽지(partner-letter-store.ts). */}
+        {/* 회차 쪽지. 안 읽은 쪽지가 있으면 어느 화면이든 가장 먼저 뜬다(use-partner-letter). */}
         <PartnerLetterModal />
       </QueryProvider>
     </GestureHandlerRootView>

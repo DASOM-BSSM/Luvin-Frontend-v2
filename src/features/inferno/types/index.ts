@@ -2,9 +2,9 @@ import type { BreadType } from '@/src/assets/images/BreadCharacter';
 
 /** 러빈지옥 에피소드 한 편. */
 export interface InfernoEpisode {
-  /** 0 이면 "Episode 00" 으로 보여준다. 목록의 키 역할도 한다. */
+  /** 1 이면 "Episode 01" 로 보여준다. 목록의 키 역할도 한다. */
   order: number;
-  /** 시작 화면 하단 바에 들어가는 제목. 예: "러빈지옥에 대해 알려드릴게요" */
+  /** 회차 이름. 홈·시작 화면·하단 바·오븐 어디서나 같다. 예: "첫 만남" */
   title: string;
 }
 
@@ -245,23 +245,9 @@ export interface InfernoSeasonSummary {
   highlights: InfernoHighlight[];
 }
 
-/**
- * EP5 를 끝낸 뒤 앱을 다시 열었을 때 오는 쪽지의 "보낸 사람". EP5 를 끝내는 순간 최종 매칭
- * 상대(`InfernoSeasonSummary.finalMatch`)에서 정해져 MMKV 에 남는다(partner-letter-store.ts).
- *
- * 쪽지 본문은 여기 없다 — 본문은 AI 가 만들어 주는 값이라 펼칠 때 받아 온다(api/partner-letter.ts).
- */
-export interface InfernoPartnerLetterSender {
-  /** [DRAFT] Solo-season mock letter; delivery lifecycle remains unchanged. */
-  draftMessage?: string;
-  /** 쪽지 한 통을 가리키는 값. 같은 쪽지를 펼치는 동안 본문이 바뀌지 않게 쿼리 키로 쓴다. */
-  id: string;
-  partnerName: string;
-  partnerType: BreadType;
-}
-
 /** 펼친 쪽지. */
 export interface InfernoPartnerLetter {
-  partnerName: string;
+  /** 보낸 빵 이름("형용사 + 빵 종류"). 알 수 없으면 null — 화면은 "From." 줄을 그리지 않는다. */
+  partnerName: string | null;
   message: string;
 }

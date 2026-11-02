@@ -12,3 +12,8 @@ export const EPISODE_VOTE_PROMPTS: Partial<Record<number, InfernoVotePrompt>> = 
   1: { modalMessage: '더 알아가고 싶은 반죽을 골라주세요', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
   3: { modalMessage: '게임에 성공해서 원하는 상대와 대화해요!', ballotMessage: '당신과 단둘이 대화하고 싶어요' },
 };
+
+/*
+ * 10화 인터뷰 질문은 "Q. 이 시즌 ○○은 당신에게 어떤 반죽이었나요?" 한 가지로 바뀌어서(Figma 7884:4650)
+ * utils/format.ts 의 formatInterviewQuestion 이 만든다. 답은 내 빵이 한다.
+ */

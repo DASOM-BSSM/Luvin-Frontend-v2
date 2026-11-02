@@ -59,6 +59,18 @@ export const okMallangBTitleStyle = {
   lineHeight: 22 * lineHeightRatio,
 };
 
+/**
+ * 러빈지옥 1화 무대 제목 "In School"(7855:3240). 40px/160%, pink-500, 테두리 없음.
+ *
+ * `display.title` 과 크기는 같지만 그쪽은 pink-200 테두리가 있다. 이 시안은 스크린샷으로
+ * 확인해도 테두리가 없어서 따로 둔다.
+ */
+export const okMallangBHeroStyle = {
+  ...okMallangBStyle,
+  fontSize: 40,
+  lineHeight: 40 * lineHeightRatio,
+};
+
 /** Figma 5726:3271: 781×300 쪽지 안의 컵·테이블 배치. */
 export const infernoMiniGameLayout = {
   width: {

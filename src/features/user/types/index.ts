@@ -29,6 +29,8 @@ export interface UserProfile {
 export interface UpdateUserProfileInput {
   nickname?: string;
   gender?: string;
+  /** [DRAFT] 러빈지옥 시즌 배경을 정한다. 시즌을 처음 만들 때 한 번만 반영된다(바꿔도 지금 시즌 배경은 그대로). */
+  age?: number;
   job?: string;
   bio?: string;
 }

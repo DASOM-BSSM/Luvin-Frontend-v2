@@ -1,51 +1,29 @@
-/** [DRAFT] Session-only narrative state, isolated by user and season. */
+/**
+ * [DRAFT] 회차를 어디까지 봤는지(이어보기 자리)만 기기에 둔다. 선택·완료·경로는 서버
+ * `story` 가 가진다 — 여기서 다시 계산하지 않는다. 앱을 다시 켜면 처음부터 다시 본다.
+ */
 import { create } from 'zustand';
-import type { ChoiceRecord, SceneSeasonState } from '@/src/features/inferno/types/scene-block';
-import { applyChoice } from '@/src/features/inferno/utils/resolve-choice';
-export const emptySceneSeason = (): SceneSeasonState => ({
-  route: null,
-  choices: [],
-  rejectCount: {},
-});
+
 interface SceneSession {
-  season: SceneSeasonState;
+  /** 회차 번호 → 재생 위치. -1 은 10화 대화를 다 보고 리포트로 넘어간 상태. */
   positions: Record<number, number>;
   reportPage: number;
-  completedOrders: number[];
 }
+
 interface Store {
   sessions: Record<string, SceneSession>;
-  record: (key: string, choice: ChoiceRecord) => void;
   save: (key: string, order: number, position: number) => void;
   saveReport: (key: string, page: number) => void;
-  complete: (key: string, order: number) => void;
   reset: () => void;
 }
+
+const emptySession = (): SceneSession => ({ positions: {}, reportPage: 0 });
+
 export const useSceneSeasonStore = create<Store>((set) => ({
   sessions: {},
-  record: (key, choice) =>
-    set((state) => {
-      const current = state.sessions[key] ?? {
-        season: emptySceneSeason(),
-        positions: {},
-        reportPage: 0,
-        completedOrders: [],
-      };
-      return {
-        sessions: {
-          ...state.sessions,
-          [key]: { ...current, season: applyChoice(current.season, choice) },
-        },
-      };
-    }),
   save: (key, order, position) =>
     set((state) => {
-      const current = state.sessions[key] ?? {
-        season: emptySceneSeason(),
-        positions: {},
-        reportPage: 0,
-        completedOrders: [],
-      };
+      const current = state.sessions[key] ?? emptySession();
       return {
         sessions: {
           ...state.sessions,
@@ -55,28 +33,8 @@ export const useSceneSeasonStore = create<Store>((set) => ({
     }),
   saveReport: (key, reportPage) =>
     set((state) => {
-      const current = state.sessions[key] ?? {
-        season: emptySceneSeason(),
-        positions: {},
-        reportPage: 0,
-        completedOrders: [],
-      };
+      const current = state.sessions[key] ?? emptySession();
       return { sessions: { ...state.sessions, [key]: { ...current, reportPage } } };
-    }),
-  complete: (key, order) =>
-    set((state) => {
-      const current = state.sessions[key] ?? {
-        season: emptySceneSeason(),
-        positions: {},
-        reportPage: 0,
-        completedOrders: [],
-      };
-      return {
-        sessions: {
-          ...state.sessions,
-          [key]: { ...current, completedOrders: [...new Set([...current.completedOrders, order])] },
-        },
-      };
     }),
   reset: () => set({ sessions: {} }),
 }));

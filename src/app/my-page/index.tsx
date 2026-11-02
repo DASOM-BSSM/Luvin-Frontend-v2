@@ -13,6 +13,7 @@ import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
+import { toKnownGender } from '@/src/features/my-page/utils/gender';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 
 /**
@@ -73,7 +74,7 @@ export default function MyPageScreen() {
           </Text>
           <View className="w-full flex-col items-center justify-center gap-[16px] rounded-[8px] border border-default-gray px-[30px] py-[20px]">
             <View className="w-full flex-row items-center gap-[20px]">
-              <ProfileAvatarPhoto gender={gender} />
+              <ProfileAvatarPhoto gender={toKnownGender(myProfileQuery.data?.gender) ?? gender} />
               <View className="flex-1 flex-col items-start justify-center gap-[8px]">
                 <View className="flex-row items-center gap-[12px]">
                   {myProfileQuery.isPending ? (

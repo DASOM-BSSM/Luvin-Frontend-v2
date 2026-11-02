@@ -14,12 +14,19 @@ interface InfernoNoticeModalProps {
   visible: boolean;
   /** 안내 문구. 넘기지 않으면 반죽 안내(Figma 6602:3956). */
   message?: string;
+  /** 안내 문구 아래 한 단계 작은 글씨(body-s)로 붙는 보조 문구. 예: 보유 토큰. */
+  subMessage?: string;
   /** 버튼 문구. 넘기지 않으면 "나만의 반죽을 만들어요"(Figma 6602:3957). */
   actionLabel?: string;
   /** 바깥을 누르거나 뒤로가기를 했을 때. */
   onClose: () => void;
   /** 버튼을 눌렀을 때. */
   onActionPress: () => void;
+  /**
+   * 모달이 완전히 닫힌 뒤(iOS 는 닫힘 애니메이션까지 끝난 뒤) 한 번 불린다. 화면 방향이 바뀌는 곳으로
+   * 이동할 때는 여기서 이동해야 한다 — iOS 는 모달이 닫히는 중에 보낸 회전 요청을 무시한다.
+   */
+  onDismiss?: () => void;
   /** 버튼을 막는다. 버튼이 서버 요청을 보내는 동안 다시 누르지 못하게 할 때 쓴다(§11). */
   isActionDisabled?: boolean;
 }
@@ -40,21 +47,33 @@ interface InfernoNoticeModalProps {
 export default function InfernoNoticeModal({
   visible,
   message = MESSAGE,
+  subMessage,
   actionLabel = ACTION_LABEL,
   onClose,
   onActionPress,
+  onDismiss,
   isActionDisabled = false,
 }: InfernoNoticeModalProps) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      // 가로로 잠긴 러빈지옥 회차 안에서도 띄운다. iOS 는 이 값이 세로뿐이면 가로 화면에서 모달을
+      // 띄울 때 앱이 죽는다(InfernoDotModal 주석 참고).
+      supportedOrientations={['portrait', 'landscape']}
+      onRequestClose={onClose}
+      onDismiss={onDismiss}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="안내 닫기"
-        className="flex-1 items-center justify-center bg-default-black/30 px-[32px]"
+        // 반죽 안내 문구가 한 줄에 들어가도록 좌우 여백을 줄여 모달을 넓혔다(사용자 요청, 32→16 / 안쪽 24→16).
+        className="flex-1 items-center justify-center bg-default-black/30 px-[16px]"
         onPress={onClose}
       >
         {/* 안쪽을 눌렀을 때 닫히지 않도록 이벤트를 여기서 멈춘다. */}
-        <Pressable className="w-full overflow-hidden rounded-[8px] bg-default-white px-[24px] py-[28px]">
+        <Pressable className="w-full overflow-hidden rounded-[8px] bg-default-white px-[16px] py-[28px]">
           <View className="w-full flex-col items-center gap-[20px]">
             <View className="w-full flex-col items-start gap-[4px]">
               <Text className="w-full text-center text-pink-500" style={okMallangBTitleStyle}>
@@ -63,6 +82,11 @@ export default function InfernoNoticeModal({
               <Text variant="body-m" className="w-full text-center text-default-black">
                 {message}
               </Text>
+              {subMessage ? (
+                <Text variant="body-s" className="w-full text-center text-default-black">
+                  {subMessage}
+                </Text>
+              ) : null}
             </View>
             <Button label={actionLabel} variant="notice" disabled={isActionDisabled} onPress={onActionPress} />
           </View>

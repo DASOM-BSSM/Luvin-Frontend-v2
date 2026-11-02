@@ -1,86 +1,75 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
+import InfernoUnlockNotice, {
+  type UnlockTarget,
+} from '@/src/features/inferno/components/inferno-unlock-notice';
 import { infernoIntroHref } from '@/src/features/inferno/constants/routes';
-import useAiSeasonList from '@/src/features/inferno/hooks/use-ai-season-list';
 import useAiSeasonStatus from '@/src/features/inferno/hooks/use-ai-season-status';
 import useInfernoProgress from '@/src/features/inferno/hooks/use-inferno-progress';
+import useStoryState from '@/src/features/inferno/hooks/use-story-state';
+import { SEASON_STAGE_TITLES } from '@/src/features/inferno/constants/season';
+import { isPreviousCompleting } from '@/src/features/inferno/utils/completion';
+import { episodeAccess } from '@/src/features/inferno/utils/episode-unlock';
 import { findNextInfernoEpisode } from '@/src/features/inferno/utils/progress';
-import SeasonCard, { type SeasonEpisodeItem } from '@/src/features/oven/components/season-card';
+import SeasonCard from '@/src/features/oven/components/season-card';
 import {
-  buildSeasonHistories,
   LAST_EPISODE_ORDER,
-  type SeasonHistory,
+  toEpisodeOrders,
   toSeasonEpisodes,
 } from '@/src/features/oven/utils/season-history';
 
-interface SeasonHistoryCardProps {
-  history: SeasonHistory & { episodes: SeasonEpisodeItem[] };
-}
-
 /**
- * 시즌 카드 하나. 회차를 누르면 그 회차 시작 화면으로 간다. 홈에서 들어갈 때처럼 시작 화면부터 본다.
- *
- * 지난 시즌이면 시즌 id 를 같이 넘겨서 그 시즌 대화를 읽기 전용으로 보여준다(use-viewed-season). 지금
- * 시즌이면 넘기지 않는다 — 지금까지처럼 지금 시즌 회차에 들어간다. 대화는 서버에 이미 저장돼 있어서 새로
- * 만들지 않고 불러온다(use-ai-episode-messages — 이미 있으면 생성 요청 안 함).
- */
-const SeasonHistoryCard = ({ history }: SeasonHistoryCardProps) => {
-  function handleEpisodePress(order: number) {
-    router.push(infernoIntroHref(order, history.isCurrent ? undefined : history.seasonId));
-  }
-
-  return (
-    <SeasonCard seasonNumber={history.seasonNumber} episodes={history.episodes} onEpisodePress={handleEpisodePress} />
-  );
-};
-
-/**
- * 오븐 화면의 시즌 카드들. 시즌마다 카드를 따로 두고, 최신 시즌이 맨 위·지난 시즌이 그 아래다
- * (사용자 결정). 시즌 목록은 `GET /api/ai/seasons`, 지금 시즌은 `GET /api/ai/seasons/me` 가 준다.
- *
- * 지난 시즌의 회차도 눌러서 다시 볼 수 있다. 회차 조회 API 가 `season_id` 로 시즌을 고를 수 있게
- * 되어서(백엔드), 지난 시즌 회차는 그 시즌 대화를 읽기 전용으로 연다(SeasonHistoryCard).
- *
- * 시즌 목록을 못 받았더라도 지금 시즌을 알면 그 시즌 하나는 보여준다 — 목록 API 가 실패해도 예전처럼
- * 지금 시즌은 볼 수 있게 한다.
+ * [DRAFT] 오븐 화면의 시즌 카드. 시즌은 사용자마다 하나라 카드도 하나다(사용자 결정 — 지난 시즌 다시
+ * 보기는 뺐다). 펼치면 지금까지 연 회차가 최신 회차부터 나오고, 누르면 그 회차 시작 화면으로 간다.
+ * 이미 본 회차는 회차 본문이 `completed` 라 다시 보기 모드로 열린다. 회차마다 무료·열림·잠김을 붙인다.
+ * 잠긴 회차를 누르면 들어가기 전에 토큰 안내(InfernoUnlockNotice)를 띄운다(사용자 결정).
  */
 export default function SeasonHistoryList() {
-  const listQuery = useAiSeasonList();
   const statusQuery = useAiSeasonStatus();
-  // ep1 인사말에 실제 반죽을 넣으려고 필요하다(season-history.ts 의 resolveEpisodeTitle) — 서버 설문
-  // 결과가 원천이라 아직 없으면(설문 전) 그 회차 제목은 그냥 못 만든다(가짜 대체값 금지).
+  const storyQuery = useStoryState();
   const { profile: myProfile } = useBreadProfile();
-
-  const status = statusQuery.data;
-  // 지금 시즌은 홈의 "이번주 에피소드" 까지 펼친다(season-history.ts 의 buildSeasonHistories 주석).
   const { completedOrders } = useInfernoProgress();
-  const currentLastOrder = findNextInfernoEpisode(completedOrders)?.order ?? LAST_EPISODE_ORDER;
-  const seasons = listQuery.data?.length
-    ? listQuery.data
-    : status
-      ? [{ seasonId: status.seasonId, seasonNumber: status.seasonNumber, status: status.status, currentEpisode: status.currentEpisode }]
-      : [];
-  const histories = myProfile
-    ? buildSeasonHistories(seasons, status?.seasonId, currentLastOrder).map((history) => ({
-        ...history,
-        // [DRAFT] Preserve the original labels for older five-episode server seasons.
-        episodes: toSeasonEpisodes(history.episodeOrders, myProfile, !history.isCurrent),
-      }))
+  const [unlockTarget, setUnlockTarget] = useState<UnlockTarget | null>(null);
+  const lastOrder = findNextInfernoEpisode(completedOrders)?.order ?? LAST_EPISODE_ORDER;
+  const episodes = myProfile
+    ? toSeasonEpisodes(toEpisodeOrders(lastOrder), storyQuery.data)
     : [];
-  const hasEpisodes = histories.some((history) => history.episodes.length > 0);
 
-  const isLoading = listQuery.isLoading || statusQuery.isLoading;
-  const isError = listQuery.isError && statusQuery.isError;
+  // 10화까지 끝낸 시즌은 "SEASON 01" 대신 배경 제목으로 보여준다(사용자 결정).
+  const setting = storyQuery.data?.setting;
+  const seasonStageTitle =
+    storyQuery.data?.completedOrders.includes(LAST_EPISODE_ORDER) && setting
+      ? SEASON_STAGE_TITLES[setting]
+      : undefined;
 
-  if (isLoading || isError || !hasEpisodes) {
+  function handleEpisodePress(order: number) {
+    const href = infernoIntroHref(order);
+    // 앞 회차를 서버가 아직 정리 중이면 회차 화면이 정리를 기다린 뒤 열기를 묻는다(홈과 같다).
+    if (
+      storyQuery.data &&
+      episodeAccess(order, storyQuery.data) === 'locked' &&
+      !isPreviousCompleting(order, storyQuery.data)
+    ) {
+      setUnlockTarget({ order, href });
+      return;
+    }
+    router.push(href);
+  }
+
+  function handleUnlockClose() {
+    setUnlockTarget(null);
+  }
+
+  if (statusQuery.isLoading || statusQuery.isError || !statusQuery.data || episodes.length === 0) {
     return (
       <Text variant="body-s" className="text-text-muted">
-        {isLoading
+        {statusQuery.isLoading
           ? '불러오는 중...'
-          : isError
+          : statusQuery.isError
             ? '에피소드 정보를 불러오지 못했어요'
             : '아직 진행 중인 에피소드가 없어요'}
       </Text>
@@ -89,9 +78,17 @@ export default function SeasonHistoryList() {
 
   return (
     <View className="w-full flex-col gap-[12px]">
-      {histories.map((history) => (
-        <SeasonHistoryCard key={history.seasonId} history={history} />
-      ))}
+      <SeasonCard
+        seasonNumber={statusQuery.data.seasonNumber ?? 1}
+        stageTitle={seasonStageTitle}
+        episodes={episodes}
+        onEpisodePress={handleEpisodePress}
+      />
+      <InfernoUnlockNotice
+        target={unlockTarget}
+        tokenCost={storyQuery.data?.episodeTokenCost ?? null}
+        onClose={handleUnlockClose}
+      />
     </View>
   );
 }

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
@@ -11,10 +11,14 @@ import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import useLogout from '@/src/features/auth/hooks/use-logout';
 import { resetToOnboarding } from '@/src/features/auth/lib/reset-to-onboarding';
+import AgeSelectField from '@/src/features/my-page/components/age-select-field';
 import GenderSelectButton from '@/src/features/my-page/components/gender-select-button';
 import NicknameEditField from '@/src/features/my-page/components/nickname-edit-field';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 import type { Gender } from '@/src/features/my-page/types';
+import { toKnownAge } from '@/src/features/my-page/utils/age';
+import { toKnownGender } from '@/src/features/my-page/utils/gender';
+import { isStoryMock, saveStoryAge } from '@/src/features/inferno/api/story';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import useDeleteAccount from '@/src/features/user/hooks/use-delete-account';
@@ -28,7 +32,7 @@ import useUpdateProfile from '@/src/features/user/hooks/use-update-profile';
  */
 export default function MyPageEditScreen() {
   const balance = useTokenStore((state) => state.balance);
-  const gender = useProfileSettingsStore((state) => state.gender);
+  const savedGender = useProfileSettingsStore((state) => state.gender);
   const setGender = useProfileSettingsStore((state) => state.setGender);
   const nickname = useProfileSettingsStore((state) => state.nickname);
   const setNickname = useProfileSettingsStore((state) => state.setNickname);
@@ -37,6 +41,15 @@ export default function MyPageEditScreen() {
   const [openConfirm, setOpenConfirm] = useState<'logout' | 'withdraw' | undefined>(undefined);
   const myProfileQuery = useMyProfile();
   const updateProfileMutation = useUpdateProfile();
+  // [DRAFT] 나이는 이 화면에서 고친 값이 있으면 그 값, 없으면 서버 값을 보여준다.
+  const [ageDraft, setAgeDraft] = useState<number>();
+  const age = ageDraft ?? toKnownAge(myProfileQuery.data?.age);
+  // [DRAFT] 성별도 같은 방식이다. 서버에 없으면 아무것도 선택되지 않은 채로 둔다(사용자 결정 —
+  // 예전처럼 "여성"을 미리 골라 두면 고르지 않고 저장해도 여성으로 저장됐다).
+  const [genderDraft, setGenderDraft] = useState<Gender>();
+  const gender = genderDraft ?? toKnownGender(myProfileQuery.data?.gender);
+  // 나이·성별은 함께 정한다(계약 v4). 하나만 정해진 채로는 저장하지 않는다.
+  const isAgeGenderPaired = (age === undefined) === (gender === undefined);
   useTokenBalance();
 
   // 로컬 닉네임 초안이 아직 없으면(한 번도 이 화면에서 수정 안 했으면) 서버 값으로 채운다 —
@@ -47,22 +60,6 @@ export default function MyPageEditScreen() {
     }
   }, [myProfileQuery.data, nickname, setNickname]);
 
-  // gender 는 nickname 과 달리 로컬 기본값(male)이 항상 있어서 "비어있으면 채운다" 방식을
-  //못 쓴다 — 그래서 "이번에 화면 연 뒤 서버 값으로 한 번 채웠는지"를 ref 로 따로 추적한다.
-  // 서버 값이 로컬 Gender('female'|'male')와 다른 포맷(예: 'MALE')이면 조용히 건너뛴다 —
-  // 로컬 기본값이 남는 게 UI 를 못 그리는 것보다 낫다(§ UpdateUserProfileInput 주석 참고).
-  const hasSyncedGenderRef = useRef(false);
-  useEffect(() => {
-    const serverGender = myProfileQuery.data?.gender;
-    if (hasSyncedGenderRef.current || !serverGender) {
-      return;
-    }
-
-    hasSyncedGenderRef.current = true;
-    if (serverGender === 'female' || serverGender === 'male') {
-      setGender(serverGender satisfies Gender);
-    }
-  }, [myProfileQuery.data, setGender]);
 
   function handleBackPress() {
     if (router.canGoBack()) {
@@ -73,15 +70,24 @@ export default function MyPageEditScreen() {
   }
 
   function handleFemaleSelect() {
-    setGender('female');
+    setGenderDraft('female');
   }
 
   function handleMaleSelect() {
-    setGender('male');
+    setGenderDraft('male');
+  }
+
+  function handleSaveInfoSuccess() {
+    // 목 모드에서는 목 서버에도 나이를 알린다(api/story.ts 의 saveStoryAge).
+    if (isStoryMock && age !== undefined) void saveStoryAge(age);
+    // 마이페이지 아바타가 쓰는 기기 값도 맞춘다.
+    if (gender) setGender(gender);
+    handleBackPress();
   }
 
   function handleSaveInfoPress() {
-    updateProfileMutation.mutate({ nickname, gender }, { onSuccess: handleBackPress });
+    if (!isAgeGenderPaired) return;
+    updateProfileMutation.mutate({ nickname, gender, age }, { onSuccess: handleSaveInfoSuccess });
   }
 
   // 스택을 비우고 온보딩만 남긴다 — replace 만 하면 아래 화면이 남아 다시 로그인했을 때 홈이
@@ -122,7 +128,9 @@ export default function MyPageEditScreen() {
     <Screen>
       <ScrollView
         className="flex-1"
-        contentContainerClassName="flex-col items-end gap-[80px] px-[30px] pb-[24px] pt-[26px]"
+        // 로그아웃·계정 탈퇴 줄이 스크롤 없이 첫 화면에 보이도록 간격을 시안 80 에서 48 로 줄였다(사용자 지적 —
+        // 나이 입력이 늘어나면서 그 줄이 하단 탭 뒤로 밀려 안 보였다).
+        contentContainerClassName="flex-col items-end gap-[48px] px-[30px] pb-[24px] pt-[26px]"
         showsVerticalScrollIndicator={false}
       >
         <View className="w-full flex-col items-start gap-[40px]">
@@ -144,7 +152,7 @@ export default function MyPageEditScreen() {
 
           <View className="w-full flex-col items-center justify-center gap-[16px] rounded-[8px] border border-default-gray px-[30px] py-[12px]">
             <View className="w-full flex-row items-center gap-[20px]">
-              <ProfileAvatarPhoto gender={gender} />
+              <ProfileAvatarPhoto gender={gender ?? savedGender} />
               <View className="flex-1 flex-col items-start justify-center gap-[4px]">
                 <View className="flex-row items-center gap-[12px]">
                   {myProfileQuery.isPending ? (
@@ -201,12 +209,24 @@ export default function MyPageEditScreen() {
                   />
                 </View>
               </View>
+
+              <View className="w-full flex-col items-start gap-[12px]">
+                <View className="flex-col items-start gap-[4px]">
+                  <Text variant="heading-h5" className="text-text-primary">
+                    나이를 알려주세요
+                  </Text>
+                  <Text variant="body-xs" className="text-text-muted">
+                    러빈지옥의 무대를 정할 때만 써요
+                  </Text>
+                </View>
+                <AgeSelectField value={age} onChange={setAgeDraft} />
+              </View>
             </View>
 
             <Button
               label="내 정보 저장하기"
               variant="infoSave"
-              disabled={updateProfileMutation.isPending}
+              disabled={updateProfileMutation.isPending || !isAgeGenderPaired}
               onPress={handleSaveInfoPress}
             />
           </View>

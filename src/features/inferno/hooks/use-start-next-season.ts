@@ -1,41 +1,46 @@
 import { useMutation } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
-import { useState } from 'react';
 
-import { startNextSeason } from '@/src/features/inferno/api/ai-season';
+import { createSeasonFromSurvey, startNextSeason } from '@/src/features/inferno/api/ai-season';
 import { aiSeasonKeys } from '@/src/features/inferno/api/query-keys';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
-import { tokenKeys } from '@/src/features/tokens/api/query-keys';
+import {
+  isNoSeasonError,
+  isSeasonInProgressError,
+  isSurveyResultStaleError,
+} from '@/src/features/inferno/utils/is-season-in-progress-error';
 import queryClient from '@/src/lib/query-client';
 
 /**
- * "다음 시즌 시작하기". `POST /api/ai/seasons/next`로 새 시즌을 연다.
+ * [DRAFT] "새로운 시즌 만들기". 10화까지 끝낸 시즌 다음 시즌을 연다.
  *
- * 토큰 차감은 서버가 이 요청 안에서 한다고 가정한다(사용자 결정 — 백엔드 확인 전). 그래서 앱은
- * `/api/tokens/use` 를 따로 부르지 않는다. 따로 부르면 서버도 차감할 경우 토큰이 두 번 빠진다.
- * 백엔드가 "앱이 /use 를 불러야 한다"고 답하면 여기서 고친다.
+ * 회차 본문·쪽지 캐시는 회차 번호로만 나뉘어 있어서(query-keys.ts) 시즌이 바뀌면 지난 시즌 1화가
+ * 새 시즌 1화로 보인다. 그래서 `ai-season` 접두사 캐시를 통째로 비우고, 기기에 남은 이어보기 자리도
+ * 지운다. 진행도의 기준은 늘 `GET /me` 하나라 응답으로 캐시를 갈아끼우지 않는다(use-create-season.ts 와 같다).
  *
- * `clientRequestId`는 한 번의 "시작" 시도 동안 유지한다 — 실패 후 다시 눌러도 같은 키를
- * 보내서, 첫 요청이 사실 서버에선 성공했던 경우에도 시즌이 두 개 생기지 않는다. 성공하면 새 키로
- * 바꿔서, 같은 화면에서 다음 시즌을 또 열 때 이전 요청의 결과가 돌아오지 않게 한다.
- *
- * 성공하면 이전 시즌의 회차 대화/리포트 캐시와 로컬 진행도(completedOrders)를 비운다.
- * 안 그러면 새 시즌인데도 이전 시즌 대화가 보이거나, 홈이 이미 다 본 시즌으로 판단한다.
+ * 이미 진행 중인 시즌이 있다는 409(SEASON_IN_PROGRESS)는 성공으로 본다 — 새 시즌은 이미 있다.
+ * 시즌이 하나도 없다는 409(STORY_NOT_STARTED, 개발용 시즌 초기화 뒤)면 첫 시즌을 `/from-survey` 로 만든다.
+ * 설문 결과가 최신이 아니라는 409(SURVEY_RESULT_STALE)면 빼고 한 번 더 보낸다 — 서버가 최신 결과를 쓴다.
  */
 export default function useStartNextSeason() {
-  const [clientRequestId, setClientRequestId] = useState(() => Crypto.randomUUID());
-
-  const mutation = useMutation({
-    mutationFn: (surveyResultId: string | undefined) => startNextSeason({ surveyResultId, clientRequestId }),
-    onSuccess: (status) => {
-      queryClient.removeQueries({ queryKey: aiSeasonKeys.all });
-      queryClient.setQueryData(aiSeasonKeys.status, status);
+  return useMutation({
+    mutationFn: async (surveyResultId: string) => {
+      const clientRequestId = Crypto.randomUUID();
+      try {
+        await startNextSeason(surveyResultId, clientRequestId);
+      } catch (error) {
+        if (isSeasonInProgressError(error)) return;
+        if (isNoSeasonError(error)) {
+          await createSeasonFromSurvey(surveyResultId);
+          return;
+        }
+        if (!isSurveyResultStaleError(error)) throw error;
+        await startNextSeason(undefined, Crypto.randomUUID());
+      }
+    },
+    onSuccess: async () => {
       useInfernoStore.getState().resetProgress();
-      // 서버가 차감한 잔액을 다시 받는다(useTokenBalance 가 화면의 토큰 수로 동기화).
-      queryClient.invalidateQueries({ queryKey: tokenKeys.balance });
-      setClientRequestId(Crypto.randomUUID());
+      await queryClient.resetQueries({ queryKey: aiSeasonKeys.all });
     },
   });
-
-  return mutation;
 }

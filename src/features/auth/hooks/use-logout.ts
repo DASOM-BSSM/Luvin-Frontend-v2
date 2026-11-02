@@ -6,7 +6,6 @@ import { clearAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
-import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
 import queryClient from '@/src/lib/query-client';
 
@@ -40,7 +39,6 @@ export default function useLogout() {
       useBreadStore.getState().clear();
       useSurveyStore.getState().resetSurvey();
       useInfernoStore.getState().switchUser(null);
-      usePartnerLetterStore.getState().switchUser(null);
       queryClient.clear();
     },
   });

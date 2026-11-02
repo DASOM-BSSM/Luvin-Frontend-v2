@@ -73,14 +73,6 @@ interface InfernoStore {
   switchUser: (userId: number | null) => void;
   /** 지금 계정의 기록을 기기에서 완전히 지우고 내려놓는다(계정 탈퇴). */
   forgetCurrentUser: () => void;
-  /**
-   * 홈에서 "다음 시즌" 안내 모달을 띄워야 하는지. ep5 의 "다음 시즌 시작하기" 나 끝난 시즌에서
-   * 시작하기를 누르면 켜고, 홈이 모달을 닫을 때 끈다. 화면 사이 신호라 저장하지 않는다(메모리).
-   * 경로 파라미터로 넘기지 않는 이유: 라우트 경로·파라미터는 딥링크 계약이라 늘리지 않는다(§13).
-   */
-  isNextSeasonNoticePending: boolean;
-  requestNextSeasonNotice: () => void;
-  clearNextSeasonNotice: () => void;
 }
 
 /** 계정의 기록 키. userId 를 모르면 계정별로 나누기 전의 키(주인 모름)다. */
@@ -214,10 +206,4 @@ export const useInfernoStore = create<InfernoStore>((set, get) => ({
     removeRecord(get().ownerUserId);
     get().switchUser(null);
   },
-
-  isNextSeasonNoticePending: false,
-
-  requestNextSeasonNotice: () => set({ isNextSeasonNoticePending: true }),
-
-  clearNextSeasonNotice: () => set({ isNextSeasonNoticePending: false }),
 }));

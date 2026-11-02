@@ -8,6 +8,8 @@ const NO_PARTNER_MESSAGE = '기록된 투표가 없어요';
 
 interface InfernoFinalMatchNamesProps {
   partner?: InfernoFinalMatchProfile;
+  /** 상대 이름 자리에 대신 쓸 이름. 혼자 흐름 리포트는 상대가 없어서 내 빵 이름을 쓴다. */
+  headline?: string;
   summaryLine?: string;
   tendencyLabel?: string;
 }
@@ -18,6 +20,7 @@ interface InfernoFinalMatchNamesProps {
  */
 export default function InfernoFinalMatchNames({
   partner,
+  headline,
   summaryLine,
   tendencyLabel,
 }: InfernoFinalMatchNamesProps) {
@@ -25,7 +28,7 @@ export default function InfernoFinalMatchNames({
     <View className="flex-col items-center gap-[8px]">
       <View className="flex-row items-center gap-[20px]">
         <Text variant="heading-h4" className="text-inferno-instruction">
-          {partner ? partner.name : NO_PARTNER_MESSAGE}
+          {headline ?? (partner ? partner.name : NO_PARTNER_MESSAGE)}
         </Text>
         {partner && tendencyLabel ? (
           <Text variant="body-s" className="text-inferno-instruction">

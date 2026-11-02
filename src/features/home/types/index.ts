@@ -14,7 +14,7 @@ export interface BreadProfile {
 export interface WeeklyEpisode {
   /** 1 이면 "Episode 01." 로 보여준다. */
   order: number;
-  /** 예: "안녕하세요 소금빵입니다!" */
+  /** 예: "첫 만남" */
   title: string;
 }
 
