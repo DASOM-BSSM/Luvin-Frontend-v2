@@ -19,7 +19,7 @@ import queryClient from '@/src/lib/query-client';
  * 지운다. 진행도의 기준은 늘 `GET /me` 하나라 응답으로 캐시를 갈아끼우지 않는다(use-create-season.ts 와 같다).
  *
  * 이미 진행 중인 시즌이 있다는 409(SEASON_IN_PROGRESS)는 성공으로 본다 — 새 시즌은 이미 있다.
- * 시즌이 하나도 없다는 409(STORY_NOT_STARTED, 개발용 시즌 초기화 뒤)면 첫 시즌을 `/from-survey` 로 만든다.
+ * 시즌이 하나도 없다는 409(STORY_NOT_STARTED, 시즌 초기화 뒤)면 첫 시즌을 `/from-survey` 로 만든다.
  * 설문 결과가 최신이 아니라는 409(SURVEY_RESULT_STALE)면 빼고 한 번 더 보낸다 — 서버가 최신 결과를 쓴다.
  */
 export default function useStartNextSeason() {

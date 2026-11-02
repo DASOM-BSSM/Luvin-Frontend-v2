@@ -62,9 +62,10 @@ export async function startNextSeason(
 }
 
 /**
- * [DRAFT] 개발 전용 시즌 초기화(`POST /api/dev/ai/seasons/current/story/reset`). 시즌 행까지 모두 지운다
- * (진행 중이든 완료했든). 계정·설문 결과·감정일기·공유방은 남고, 4~10화를 열며 쓴 토큰은 돌려받는다.
- * dev·staging 서버에만 경로가 있다. 목 모드면 목 서버를 처음으로 되돌린다.
+ * 시즌 초기화(`POST /api/ai/seasons/reset` — 정식 경로, 모든 서버). 시즌 행까지 모두 지운다(진행 중이든
+ * 완료했든, 지난 시즌까지). 계정·설문 결과·감정일기·공유방·토큰은 남고, 4~10화를 열며 쓴 토큰은 **돌려주지
+ * 않는다**(`refundedTokens` 는 늘 0). 예전에는 테스트용 `/api/dev/.../reset`(환불 있음)을 썼다.
+ * 목 모드면 목 서버를 처음으로 되돌린다.
  */
 export async function resetSeasons(): Promise<AiSeasonResetView> {
   if (isStoryMock) {
@@ -73,7 +74,7 @@ export async function resetSeasons(): Promise<AiSeasonResetView> {
   }
 
   const { data } = await httpClient.post<ApiEnvelope<AiSeasonResetView>>(
-    '/api/dev/ai/seasons/current/story/reset',
+    '/api/ai/seasons/reset',
   );
   return data.data;
 }

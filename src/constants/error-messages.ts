@@ -21,7 +21,7 @@ export const ERROR_MESSAGES = {
   seasonCompleted: '이번 시즌은 끝났어요. 최종 리포트와 지난 회차만 볼 수 있어요',
   /** [DRAFT] "새로운 시즌 만들기"(`POST /api/ai/seasons/next`) 실패. */
   newSeasonFailed: '새 시즌을 열지 못했어요. 다시 시도해주세요',
-  /** [DRAFT] 개발 전용 시즌 초기화 실패. 운영 서버에는 경로가 없어서 404 도 여기로 온다. */
+  /** [DRAFT] 시즌 초기화(`POST /api/ai/seasons/reset`) 실패. */
   seasonResetFailed: '시즌을 초기화하지 못했어요. 다시 시도해주세요',
   choiceFailed: '선택을 전하지 못했어요. 다시 시도해주세요',
   completeFailed: '회차를 마치지 못했어요. 다시 시도해주세요',

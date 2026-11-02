@@ -4,6 +4,7 @@ import { View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
+import InfernoSeasonReset from '@/src/features/inferno/components/inferno-season-reset';
 import InfernoUnlockNotice, {
   type UnlockTarget,
 } from '@/src/features/inferno/components/inferno-unlock-notice';
@@ -83,6 +84,7 @@ export default function SeasonHistoryList() {
         stageTitle={seasonStageTitle}
         episodes={episodes}
         onEpisodePress={handleEpisodePress}
+        footer={<InfernoSeasonReset />}
       />
       <InfernoUnlockNotice
         target={unlockTarget}
