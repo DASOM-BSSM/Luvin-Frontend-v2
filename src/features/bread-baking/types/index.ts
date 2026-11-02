@@ -25,6 +25,11 @@ export interface BakingShaping {
 /** How the last loaf left the oven; drives the serve-step asset (Figma 7975:2356). */
 export type BakingOvenResult = 'baked' | 'burnt' | 'raw';
 
+/** Wrong-order NOTICE modals (Figma 8025:3848–3883, 7958:5971). Copy: `constants/notices.ts`. */
+export type BakingNotice =
+  | 'flour-first' | 'mix-flour-eggs' | 'butter-first' | 'mix-butter-water' | 'salt-first'
+  | 'butter-filling' | 'sprinkle-salt';
+
 export interface BakingState {
   phase: 'ready' | 'playing' | 'success' | 'fail';
   step: BakingStep;
@@ -35,6 +40,8 @@ export interface BakingState {
   /** Gauge fraction where this try's green zone begins; drawn per try on `load`. */
   ovenGreenStart: number;
   shaping: BakingShaping;
+  /** A wrong-order NOTICE is up: the clock is paused and input waits for `dismiss-notice`. */
+  notice: BakingNotice | null;
 }
 
 export interface BakingOvenZone {
@@ -49,8 +56,11 @@ export type BakingAction =
   /** The filling (butter) drop carries the first shaping arrows, since the reducer has no randomness. */
   | { type: 'ingredient'; ingredient: BakingIngredient; arrows?: BakingDirection[] }
   | { type: 'prepare' | 'mix' | 'transfer' | 'roll' | 'remove' | 'serve' }
+  /** Salt released off the dough on the sprinkle step. */
+  | { type: 'sprinkle-miss' }
+  | { type: 'dismiss-notice' }
   | { type: 'swipe'; direction: BakingDirection }
-  | { type: 'shape-retry'; arrows: BakingDirection[] }
+  | { type: 'shape-retry' }
   | { type: 'load'; greenStart: number }
   | { type: 'tick'; elapsedMs: number };
 

@@ -35,14 +35,11 @@ const SOURCES = {
   timerFrame: require('@/src/assets/images/bread-baking/timer-frame.png'),
   timerMarker: require('@/src/assets/images/bread-baking/timer-marker.png'),
   // GPT-made shaping set (prompts 1–9); dough images share one crop so stages line up.
-  largeBoard: require('@/src/assets/images/bread-baking/large-board.png'),
-  shapingRoundDough: require('@/src/assets/images/bread-baking/shaping-round-dough.png'),
   shapingFlatDough: require('@/src/assets/images/bread-baking/shaping-flat-dough.png'),
   shapingRollStart: require('@/src/assets/images/bread-baking/shaping-roll-start.png'),
   shapingRollHalf: require('@/src/assets/images/bread-baking/shaping-roll-half.png'),
   shapingRollNearlyDone: require('@/src/assets/images/bread-baking/shaping-roll-nearly-done.png'),
   shapingRollComplete: require('@/src/assets/images/bread-baking/shaping-roll-complete.png'),
-  shapingRollSalted: require('@/src/assets/images/bread-baking/shaping-roll-salted.png'),
   shapingArrow: require('@/src/assets/images/bread-baking/shaping-arrow-right.png'),
 };
 

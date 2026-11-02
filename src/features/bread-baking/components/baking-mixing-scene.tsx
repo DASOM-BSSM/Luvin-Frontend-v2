@@ -5,7 +5,7 @@ import BakingSprite from '@/src/features/bread-baking/components/baking-sprite';
 import type {
   BakingAction, BakingDrop, BakingIngredient as Ingredient, BakingState, BakingStep,
 } from '@/src/features/bread-baking/types';
-import { getExpectedIngredient, isDropInside, isMixingStep } from '@/src/features/bread-baking/utils/game';
+import { isDropInside, isMixingStep } from '@/src/features/bread-baking/utils/game';
 
 interface BakingMixingSceneProps {
   state: BakingState;
@@ -49,20 +49,27 @@ export default function BakingMixingScene({ state, enabled, onAction }: BakingMi
     onAction({ type: 'mix' });
   }
 
+  // Every ingredient stays draggable so a wrong one can raise its NOTICE (the reducer decides).
   function renderIngredient(ingredient: Ingredient) {
     return <BakingIngredient key={ingredient} ingredient={ingredient}
-      enabled={enabled && getExpectedIngredient(step) === ingredient} onAction={onAction} />;
+      enabled={enabled} onAction={onAction} />;
   }
 
+  function getBowlRect() {
+    if (isTransfer) return bakingLayout.slots.transferBowl;
+    return hasDough ? bakingLayout.slots.doughBowl : bakingLayout.slots.emptyBowl;
+  }
+
+  // Figma 8026:4052: on the transfer step only the board and the dough bowl are left.
   return <>
-    {INGREDIENTS.map(renderIngredient)}
-    {isTransfer && <BakingSprite name="board" rect={bakingLayout.slots.board} />}
-    <BakingSprite name={getBowlAsset(step)}
-      rect={hasDough ? bakingLayout.slots.doughBowl : bakingLayout.slots.emptyBowl}
+    {!isTransfer && INGREDIENTS.map(renderIngredient)}
+    {isTransfer && <BakingSprite name="board" rect={bakingLayout.slots.transferBoard} />}
+    <BakingSprite key={isTransfer ? 'transfer-bowl' : 'bowl'} name={getBowlAsset(step)}
+      rect={getBowlRect()}
       label={isTransfer ? '반죽을 도마로 옮기기' : '빈 그릇 준비하기'}
       enabled={enabled && (step === 'prepare' || isTransfer)} onDrop={handleBowlDrop} />
-    <BakingSprite name="whisk" rect={bakingLayout.slots.whisk} label="거품기로 섞기"
+    {!isTransfer && <BakingSprite name="whisk" rect={bakingLayout.slots.whisk} label="거품기로 섞기"
       workArea={bakingLayout.targets.bowl}
-      enabled={enabled && isMixingStep(step)} onTravel={handleWhiskTravel} />
+      enabled={enabled && isMixingStep(step)} onTravel={handleWhiskTravel} />}
   </>;
 }

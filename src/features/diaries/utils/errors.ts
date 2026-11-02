@@ -13,6 +13,8 @@ const ROOM_QUESTION_ALREADY_EXISTS_CODE = 'ROOM_QUESTION_ALREADY_EXISTS';
 const ROOM_ANSWER_INVALID_CODE = 'ROOM_ANSWER_INVALID';
 /** generating · failed 인 질문에 답하려 할 때 서버가 주는 코드(409). */
 const ROOM_QUESTION_NOT_READY_CODE = 'ROOM_QUESTION_NOT_READY';
+/** 밸런스 게임을 이미 골랐을 때 서버가 주는 코드(409). 답은 바꿀 수 없다. */
+const DAILY_QUESTION_ALREADY_ANSWERED_CODE = 'DAILY_QUESTION_ALREADY_ANSWERED';
 
 /**
  * 방 하나 조회 실패가 "볼 수 없는 방"인지 — 없는 방(404)이거나 내가 멤버가 아닌 방(403).
@@ -78,4 +80,20 @@ export function getAnswerQuestionErrorMessage(error: unknown): string {
     return ERROR_MESSAGES.roomQuestionNotReady;
   }
   return ERROR_MESSAGES.answerQuestionFailed;
+}
+
+/** 밸런스 게임 고르기가 "이미 골랐음"(409 `DAILY_QUESTION_ALREADY_ANSWERED`)으로 막혔는지. */
+export function isBalanceGameAlreadyAnswered(error: unknown): boolean {
+  if (!axios.isAxiosError<{ code?: string }>(error)) {
+    return false;
+  }
+  return error.response?.data?.code === DAILY_QUESTION_ALREADY_ANSWERED_CODE;
+}
+
+/** 밸런스 게임 고르기 실패 → 화면 문구. code 로만 가른다(§11). */
+export function getAnswerBalanceGameErrorMessage(error: unknown): string {
+  if (isBalanceGameAlreadyAnswered(error)) {
+    return ERROR_MESSAGES.balanceGameAlreadyAnswered;
+  }
+  return ERROR_MESSAGES.answerBalanceGameFailed;
 }

@@ -23,7 +23,7 @@ module.exports = {
       fontFamily: tailwindFontFamily,
       fontSize: tailwindFontSize,
       width: { ...infernoMiniGameLayout.width, ...bakingLayout.width },
-      height: infernoMiniGameLayout.height,
+      height: { ...infernoMiniGameLayout.height, ...bakingLayout.height },
       spacing: { ...infernoMiniGameLayout.spacing, ...bakingLayout.spacing },
     },
   },

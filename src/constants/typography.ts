@@ -100,6 +100,17 @@ export const infernoMiniGameLayout = {
 /** Figma 5726:2608 / 7966:6180 / 7966:6239, coordinates inside the frame border.
  * Sprite positions, like the other minigames, require positioned animated views.
  */
+/**
+ * 미니게임 프레임 안 숫자(빵굽기 타이머 "03:00", 공룡빵 기록). Figma 5726:2608·8026:3903:
+ * Ok Mallang B 28px, leading 1.1, pink-500. 테두리는 시안 캡처에서 보이지 않아 넣지 않았다.
+ * 공룡빵 기록도 빵굽기 타이머와 같은 글꼴로 맞췄다(사용자 요청, 2026-11-01).
+ */
+export const miniGameCounterStyle = {
+  ...okMallangBStyle,
+  fontSize: 28,
+  lineHeight: 28 * 1.1,
+};
+
 export const bakingLayout = {
   spacing: {
     'baking-top': '26px',
@@ -110,6 +121,9 @@ export const bakingLayout = {
     'baking-timer-right': '16px',
   },
   width: { 'baking-content': '340px' },
+  // Shorter than the shared 555 GameFrame so the play screen fits without scrolling (user request,
+  // 2026-11-01). The lowest sprite (rolling pin) ends at y 494, so nothing is clipped.
+  height: { 'baking-frame': '510px' },
   slots: {
     flour: { x: 12, y: 94, width: 67, height: 72 },
     eggs: { x: 87, y: 106.5, width: 85, height: 47 },
@@ -121,20 +135,31 @@ export const bakingLayout = {
     whisk: { x: 208, y: 213, width: 100.788, height: 137.041 },
     emptyBowl: { x: 92.5, y: 334.5, width: 147, height: 124 },
     doughBowl: { x: 92, y: 334, width: 148, height: 125 },
-    board: { x: 72, y: 226, width: 188, height: 135 },
-    // Shaping on the large board (GPT assets, 2026-10-29). Not in Figma: placed to fit the frame.
-    largeBoard: { x: 10, y: 250, width: 320, height: 189.2 },
-    // Every shaping-* dough image shares one crop (1169x569), so stages swap without jumping.
-    boardDough: { x: 55, y: 275, width: 230, height: 112 },
-    shapeArrow: { x: 120, y: 171, width: 100, height: 38.3 },
-    rollingPin: { x: 95, y: 455, width: 150, height: 39 },
-    boardButter: { x: 40, y: 140, width: 68, height: 51 },
-    boardSalt: { x: 262, y: 137, width: 37, height: 57 },
+    // Shaping board, Figma 7966:6180 (back to the Figma layout on 2026-11-01).
+    // Moved 26 down from Figma (226) so the upright shaping arrow (y 179–247) clears it (user request).
+    board: { x: 72, y: 252, width: 188, height: 135 },
+    // Transfer step, Figma 8026:4052: the board waits above and the dough bowl sits below it,
+    // with the ingredients and whisk cleared away.
+    transferBoard: { x: 72, y: 148, width: 188, height: 135 },
+    transferBowl: { x: 92, y: 319, width: 148, height: 125 },
+    // Round dough before rolling, Figma 7954:3833.
+    roundDough: { x: 113, y: 268, width: 98, height: 76 },
+    // Rolled/shaped dough (GPT shaping-* images, one 1169x569 crop so stages swap in place),
+    // centred where Figma's round dough sits.
+    boardDough: { x: 97, y: 274.5, width: 130, height: 63.3 },
+    // Finished shaping turns into the oven's salt bread (same size), centred on boardDough.
+    boardSaltBread: { x: 114.6, y: 267, width: 94.808, height: 78.351 },
+    // Sized to fit between the raised salt (bottom 155) and the lowered board (top 252) in every
+    // rotation: rotated up/down it spans y 159.5–247.5 (user requests, 2026-11-02).
+    shapeArrow: { x: 118, y: 186.65, width: 88, height: 33.7 },
+    rollingPin: { x: 87, y: 433, width: 150, height: 39 },
+    // Figma row (7966:6284): butter then salt, 20 apart, bottom-aligned.
+    boardButter: { x: 41, y: 124, width: 68, height: 51 },
+    // Raised 20 above Figma (118) to leave the shaping arrow more room (user request).
+    boardSalt: { x: 129, y: 98, width: 37, height: 57 },
     oven: { x: 71, y: 129, width: 177, height: 147 },
     tray: { x: 74, y: 293, width: 188, height: 126 },
     saltBread: { x: 121, y: 317, width: 94.808, height: 78.351 },
-    // Salted shaping dough on the tray, centred where `saltBread` sits.
-    trayDough: { x: 103, y: 325, width: 130, height: 63.3 },
     // Oven gauge (GPT asset, 2005x341 after crop). Track = inner hole at px 132–1873 x 141–257.
     timerFrame: { x: 40, y: 74, width: 260, height: 44.2 },
     timerTrack: { x: 57.1, y: 92.3, width: 225.8, height: 15 },
@@ -143,10 +168,11 @@ export const bakingLayout = {
   },
   targets: {
     bowl: { x: 92, y: 334, width: 148, height: 125 },
-    board: { x: 72, y: 226, width: 188, height: 135 },
+    board: { x: 72, y: 148, width: 188, height: 135 },
     oven: { x: 71, y: 129, width: 177, height: 147 },
     tray: { x: 74, y: 293, width: 188, height: 126 },
-    largeBoard: { x: 10, y: 250, width: 320, height: 189.2 },
+    // Shaping board (same as its slot): butter/salt drops, rolling and swipes land here.
+    shapingBoard: { x: 72, y: 252, width: 188, height: 135 },
   },
 } as const;
 

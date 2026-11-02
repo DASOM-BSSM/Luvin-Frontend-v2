@@ -1,9 +1,12 @@
 import type { BakingDirection, BakingShaping } from '@/src/features/bread-baking/types';
 
-/** User-approved counts (5 arrows, fail at 3 misses); swipe distance is an initial value. */
+/**
+ * User-approved counts: 5 arrows, and one wrong direction fails the round so shaping restarts
+ * right away (was 3 misses until 2026-11-01). Swipe distance is an initial value.
+ */
 export const SHAPING_RULES = {
   arrowCount: 5,
-  missLimit: 3,
+  missLimit: 1,
   /** Shorter drags are ignored instead of judged, so a stray tap is not a miss. */
   swipeMinDistance: 40,
 } as const;

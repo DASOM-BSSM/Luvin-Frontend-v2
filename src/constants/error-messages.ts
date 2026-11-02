@@ -46,4 +46,12 @@ export const ERROR_MESSAGES = {
   updateDiaryFailed: '일기를 고치지 못했어요. 다시 시도해 주세요',
   /** 일기 삭제 실패. */
   deleteDiaryFailed: '일기를 지우지 못했어요. 다시 시도해 주세요',
+  /** 일기 모아보기 달력 조회 실패 — 문구를 누르면 다시 불러온다. */
+  diaryCalendarFailed: '일기를 쓴 날을 불러오지 못했어요. 눌러서 다시 시도',
+  /** 오늘의 밸런스 게임 조회 실패 — 문구를 누르면 다시 불러온다. */
+  balanceGameFailed: '오늘의 질문을 불러오지 못했어요. 다시 시도',
+  /** 밸런스 게임 — 이미 고른 질문일 때(서버 409 `DAILY_QUESTION_ALREADY_ANSWERED`). 답은 바꿀 수 없다. */
+  balanceGameAlreadyAnswered: '이미 고른 질문이에요',
+  /** 밸런스 게임 고르기 실패 — 위 경우가 아닌 나머지. */
+  answerBalanceGameFailed: '답을 보내지 못했어요. 다시 눌러 주세요',
 };

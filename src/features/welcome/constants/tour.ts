@@ -30,7 +30,7 @@ export const TOUR_FEATURE_PAGES: readonly TourFeaturePage[] = [
   {
     key: 'minigame',
     title: '미니게임으로 다음 이야기를 열어요',
-    description: '공룡빵게임, 빵건너친구들로 토큰을 모아\n다음 에피소드를 열어요',
+    description: '공룡빵게임, 다솜이의 소금빵게임으로\n토큰을 모아 다음 에피소드를 열어요',
   },
   {
     key: 'diary',

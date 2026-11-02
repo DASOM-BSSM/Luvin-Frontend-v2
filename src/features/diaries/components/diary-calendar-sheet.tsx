@@ -4,16 +4,22 @@ import { Calendar, type DateData } from 'react-native-calendars';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
 import Text from '@/src/components/ui/text';
+import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import DiaryCalendarDay, { type DiaryCalendarDayProps } from '@/src/features/diaries/components/diary-calendar-day';
-import { formatYearMonth, shiftMonth, toDateString } from '@/src/features/diaries/utils/feed';
+import useMyDiaryCalendar from '@/src/features/diaries/hooks/use-my-diary-calendar';
+import {
+  formatYearMonth,
+  shiftMonth,
+  toDateString,
+  toWrittenDates,
+  toYearMonth,
+} from '@/src/features/diaries/utils/feed';
 
 /** Figma 요일 줄(일요일 시작). */
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
 interface DiaryCalendarSheetProps {
   visible: boolean;
-  /** 내가 일기를 쓴 날짜("YYYY-MM-DD"). */
-  writtenDates: Set<string>;
   onClose: () => void;
 }
 
@@ -24,13 +30,17 @@ const EmptyHeader = () => null;
  * 일기 모아보기. Figma "일기 모아보기"(6199:3820) — 아래에서 올라오는 흰 시트에 한 달 달력.
  * 날짜 계산(달마다 칸 배치)만 react-native-calendars 를 쓰고, 머리와 날짜 칸은 직접 그린다.
  *
- * NOTE: 월별 일기 조회 API 가 아직 없어, 그룹 일기 피드에 있는 내 일기로만 날짜를 칠한다.
+ * 일기를 쓴 날은 `GET /api/diaries/calendar` 로 보이는 달마다 받는다 — 모든 그룹의 내 일기가 대상이다.
+ * 받는 중이거나 실패하면 모든 날이 회색이고, 실패하면 머리 아래에 다시 시도 문구가 뜬다.
  * 날짜를 눌러 그날 일기를 보는 화면은 시안이 없어 고르기만 된다.
  */
-export default function DiaryCalendarSheet({ visible, writtenDates, onClose }: DiaryCalendarSheetProps) {
+export default function DiaryCalendarSheet({ visible, onClose }: DiaryCalendarSheetProps) {
   const today = toDateString(new Date());
   const [visibleMonth, setVisibleMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
+  const { year, month } = toYearMonth(visibleMonth);
+  const calendarQuery = useMyDiaryCalendar(year, month);
+  const writtenDates = toWrittenDates(calendarQuery.data ?? []);
 
   function handlePrevPress() {
     setVisibleMonth((month) => shiftMonth(month, -1));
@@ -38,6 +48,10 @@ export default function DiaryCalendarSheet({ visible, writtenDates, onClose }: D
 
   function handleNextPress() {
     setVisibleMonth((month) => shiftMonth(month, 1));
+  }
+
+  function handleRetryPress() {
+    calendarQuery.refetch();
   }
 
   function handleDayPress(date?: DateData) {
@@ -82,6 +96,14 @@ export default function DiaryCalendarSheet({ visible, writtenDates, onClose }: D
               </Pressable>
             </View>
           </View>
+
+          {calendarQuery.isError ? (
+            <Pressable accessibilityRole="button" onPress={handleRetryPress}>
+              <Text variant="body-xxs" className="text-state-error">
+                {ERROR_MESSAGES.diaryCalendarFailed}
+              </Text>
+            </Pressable>
+          ) : null}
 
           <View className="w-full flex-row items-center justify-around">
             {WEEKDAY_LABELS.map((label) => (
