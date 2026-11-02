@@ -23,7 +23,7 @@ export function isSeasonInProgressError(error: unknown): boolean {
 
 /**
  * [DRAFT] `POST /api/ai/seasons/next` 가 409 `STORY_NOT_STARTED`(시즌이 하나도 없음)로 실패했는지.
- * 개발용 시즌 초기화 뒤처럼 시즌이 없으면 다음 시즌이 아니라 첫 시즌(`/from-survey`)을 만들어야 한다.
+ * 시즌 초기화 뒤처럼 시즌이 없으면 다음 시즌이 아니라 첫 시즌(`/from-survey`)을 만들어야 한다.
  */
 export function isNoSeasonError(error: unknown): boolean {
   return getSeasonErrorCode(error) === 'STORY_NOT_STARTED';

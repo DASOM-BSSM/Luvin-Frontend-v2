@@ -357,21 +357,26 @@ export interface paths {
         };
         /**
          * 지난 그룹 질문 목록
-         * @description 최신순. page는 0부터, size 기본 20·최대 50. 답 수(answerCount) 포함 — 답 내용은 GET current처럼 상세가 필요하면
-         *     따로 요청한다(지금은 current만 상세를 준다).
+         * @description 최신순(`slotStartAt`). page는 0부터, size 기본 20·최대 50. 답 수(answerCount) 포함 — 답 내용은
+         *     GET `/{questionId}`로 따로 요청한다.
+         *     `from`·`to`(KST 날짜 `yyyy-MM-dd`, 둘 다 포함)를 주면 그 날짜의 칸만 준다. 한쪽만 줘도 된다(다른 쪽은 끝까지).
+         *     예: `?from=2026-11-02&to=2026-11-02` → 그날 칸들(최대 24개).
+         *
+         *     **400 code**: `ROOM_QUESTION_RANGE_INVALID`(날짜 형식이 틀렸거나 from이 to보다 뒤)
          *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
          */
         get: operations["getRoomQuestionHistory"];
         put?: never;
         /**
          * 그룹 질문 생성
-         * @description 그룹 멤버면 누구나 누를 수 있다. 그룹당 하루(KST 자정 기준) 1개.
+         * @description 그룹 멤버면 누구나 누를 수 있다. 그룹당 KST 정각 칸(예: 09:00~09:59)마다 1개.
+         *     칸은 이 API를 부른 시각을 KST 정각으로 내린 것이고, 응답 `slotStartAt`에 담긴다(예: 09:42에 누르면 `09:00:00+09:00`).
          *     **비동기**: 바로 202와 함께 `status: generating`인 질문을 돌려준다. 1~3초 간격으로 GET current를 다시 요청해서
          *     `ready`(content·answers 채워짐)나 `failed`를 확인한다. `failed`면 이 API를 다시 눌러 재시도할 수 있다.
          *     AI에는 그룹 이름·멤버 수·최근 질문만 넘기고 일기 본문은 넘기지 않는다.
          *
          *     **409 code**
-         *     - `ROOM_QUESTION_ALREADY_EXISTS`: 오늘 질문이 이미 있다(생성 중 포함). data에 그 질문(QuestionView)이 담긴다
+         *     - `ROOM_QUESTION_ALREADY_EXISTS`: 이 칸의 질문이 이미 있다(생성 중 포함). data에 그 질문(QuestionView)이 담긴다
          *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
          */
         post: operations["create"];
@@ -401,6 +406,31 @@ export interface paths {
          *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
          */
         post: operations["answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/daily_questions/{questionId}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 밸런스 게임 보기 고르기
+         * @description body `{ selectedOption }` — 고른 보기의 optionId. 한 사람당 질문 하나에 1번이고 **바꿀 수 없다**.
+         *     응답은 결과(results·totalCount)가 채워진 질문이다(GET today와 같은 형식).
+         *
+         *     **400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption 누락, 없는 optionId, 다른 질문의 보기)
+         *     **404 code**: `DAILY_QUESTION_NOT_FOUND`(없는 questionId)
+         *     **409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(이미 고름)
+         */
+        post: operations["answerBalanceGame"];
         delete?: never;
         options?: never;
         head?: never;
@@ -553,8 +583,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * AI 시즌 초기화(시즌 삭제)
-         * @description 내 AI 시즌을 **시즌 행까지 모두 지운다**. 진행 중이든 완료했든 같고, 시즌이 여러 개면 전부 지운다.
+         * AI 시즌 초기화(시즌 삭제, 토큰 환불)
+         * @description 테스트용. 앱의 시즌 초기화 버튼은 정식 경로 `POST /api/ai/seasons/reset`(환불 없음)을 쓴다.
+         *     이 경로는 그와 같고, 쓴 토큰을 돌려주는 것만 다르다.
+         *
+         *     내 AI 시즌을 **시즌 행까지 모두 지운다**. 진행 중이든 완료했든 같고, 시즌이 여러 개면 전부 지운다.
          *     계정·설문 결과와 빵 유형·감정일기·공유방은 남는다.
          *
          *     - 지우는 것: 회차 본문·선택 결과 장면·선택 기록·열린 회차·회차 완료 상태, 1:1 장면 좋아요·피드백(학습 입력 포함),
@@ -1288,6 +1321,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diary-rooms/{roomId}/questions/{questionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 그룹 질문 상세
+         * @description 질문 하나(지난 질문 포함). 응답은 GET current와 같은 형태다(content·myAnswer·answers는 `status: ready`일 때만).
+         *
+         *     **404 code**: `ROOM_QUESTION_NOT_FOUND`(이 그룹의 질문이 아님)
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        get: operations["getRoomQuestion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/diary-rooms/{roomId}/questions/current": {
         parameters: {
             query?: never;
@@ -1297,11 +1353,35 @@ export interface paths {
         };
         /**
          * 지금 그룹 질문
-         * @description 가장 최근 날짜의 질문. 질문이 한 번도 없으면 `data: null`.
+         * @description 가장 최근 칸(`slotStartAt`)의 질문. 질문이 한 번도 없으면 `data: null`.
          *     content·myAnswer·answers는 `status: ready`일 때만 채워진다. answers는 내 답을 포함한 멤버 답(작성순)이다.
+         *     `creatorNickname`·`creatorBreadType`은 질문을 만든 사람(실패 후 다시 누르면 다시 누른 사람)이고 탈퇴했으면 null.
          *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
          */
         get: operations["getCurrent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/daily_questions/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 오늘의 밸런스 게임
+         * @description 하루(KST 자정 기준) 1개, 모든 사용자에게 같은 질문이다. 미리 준비해 둔 목록에서 날짜별로 고른다.
+         *     answered·selectedOptionId는 요청한 사용자 기준이다.
+         *     **results·totalCount는 내가 고른 뒤에만 채워진다** — 고르기 전에는 `results: []`, `totalCount: 0`.
+         *     오늘 질문이 없으면 `data: null`(200)이다. 이때는 섹션을 숨긴다.
+         */
+        get: operations["getTodayBalanceGame"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1690,7 +1770,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/daily_questions/{questionId}/answer": {
+    "/api/diaries/reactions/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 최근 반응 알림
+         * @description 내가 방장이거나 멤버인 공유방들의 일기에 남긴 반응, 최신순(감정일기 홈 "쫀쫀한 조합들" 맨 위 카드:
+         *     "{reactorBreadName}님이 {diaryAuthorBreadName}님의 일기에 '{emoji}' 반응을 했습니다.").
+         *
+         *     - 내가 남긴 반응은 빼고, 내 일기에 다른 사람이 남긴 반응은 포함한다.
+         *     - limit: 1~20(기본 1). after(ISO-8601 시각, 선택): 이 시각보다 뒤의 반응만 — 앱이 마지막으로 본 반응의
+         *       reactedAt을 저장해 두고 넘기면 이미 본 알림을 다시 받지 않는다(서버에 읽음 상태는 없다).
+         *     - reactedAt은 반응을 남기거나 다른 이모지로 바꾼 시각이다. 반응을 취소하면 목록에서 빠진다.
+         *     - 빵 이름은 설문 전·탈퇴면 null이다. 없으면 빈 배열.
+         */
+        get: operations["getRecentReactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/reset": {
         parameters: {
             query?: never;
             header?: never;
@@ -1700,38 +1807,21 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 밸런스 게임 보기 고르기
-         * @description body `{ selectedOption }` — 고른 보기의 optionId. 한 사람당 질문 하나에 1번이고 **바꿀 수 없다**.
-         *     응답은 결과(results·totalCount)가 채워진 질문이다(GET today와 같은 형식).
+         * 시즌 초기화
+         * @description 내 AI 시즌을 **시즌 행까지 모두 지우고** 처음부터 다시 시작하게 한다. 진행 중이든 완료했든 같고, 시즌이 여러 개면
+         *     지난 시즌까지 전부 지운다. 계정·설문 결과와 빵 유형·감정일기·공유방·토큰은 남는다.
          *
-         *     **400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption 누락, 없는 optionId, 다른 질문의 보기)
-         *     **404 code**: `DAILY_QUESTION_NOT_FOUND`(없는 questionId)
-         *     **409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(이미 고름)
+         *     - 지우는 것: 회차 본문·선택 결과 장면·선택 기록·열린 회차·회차 완료 상태, 1:1 장면 좋아요·피드백,
+         *       회차 정리 기록·관계 기록·회차 쪽지·시즌 편지·최종 리포트, 출연진, 새 시즌 설정, 시즌 생성 입력
+         *     - 4~10화를 열며 쓴 토큰은 **돌려주지 않는다**(`refundedTokens`는 항상 0, `tokenBalance`는 현재 잔액).
+         *       새 시즌에서도 4화부터 다시 토큰을 쓴다.
+         *     - 초기화 전에 돌던 회차 생성·완료·선택 결과 생성은 시즌이 없어져 결과를 버린다.
+         *     - 시즌이 없으면 아무것도 하지 않고 200(`deletedSeasons` 0).
+         *
+         *     초기화 뒤: `GET /api/ai/seasons/me`는 404 `SEASON_NOT_FOUND` → `POST /api/ai/seasons/from-survey`
+         *     (`surveyResultId`는 최신 설문 결과)로 새 시즌 → `GET /api/ai/seasons/episodes/1/content`로 1화부터 시작.
          */
-        post: operations["answerBalanceGame"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/daily_questions/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 오늘의 밸런스 게임
-         * @description 하루(KST 자정 기준) 1개, 모든 사용자에게 같은 질문이다. 미리 준비해 둔 목록에서 날짜별로 고른다.
-         *     answered·selectedOptionId는 요청한 사용자 기준이다.
-         *     **results·totalCount는 내가 고른 뒤에만 채워진다** — 고르기 전에는 `results: []`, `totalCount: 0`.
-         *     오늘 질문이 없으면 `data: null`(200)이다. 이때는 섹션을 숨긴다.
-         */
-        get: operations["getTodayBalanceGame"];
-        put?: never;
-        post?: never;
+        post: operations["resetMySeasons"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1853,6 +1943,8 @@ export interface components {
             authorNickname?: string;
             authorBreadType?: string;
             isMine?: boolean;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
         };
         TokenUseRequest: {
             /** Format: int32 */
@@ -2015,7 +2107,7 @@ export interface components {
         RoomQuestionAlreadyExistsError: {
             /** @example false */
             success?: boolean;
-            /** @description 이미 있는 오늘 질문(생성 중 포함) */
+            /** @description 이미 있는 이 칸의 질문(생성 중 포함) */
             data?: components["schemas"]["RoomQuestionView"];
             message?: string;
             /** @enum {string} */
@@ -2032,6 +2124,10 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            /** @description 작성자 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전·탈퇴면 null */
+            authorBreadType?: string;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
         };
         RoomQuestionView: {
             /** Format: int64 */
@@ -2040,9 +2136,15 @@ export interface components {
             roomId?: number;
             /**
              * Format: date
-             * @description 이 질문의 날짜(KST). 그룹당 하루 1개
+             * @description 이 질문 칸의 날짜(KST). slotStartAt의 날짜와 같다
              */
             questionDate?: string;
+            /**
+             * Format: date-time
+             * @description 이 질문의 칸 시작 시각(KST 정각, +09:00). 그룹당 칸마다 1개. 칸은 slotStartAt ~ +1시간
+             * @example 2026-11-02T09:00:00+09:00
+             */
+            slotStartAt?: string;
             content?: string;
             /**
              * @description generating이면 1~3초 간격으로 GET current를 다시 요청. failed면 POST로 다시 생성할 수 있다
@@ -2051,10 +2153,21 @@ export interface components {
             status?: "generating" | "ready" | "failed";
             /** Format: date-time */
             createdAt?: string;
+            /** @description 질문을 만든 사람의 닉네임(계정 닉네임, 없으면 이름). 탈퇴했으면 null */
+            creatorNickname?: string;
+            /** @description 질문을 만든 사람의 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전·탈퇴면 null */
+            creatorBreadType?: string;
             /** @description 내 답. 없으면 null */
             myAnswer?: components["schemas"]["RoomQuestionAnswerItem"];
             /** @description 그룹 멤버들의 답(내 답 포함), 작성순 */
             answers?: components["schemas"]["RoomQuestionAnswerItem"][];
+            /**
+             * Format: int64
+             * @description 질문을 만든 사람의 id. 내가 만든 질문인지 알 때 쓴다
+             */
+            creatorId?: number;
+            /** @description 질문을 만든 사람의 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            creatorBreadName?: string;
         };
         ApiResponseRoomQuestionView: {
             success?: boolean;
@@ -2065,6 +2178,67 @@ export interface components {
         RoomQuestionAnswerRequest: {
             /** @description 1~200자(앞뒤 공백 제외). 아니면 400 ROOM_ANSWER_INVALID */
             content?: string;
+        };
+        BalanceGameAnswerRequest: {
+            /**
+             * Format: int64
+             * @description 고른 보기의 optionId. 없거나 이 질문의 보기가 아니면 400 DAILY_QUESTION_INVALID_OPTION
+             */
+            selectedOption?: number;
+        };
+        BalanceGameOption: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+        };
+        BalanceGameResult: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+            /**
+             * Format: int64
+             * @description 이 보기를 고른 사람 수
+             */
+            voteCount?: number;
+            /**
+             * Format: double
+             * @description 전체 중 비율(0~100, 소수 첫째 자리까지)
+             * @example 62.5
+             */
+            percentage?: number;
+        };
+        BalanceGameView: {
+            /** Format: int64 */
+            questionId?: number;
+            /** @description 질문 문장 */
+            question?: string;
+            /**
+             * Format: date
+             * @description 이 질문의 날짜(KST). 하루 1개, 모든 사용자 공통
+             */
+            questionDate?: string;
+            /** @description 보기 2개 */
+            options?: components["schemas"]["BalanceGameOption"][];
+            /** @description 내가 이미 골랐는지 */
+            answered?: boolean;
+            /**
+             * Format: int64
+             * @description 내가 고른 optionId. 안 골랐으면 null
+             */
+            selectedOptionId?: number;
+            /** @description 보기별 결과(options와 같은 순서). 고르기 전에는 빈 목록 */
+            results?: components["schemas"]["BalanceGameResult"][];
+            /**
+             * Format: int64
+             * @description 전체 응답 수. 고르기 전에는 0
+             */
+            totalCount?: number;
+        };
+        ApiResponseBalanceGameView: {
+            success?: boolean;
+            data?: components["schemas"]["BalanceGameView"];
+            message?: string;
+            code?: string;
         };
         DiaryRoomAddMemberRequest: {
             /** Format: int64 */
@@ -2564,6 +2738,8 @@ export interface components {
             latestSurveyResultId?: string;
             /** @description 감정일기 학습 동의. 끄면 일기·댓글·그룹 답을 내 빵 학습에 쓰지 않는다 */
             learningEnabled?: boolean;
+            /** @description 내 빵 이름(예: "쫀쫀한 카스테라"). 감정일기에서 다른 사람에게 보이는 이름과 같다. 설문 전이면 null */
+            breadName?: string;
         };
         TokenBalanceResponse: {
             /** Format: int32 */
@@ -2708,6 +2884,12 @@ export interface components {
             questionId?: number;
             /** Format: date */
             questionDate?: string;
+            /**
+             * Format: date-time
+             * @description 이 질문의 칸 시작 시각(KST 정각, +09:00)
+             * @example 2026-11-02T09:00:00+09:00
+             */
+            slotStartAt?: string;
             content?: string;
             /** @enum {string} */
             status?: "generating" | "ready" | "failed";
@@ -2731,6 +2913,10 @@ export interface components {
             nickname?: string;
             /** @enum {string} */
             role?: "OWNER" | "MEMBER";
+            /** @description 빵 이름(예: "쫀쫀한 카스테라"). 설문 전이면 null */
+            breadName?: string;
+            /** @description 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전이면 null */
+            breadType?: string;
         };
         ApiResponseListDiaryFeedItem: {
             success?: boolean;
@@ -2760,6 +2946,8 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
         };
         ApiResponseListDiaryResponse: {
             success?: boolean;
@@ -2989,66 +3177,28 @@ export interface components {
             userId?: number;
             message?: string;
         };
-        BalanceGameAnswerRequest: {
-            /**
-             * Format: int64
-             * @description 고른 보기의 optionId. 없거나 이 질문의 보기가 아니면 400 DAILY_QUESTION_INVALID_OPTION
-             */
-            selectedOption?: number;
-        };
-        BalanceGameOption: {
-            /** Format: int64 */
-            optionId?: number;
-            content?: string;
-        };
-        BalanceGameResult: {
-            /** Format: int64 */
-            optionId?: number;
-            content?: string;
-            /**
-             * Format: int64
-             * @description 이 보기를 고른 사람 수
-             */
-            voteCount?: number;
-            /**
-             * Format: double
-             * @description 전체 중 비율(0~100, 소수 첫째 자리까지)
-             * @example 62.5
-             */
-            percentage?: number;
-        };
-        BalanceGameView: {
-            /** Format: int64 */
-            questionId?: number;
-            /** @description 질문 문장 */
-            question?: string;
-            /**
-             * Format: date
-             * @description 이 질문의 날짜(KST). 하루 1개, 모든 사용자 공통
-             */
-            questionDate?: string;
-            /** @description 보기 2개 */
-            options?: components["schemas"]["BalanceGameOption"][];
-            /** @description 내가 이미 골랐는지 */
-            answered?: boolean;
-            /**
-             * Format: int64
-             * @description 내가 고른 optionId. 안 골랐으면 null
-             */
-            selectedOptionId?: number;
-            /** @description 보기별 결과(options와 같은 순서). 고르기 전에는 빈 목록 */
-            results?: components["schemas"]["BalanceGameResult"][];
-            /**
-             * Format: int64
-             * @description 전체 응답 수. 고르기 전에는 0
-             */
-            totalCount?: number;
-        };
-        ApiResponseBalanceGameView: {
+        ApiResponseListDiaryRecentReaction: {
             success?: boolean;
-            data?: components["schemas"]["BalanceGameView"];
+            data?: components["schemas"]["DiaryRecentReaction"][];
             message?: string;
             code?: string;
+        };
+        DiaryRecentReaction: {
+            /** Format: int64 */
+            diaryId?: number;
+            /** Format: int64 */
+            roomId?: number;
+            emoji?: string;
+            /** Format: date-time */
+            reactedAt?: string;
+            /** Format: int64 */
+            reactorId?: number;
+            reactorBreadName?: string;
+            /** @description 반응한 사람의 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값) */
+            reactorBreadType?: string;
+            /** Format: int64 */
+            diaryAuthorId?: number;
+            diaryAuthorBreadName?: string;
         };
     };
     responses: never;
@@ -3947,6 +4097,10 @@ export interface operations {
     getRoomQuestionHistory: {
         parameters: {
             query?: {
+                /** @description 이 날짜(KST)부터, 포함 */
+                from?: string;
+                /** @description 이 날짜(KST)까지, 포함 */
+                to?: string;
                 page?: number;
                 size?: number;
             };
@@ -3965,6 +4119,23 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListRoomQuestionHistoryItem"];
+                };
+            };
+            /** @description code: ROOM_QUESTION_RANGE_INVALID(날짜 형식이 틀렸거나 from이 to보다 뒤) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "from은 to보다 늦을 수 없습니다.",
+                     *       "code": "ROOM_QUESTION_RANGE_INVALID"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
             /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
@@ -4057,7 +4228,7 @@ export interface operations {
                     "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
-            /** @description code: ROOM_QUESTION_ALREADY_EXISTS. 오늘 질문이 이미 있다(생성 중 포함). data에 그 질문 */
+            /** @description code: ROOM_QUESTION_ALREADY_EXISTS. 이 칸의 질문이 이미 있다(생성 중 포함). data에 그 질문 */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -4148,6 +4319,83 @@ export interface operations {
                      *       "data": null,
                      *       "message": "아직 질문이 준비되지 않았습니다.",
                      *       "code": "ROOM_QUESTION_NOT_READY"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    answerBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BalanceGameAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_INVALID_OPTION(selectedOption 누락, 없는 optionId, 다른 질문의 보기) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이 질문의 보기가 아닙니다.",
+                     *       "code": "DAILY_QUESTION_INVALID_OPTION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_NOT_FOUND(없는 questionId) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "밸런스 게임 질문을 찾을 수 없습니다.",
+                     *       "code": "DAILY_QUESTION_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_ALREADY_ANSWERED(이미 고름. 답은 바꿀 수 없다) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이미 답한 질문입니다.",
+                     *       "code": "DAILY_QUESTION_ALREADY_ANSWERED"
                      *     }
                      */
                     "application/json": components["schemas"]["ApiErrorResponse"];
@@ -5343,6 +5591,55 @@ export interface operations {
             };
         };
     };
+    getRoomQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_NOT_FOUND(없는 그룹) 또는 ROOM_QUESTION_NOT_FOUND(이 그룹의 질문이 아님) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     getCurrent: {
         parameters: {
             query?: never;
@@ -5395,6 +5692,26 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTodayBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
                 };
             };
         };
@@ -5867,20 +6184,17 @@ export interface operations {
             };
         };
     };
-    answerBalanceGame: {
+    getRecentReactions: {
         parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                questionId: number;
+            query?: {
+                limit?: number;
+                after?: string;
             };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BalanceGameAnswerRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -5888,63 +6202,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
-                };
-            };
-            /** @description code: DAILY_QUESTION_INVALID_OPTION(selectedOption 누락, 없는 optionId, 다른 질문의 보기) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "success": false,
-                     *       "data": null,
-                     *       "message": "이 질문의 보기가 아닙니다.",
-                     *       "code": "DAILY_QUESTION_INVALID_OPTION"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description code: DAILY_QUESTION_NOT_FOUND(없는 questionId) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "success": false,
-                     *       "data": null,
-                     *       "message": "밸런스 게임 질문을 찾을 수 없습니다.",
-                     *       "code": "DAILY_QUESTION_NOT_FOUND"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiErrorResponse"];
-                };
-            };
-            /** @description code: DAILY_QUESTION_ALREADY_ANSWERED(이미 고름. 답은 바꿀 수 없다) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "success": false,
-                     *       "data": null,
-                     *       "message": "이미 답한 질문입니다.",
-                     *       "code": "DAILY_QUESTION_ALREADY_ANSWERED"
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ApiErrorResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryRecentReaction"];
                 };
             };
         };
     };
-    getTodayBalanceGame: {
+    resetMySeasons: {
         parameters: {
             query?: never;
             header?: never;
@@ -5959,7 +6222,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
+                    "*/*": components["schemas"]["ApiResponseAiSeasonResetView"];
                 };
             };
         };

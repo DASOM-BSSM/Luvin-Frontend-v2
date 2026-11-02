@@ -9,6 +9,7 @@ import EditDiaryForm from '@/src/features/diaries/components/edit-diary-form';
 import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import ReactionPicker from '@/src/features/diaries/components/reaction-picker';
 import useDeleteDiary from '@/src/features/diaries/hooks/use-delete-diary';
+import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import useReactToDiary from '@/src/features/diaries/hooks/use-react-to-diary';
 import type { DiaryFeedItem } from '@/src/features/diaries/types';
 import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
@@ -70,7 +71,8 @@ function DiaryDetailContent({ diary, initialMenuOpen, onDeleted }: DiaryDetailCo
   const [isEditing, setIsEditing] = useState(false);
   const reactMutation = useReactToDiary();
   const deleteMutation = useDeleteDiary();
-  const preview = toGroupDiaryPreview(diary);
+  const me = useMyDiaryAuthor();
+  const preview = toGroupDiaryPreview(diary, me.name);
 
   function handleReactionPress() {
     setIsPickerOpen((open) => !open);

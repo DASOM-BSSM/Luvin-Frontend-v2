@@ -37,7 +37,7 @@ export function toBreadType(canonical: string | null): BreadType | null {
  * 생겨야만 바뀐다.
  *
  * `description`은 이번 시즌엔 고정 문구다 — 유형별로 다른 설명을 지어내지 않는다. "반죽"은
- * 안 붙인다(사용자 확인) — "당신은 쫀쫀한 소금빵 성향이 나타났어요!"처럼 빵 종류까지만 쓴다.
+ * 안 붙인다(사용자 확인) — "당신은 쫀쫀한 소금빵 성향이에요!"처럼 빵 종류까지만 쓴다.
  */
 export function mapSurveyResultToBreadProfile(result: SurveyResult): BreadProfile | null {
   const type = toBreadType(result.primaryType);
@@ -53,6 +53,6 @@ export function mapSurveyResultToBreadProfile(result: SurveyResult): BreadProfil
     type,
     state: 'dough',
     name,
-    description: `당신은 ${adjective} ${flavorName} 성향이 나타났어요!`,
+    description: `당신은 ${adjective} ${flavorName} 성향이에요!`,
   };
 }

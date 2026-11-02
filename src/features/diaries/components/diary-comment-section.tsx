@@ -7,8 +7,9 @@ import Text from '@/src/components/ui/text';
 import TextField from '@/src/components/ui/text-field';
 import useCreateComment from '@/src/features/diaries/hooks/use-create-comment';
 import useDiaryComments from '@/src/features/diaries/hooks/use-diary-comments';
+import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import type { DiaryComment, DiaryId } from '@/src/features/diaries/types';
-import { formatRelativeTime, UNKNOWN_AUTHOR_NAME } from '@/src/features/diaries/utils/feed';
+import { formatRelativeTime, resolveAuthorName } from '@/src/features/diaries/utils/feed';
 import { toBreadType } from '@/src/features/survey/utils/map-bread-result';
 
 interface DiaryCommentSectionProps {
@@ -18,15 +19,26 @@ interface DiaryCommentSectionProps {
 interface CommentItemProps {
   comment: DiaryComment;
   now: Date;
+  /** 내 빵 이름 — 내 댓글이면 이 이름을 쓴다. */
+  myName: string;
 }
 
 /**
  * 댓글 한 장(Figma 5950:6015) — 작성자 빵 · 닉네임 · 몇 분 전, 그 아래 내용. 빵 타입이 없으면
  * (설문 안 함 · 탈퇴) 일기 카드처럼 그림 자리를 비운다.
  */
-const CommentItem = ({ comment, now }: CommentItemProps) => {
+const CommentItem = ({ comment, now, myName }: CommentItemProps) => {
   const breadType = toBreadType(comment.authorBreadType);
-  const authorName = comment.authorNickname ?? UNKNOWN_AUTHOR_NAME;
+  // 실제 이름이 아니라 빵 이름으로 쓴다(사용자 결정, utils/feed.ts `resolveAuthorName`).
+  const authorName = resolveAuthorName(
+    {
+      isMine: comment.isMine,
+      nickname: comment.authorNickname,
+      breadName: comment.authorBreadName,
+      breadType: comment.authorBreadType,
+    },
+    myName,
+  );
 
   return (
     <View className="w-full flex-col items-start gap-[8px] rounded-[8px] border border-default-gray bg-default-white p-[10px]">
@@ -58,6 +70,7 @@ export default function DiaryCommentSection({ diaryId }: DiaryCommentSectionProp
   const [content, setContent] = useState('');
   const commentsQuery = useDiaryComments(diaryId);
   const createCommentMutation = useCreateComment();
+  const me = useMyDiaryAuthor();
   const now = new Date();
 
   function handleSendSuccess() {
@@ -100,7 +113,7 @@ export default function DiaryCommentSection({ diaryId }: DiaryCommentSectionProp
         </Pressable>
       ) : (
         (commentsQuery.data ?? []).map((comment) => (
-          <CommentItem key={comment.id} comment={comment} now={now} />
+          <CommentItem key={comment.id} comment={comment} now={now} myName={me.name} />
         ))
       )}
     </View>

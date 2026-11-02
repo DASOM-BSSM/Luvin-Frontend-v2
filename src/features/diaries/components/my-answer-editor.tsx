@@ -8,6 +8,7 @@ import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import QuestionAnswerItem from '@/src/features/diaries/components/question-answer-item';
 import useAnswerQuestion from '@/src/features/diaries/hooks/use-answer-question';
 import useDeleteAnswer from '@/src/features/diaries/hooks/use-delete-answer';
+import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import type { RoomQuestion } from '@/src/features/diaries/types';
 import { getAnswerQuestionErrorMessage } from '@/src/features/diaries/utils/errors';
 import { ANSWER_MAX_LENGTH, isValidAnswer } from '@/src/features/diaries/utils/question';
@@ -25,6 +26,7 @@ interface MyAnswerEditorProps {
  */
 export default function MyAnswerEditor({ question, now }: MyAnswerEditorProps) {
   const { roomId, questionId, myAnswer } = question;
+  const me = useMyDiaryAuthor();
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState('');
   const answerMutation = useAnswerQuestion();
@@ -68,6 +70,7 @@ export default function MyAnswerEditor({ question, now }: MyAnswerEditorProps) {
       <View className="w-full flex-col items-start gap-[4px]">
         <QuestionAnswerItem
           answer={myAnswer}
+          authorName={me.name}
           now={now}
           onEditPress={handleEditPress}
           onDeletePress={handleDeletePress}

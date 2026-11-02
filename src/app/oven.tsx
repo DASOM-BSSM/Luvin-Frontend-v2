@@ -17,7 +17,6 @@ import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
 import SeasonHistoryList from "@/src/features/oven/components/season-history-list";
-import InfernoDevSeasonReset from "@/src/features/inferno/components/inferno-dev-season-reset";
 
 /** 두 미리보기 카드 공용 우상단 하트 3개. 실제 게임 상태와 무관한 장식용이라 항상 꽉 차 있다. */
 function PreviewHearts() {
@@ -245,11 +244,9 @@ export default function OvenScreen() {
         <View className="w-full flex-col items-start gap-[12px]">
           <SectionHeader title="러빈지옥 에피소드" />
           {/* 시즌마다 카드를 따로 둔다. 최신 시즌이 맨 위, 지난 시즌이 그 아래다. */}
+          {/* 시즌 초기화 버튼은 시즌 카드를 펼쳤을 때 1화 밑에 뜬다(SeasonHistoryList → SeasonCard footer). */}
           <SeasonHistoryList />
         </View>
-
-        {/* 개발 빌드에서만 보인다(사용자 요청). 배포 빌드에서는 아무것도 그리지 않는다. */}
-        <InfernoDevSeasonReset />
 
         <View className="w-full flex-col items-center gap-[16px]">
           <SectionHeader

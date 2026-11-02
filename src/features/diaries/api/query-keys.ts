@@ -1,4 +1,4 @@
-import type { DiaryId, RoomId } from '@/src/features/diaries/types';
+import type { DiaryId, RoomId, RoomQuestionId } from '@/src/features/diaries/types';
 
 /**
  * `diaries` 기능의 쿼리 키 팩토리(§11). 일기 · 공유방 · 커뮤니티 피드 · 밸런스 게임 키를
@@ -20,6 +20,8 @@ export const diaryKeys = {
   calendar: (year: number, month: number) => [...diaryKeys.calendars(), { year, month }] as const,
   /** 공유 일기(커뮤니티) 피드. */
   community: () => [...diaryKeys.all, 'community'] as const,
+  /** 최근 반응 알림(`GET /api/diaries/reactions/recent`). */
+  recentReactions: () => [...diaryKeys.all, 'reactions', 'recent'] as const,
 };
 
 export const roomKeys = {
@@ -39,8 +41,13 @@ export const roomKeys = {
   questions: (roomId: RoomId) => [...roomKeys.detail(roomId), 'questions'] as const,
   /** 지금 그룹 질문(`GET .../questions/current`). */
   currentQuestion: (roomId: RoomId) => [...roomKeys.questions(roomId), 'current'] as const,
+  /** 질문 하나(`GET .../questions/{questionId}`). 지난 칸의 질문 답 모달이 쓴다. */
+  question: (roomId: RoomId, questionId: RoomQuestionId) =>
+    [...roomKeys.questions(roomId), 'question', questionId] as const,
   /** 지난 질문 목록(`GET .../questions`). */
   questionHistory: (roomId: RoomId) => [...roomKeys.questions(roomId), 'history'] as const,
+  /** 그날(KST "YYYY-MM-DD") 질문만. 지난 질문 목록 키 아래라 그 목록을 무효화하면 같이 새로 받는다. */
+  questionHistoryOn: (roomId: RoomId, date: string) => [...roomKeys.questionHistory(roomId), date] as const,
 };
 
 /** 오늘의 밸런스 게임(`/api/daily_questions`). */

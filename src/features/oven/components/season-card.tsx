@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View } from 'react-native';
 
 import EpisodeHistoryRow from '@/src/features/oven/components/episode-history-row';
@@ -25,6 +25,8 @@ interface SeasonCardProps {
   episodes: SeasonEpisodeItem[];
   /** 펼친 회차 줄을 눌렀을 때. 그 회차로 들어간다. */
   onEpisodePress: (order: number) => void;
+  /** 펼쳤을 때 회차 줄들 맨 아래(1화 밑)에 붙일 것 — 시즌 초기화 버튼(사용자 결정). */
+  footer?: ReactNode;
 }
 
 interface SeasonEpisodeRowProps {
@@ -69,6 +71,7 @@ export default function SeasonCard({
   stageTitle,
   episodes,
   onEpisodePress,
+  footer,
 }: SeasonCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const title = stageTitle ?? formatSeasonTitle(seasonNumber);
@@ -91,6 +94,7 @@ export default function SeasonCard({
             <SeasonEpisodeRow key={episode.order} episode={episode} onPress={onEpisodePress} />
           ))
         : null}
+      {isOpen ? footer : null}
     </View>
   );
 }
