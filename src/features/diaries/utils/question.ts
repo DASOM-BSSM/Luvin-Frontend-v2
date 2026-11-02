@@ -51,11 +51,16 @@ export function formatHourSlotLabel(isoDateTime: string): string {
 }
 
 /**
- * 홈에 질문 생성 알림을 띄울 질문인지 — 내용이 다 만들어진(ready) 오늘(KST) 질문만. 지난 날짜 질문은
- * 알림으로 띄우지 않는다(사용자 결정).
+ * 홈에 질문 생성 알림을 띄울 질문인지 — 내용이 다 만들어진(ready) 오늘(KST) 질문 중 지금 시각의 정각 칸
+ * 것만. 지난 날짜 질문은 알림으로 띄우지 않는다(사용자 결정). 지난 칸(21시) 질문을 22시에 띄우면 21시 일기와
+ * 22시 "눌러서 작성"이 한 화면에 섞여서, 홈도 감정일기 메인처럼 지금 칸 하나만 보여준다(사용자 결정).
  */
 export function isAnnounceableQuestion(question: RoomQuestion | null | undefined, now: Date): boolean {
-  return question?.status === 'ready' && isTodayQuestion(question, now);
+  return (
+    question?.status === 'ready' &&
+    isTodayQuestion(question, now) &&
+    getHourSlotKey(question.slotStartAt) === getKstHourSlotKey(now)
+  );
 }
 
 /**
@@ -76,3 +81,11 @@ export function getKstHourSlotKey(now: Date): string {
   return new Date(now.getTime() + KST_OFFSET_MS).toISOString().slice(0, 13);
 }
 
+
+/**
+ * 내가 만든 질문인지. 내 id 를 아직 모르면(프로필을 불러오는 중) false — 알림 쪽에서 따로 기다린다.
+ * 내가 만든 질문은 홈에 생성 알림을 띄우지 않는다(사용자 결정).
+ */
+export function isMyQuestion(question: Pick<RoomQuestion, 'creatorId'>, myId: number | undefined): boolean {
+  return myId !== undefined && question.creatorId === myId;
+}

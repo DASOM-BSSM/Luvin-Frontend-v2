@@ -101,3 +101,11 @@ export function findSlotQuestion(
     (item) => item.status === 'ready' && item.content !== null && getHourSlotKey(item.slotStartAt) === slot,
   );
 }
+
+/**
+ * 서버 시각(한국 시간 ISO-8601)이 지금 정각 칸 안인지. 홈 반응 알림은 지금 칸에 남긴 반응만 띄운다 — 지난
+ * 시간대 반응이 계속 맨 위에 남아 있지 않게(사용자 결정).
+ */
+export function isInCurrentSlot(isoDateTime: string, now: Date): boolean {
+  return getHourSlotKey(isoDateTime) === getKstHourSlotKey(now);
+}
