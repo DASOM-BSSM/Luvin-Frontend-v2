@@ -22,6 +22,7 @@ interface QuestionCreatedNoticeProps {
  * 닉네임이 없으면 "15:00 질문이 생성됐어요!"로 쓴다. 내가 만든 질문(`creatorId` 가 내 id)이면 내 빵 이름을 쓴다.
  * 시각은 서버가 정한 칸(`slotStartAt`)이다.
  * "N분 전"은 사용자 요청으로 뺐다.
+ * 글자 크기(Body/S 14px)는 반응 알림과 같다(사용자 결정).
  */
 export default function QuestionCreatedNotice({ question, onPress }: QuestionCreatedNoticeProps) {
   const me = useMyDiaryAuthor();
