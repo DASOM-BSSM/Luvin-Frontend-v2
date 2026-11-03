@@ -92,6 +92,21 @@ export const removeBadge = {
   icon: state.error,
 };
 
+/**
+ * 온보딩 "Google 계정으로 로그인" 버튼 색. `Color system` 컬렉션에 없는 값이라 Google 공식 브랜딩
+ * 가이드(developers.google.com/identity/branding-guidelines)의 라이트 테마 버튼 · G 로고 값을 그대로 옮겼다.
+ * 바탕은 `default.white`, 글자는 `text.primary` 를 쓴다(가이드 #1F1F1F 와 거의 같다).
+ */
+export const google = {
+  button: { border: '#747775' },
+  logo: {
+    blue: '#4285F4',
+    red: '#EA4335',
+    yellow: '#FBBC05',
+    green: '#34A853',
+  },
+};
+
 export const colors = {
   /** Figma 5726:3281은 text/primary가 아닌 순수 검정을 사용한다. */
   inferno: { instruction: '#000000' },
@@ -100,6 +115,7 @@ export const colors = {
   pink,
   heart,
   removeBadge,
+  google,
   state,
   text,
   default: defaultColor,

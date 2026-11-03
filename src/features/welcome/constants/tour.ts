@@ -1,8 +1,9 @@
 /**
- * 첫 로그인 환영 투어의 문구. Figma 시안이 없어 기획 단계에서 정한 문구다 — 디자인이 나오면 맞출 것.
+ * 앱 소개 투어(로그인 전, 처음 한 번)의 문구. Figma 시안이 없어 기획 단계에서 정한 문구다 — 디자인이
+ * 나오면 맞출 것.
  *
- * 첫 장(인사)은 닉네임이 들어가서 `buildWelcomeTitle` 이 제목을 만들고, 나머지는 기능을 하나씩
- * 소개한 뒤 반죽 만들기(설문)로 이어진다. 반죽이 있어야 러빈지옥이 시작되기 때문이다.
+ * 첫 장(인사)은 `buildWelcomeTitle` 이 제목을 만들고(로그인 전이라 닉네임 없이 "환영해요"), 나머지는
+ * 기능을 하나씩 소개한 뒤 로그인으로 이어진다. 로그인하면 홈의 반죽 만들기 카드로 설문을 시작한다.
  */
 export const TOUR_GREETING_DESCRIPTION =
   '사랑은 타이밍이에요.\n러빈이 그 타이밍을 함께 찾아드릴게요';
@@ -50,6 +51,6 @@ export const TOUR_PAGE_COUNT = 1 + TOUR_FEATURE_PAGES.length;
 export const TOUR_BUTTON_LABEL = {
   next: '다음',
   skip: '건너뛰기',
-  start: '나만의 반죽 만들기',
-  later: '먼저 둘러볼게요',
+  /** 마지막 장 버튼. 로그인(온보딩)으로 간다. */
+  start: '시작하기',
 } as const;

@@ -3,8 +3,8 @@ import { setAccessToken } from '@/src/features/auth/lib/token-storage';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
 import { useBreadStore } from '@/src/features/bread/store/bread-store';
 import { useInfernoStore } from '@/src/features/inferno/store/inferno-store';
-import { usePartnerLetterStore } from '@/src/features/inferno/store/partner-letter-store';
 import { useSurveyStore } from '@/src/features/survey/store/survey-store';
+import { markTourSeen } from '@/src/features/welcome/lib/tour-seen';
 import queryClient from '@/src/lib/query-client';
 
 /**
@@ -28,7 +28,9 @@ export async function startSession(result: SocialLoginResult) {
   useBreadStore.getState().clear();
   useSurveyStore.getState().resetSurvey();
   useInfernoStore.getState().switchUser(result.user.userId);
-  usePartnerLetterStore.getState().switchUser(result.user.userId);
+  // 로그인해 본 기기에서는 앱 소개 투어를 다시 띄우지 않는다 — 투어가 생기기 전부터 쓰던 사람이
+  // 로그아웃했을 때 투어가 뜨지 않게(features/welcome/lib/tour-seen).
+  markTourSeen();
 
   await setAccessToken(result.accessToken);
   useAuthStore.getState().setSession(result.user);

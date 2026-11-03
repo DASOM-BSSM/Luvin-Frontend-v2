@@ -58,7 +58,8 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "typecheck": "tsc --noEmit",
-    "generate:api-types": "pnpm dlx openapi-typescript@7.13.0 docs/api/openapi.json -o src/types/api-generated.ts"
+    "generate:api-types": "pnpm dlx openapi-typescript@7.13.0 docs/api/openapi.json -o src/types/api-generated.ts",
+    "build:legal-site": "pnpm --allow-build=esbuild dlx tsx@4.19.2 docs/legal-site/build.ts"
   },
   "private": true
 }
