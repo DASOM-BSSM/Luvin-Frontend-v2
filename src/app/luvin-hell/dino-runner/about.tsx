@@ -9,6 +9,7 @@ import CloudSmallIcon from '@/src/assets/icons/CloudSmallIcon';
 import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import PlayerAvatar from '@/src/assets/images/PlayerAvatar';
 import Text from '@/src/components/ui/text';
+import { miniGameCounterStyle } from '@/src/constants/typography';
 import GameFrame from '@/src/features/luvin-hell/components/GameFrame';
 import { sceneColors } from '@/src/features/luvin-hell/constants/scene-colors';
 import DinoGround from '@/src/features/luvin-hell/games/dino-runner/components/DinoGround';
@@ -60,7 +61,7 @@ export default function DinoRunnerAboutScreen() {
 
           <DinoGround />
 
-          <Text variant="display-score" className="absolute left-[16px] top-[20px]">
+          <Text className="absolute left-[16px] top-[20px] text-pink-500" style={miniGameCounterStyle}>
             40
           </Text>
 

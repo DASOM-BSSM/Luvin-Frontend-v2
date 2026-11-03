@@ -59,6 +59,18 @@ export const okMallangBTitleStyle = {
   lineHeight: 22 * lineHeightRatio,
 };
 
+/**
+ * 러빈지옥 1화 무대 제목 "In School"(7855:3240). 40px/160%, pink-500, 테두리 없음.
+ *
+ * `display.title` 과 크기는 같지만 그쪽은 pink-200 테두리가 있다. 이 시안은 스크린샷으로
+ * 확인해도 테두리가 없어서 따로 둔다.
+ */
+export const okMallangBHeroStyle = {
+  ...okMallangBStyle,
+  fontSize: 40,
+  lineHeight: 40 * lineHeightRatio,
+};
+
 /** Figma 5726:3271: 781×300 쪽지 안의 컵·테이블 배치. */
 export const infernoMiniGameLayout = {
   width: {
@@ -84,6 +96,85 @@ export const infernoMiniGameLayout = {
     'inferno-cup-hidden': '10.8px',
   },
 };
+
+/** Figma 5726:2608 / 7966:6180 / 7966:6239, coordinates inside the frame border.
+ * Sprite positions, like the other minigames, require positioned animated views.
+ */
+/**
+ * 미니게임 프레임 안 숫자(빵굽기 타이머 "03:00", 공룡빵 기록). Figma 5726:2608·8026:3903:
+ * Ok Mallang B 28px, leading 1.1, pink-500. 테두리는 시안 캡처에서 보이지 않아 넣지 않았다.
+ * 공룡빵 기록도 빵굽기 타이머와 같은 글꼴로 맞췄다(사용자 요청, 2026-11-01).
+ */
+export const miniGameCounterStyle = {
+  ...okMallangBStyle,
+  fontSize: 28,
+  lineHeight: 28 * 1.1,
+};
+
+export const bakingLayout = {
+  spacing: {
+    'baking-top': '26px',
+    'baking-header-gap': '8px',
+    'baking-frame-gap': '16px',
+    'baking-footer-gap': '40px',
+    'baking-timer-top': '19px',
+    'baking-timer-right': '16px',
+  },
+  width: { 'baking-content': '340px' },
+  // Shorter than the shared 555 GameFrame so the play screen fits without scrolling (user request,
+  // 2026-11-01). The lowest sprite (rolling pin) ends at y 494, so nothing is clipped.
+  height: { 'baking-frame': '510px' },
+  slots: {
+    flour: { x: 12, y: 94, width: 67, height: 72 },
+    eggs: { x: 87, y: 106.5, width: 85, height: 47 },
+    butter: { x: 180, y: 104.5, width: 68, height: 51 },
+    water: { x: 256, y: 94, width: 64, height: 72 },
+    salt: { x: 93, y: 175.5, width: 37, height: 57 },
+    sugar: { x: 146, y: 175.5, width: 39, height: 57 },
+    yeast: { x: 201, y: 175, width: 39, height: 58 },
+    whisk: { x: 208, y: 213, width: 100.788, height: 137.041 },
+    emptyBowl: { x: 92.5, y: 334.5, width: 147, height: 124 },
+    doughBowl: { x: 92, y: 334, width: 148, height: 125 },
+    // Shaping board, Figma 7966:6180 (back to the Figma layout on 2026-11-01).
+    // Moved 26 down from Figma (226) so the upright shaping arrow (y 179–247) clears it (user request).
+    board: { x: 72, y: 252, width: 188, height: 135 },
+    // Transfer step, Figma 8026:4052: the board waits above and the dough bowl sits below it,
+    // with the ingredients and whisk cleared away.
+    transferBoard: { x: 72, y: 148, width: 188, height: 135 },
+    transferBowl: { x: 92, y: 319, width: 148, height: 125 },
+    // Round dough before rolling, Figma 7954:3833.
+    roundDough: { x: 113, y: 268, width: 98, height: 76 },
+    // Rolled/shaped dough (GPT shaping-* images, one 1169x569 crop so stages swap in place),
+    // centred where Figma's round dough sits.
+    boardDough: { x: 97, y: 274.5, width: 130, height: 63.3 },
+    // Finished shaping turns into the oven's salt bread (same size), centred on boardDough.
+    boardSaltBread: { x: 114.6, y: 267, width: 94.808, height: 78.351 },
+    // Sized to fit between the raised salt (bottom 155) and the lowered board (top 252) in every
+    // rotation: rotated up/down it spans y 159.5–247.5 (user requests, 2026-11-02).
+    shapeArrow: { x: 118, y: 186.65, width: 88, height: 33.7 },
+    rollingPin: { x: 87, y: 433, width: 150, height: 39 },
+    // Figma row (7966:6284): butter then salt, 20 apart, bottom-aligned.
+    boardButter: { x: 41, y: 124, width: 68, height: 51 },
+    // Raised 20 above Figma (118) to leave the shaping arrow more room (user request).
+    boardSalt: { x: 129, y: 98, width: 37, height: 57 },
+    oven: { x: 71, y: 129, width: 177, height: 147 },
+    tray: { x: 74, y: 293, width: 188, height: 126 },
+    saltBread: { x: 121, y: 317, width: 94.808, height: 78.351 },
+    // Oven gauge (GPT asset, 2005x341 after crop). Track = inner hole at px 132–1873 x 141–257.
+    timerFrame: { x: 40, y: 74, width: 260, height: 44.2 },
+    timerTrack: { x: 57.1, y: 92.3, width: 225.8, height: 15 },
+    // Marker x follows progress; its tip (bottom) dips into the track.
+    timerMarker: { x: 0, y: 66, width: 24.5, height: 30 },
+  },
+  targets: {
+    bowl: { x: 92, y: 334, width: 148, height: 125 },
+    board: { x: 72, y: 148, width: 188, height: 135 },
+    oven: { x: 71, y: 129, width: 177, height: 147 },
+    tray: { x: 74, y: 293, width: 188, height: 126 },
+    // Shaping board (same as its slot): butter/salt drops, rolling and swipes land here.
+    shapingBoard: { x: 72, y: 252, width: 188, height: 135 },
+  },
+} as const;
 
 /**
  * AI 답장 대기 "빵 줄넘기" 장면의 기준 좌표. Figma `ep0` 줄넘기 시안(7219:3595)의 쪽지
@@ -255,6 +346,14 @@ const DISPLAY_LINE_HEIGHT_RATIO = 1.1;
  * 검정 두꺼운 테두리로 서로 다르다.
  */
 export const display = {
+  /** EP5 `REPORT`/`HIGHLIGHT` (5748:4322, 5760:4358): 22px, pink-500 fill, 얇은 pink-200 stroke. */
+  sectionTitle: {
+    fontFamily: fontFamily.okMallangB,
+    fontSize: 22,
+    lineHeight: 22 * lineHeightRatio,
+    fill: pink[500],
+    stroke: { color: pink[200], width: 1 },
+  },
   /** "Ready?" / "Game Over" 오버레이 타이틀. Figma: 6285:6955, 6263:6495 등 40px, pink-500 위 pink-200 stroke ~2px. */
   title: {
     fontFamily: fontFamily.okMallangB,

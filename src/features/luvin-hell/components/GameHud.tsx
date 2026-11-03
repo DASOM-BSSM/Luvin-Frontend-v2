@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import HeartIcon from '@/src/assets/icons/HeartIcon';
 import Text from '@/src/components/ui/text';
 import { heart } from '@/src/constants/colors';
+import { miniGameCounterStyle } from '@/src/constants/typography';
 
 interface MissionBannerProps {
   missionTarget: number;
@@ -41,7 +42,7 @@ interface InGameStatsProps {
 export function InGameStats({ score, hearts, maxHearts = 3 }: InGameStatsProps) {
   return (
     <View className="absolute left-0 right-0 top-[20px] w-full flex-row items-start justify-between px-[16px]">
-      <Text variant="display-score">
+      <Text className="text-pink-500" style={miniGameCounterStyle}>
         {Math.floor(score)}
       </Text>
       <View className="flex-row gap-[4px]">

@@ -1,4 +1,4 @@
-import type { DiaryId, RoomId } from '@/src/features/diaries/types';
+import type { DiaryId, RoomId, RoomQuestionId } from '@/src/features/diaries/types';
 
 /**
  * `diaries` 기능의 쿼리 키 팩토리(§11). 일기 · 공유방 · 커뮤니티 피드 · 밸런스 게임 키를
@@ -14,23 +14,43 @@ export const diaryKeys = {
   detail: (diaryId: DiaryId) => [...diaryKeys.all, 'detail', diaryId] as const,
   /** 일기 하나에 달린 댓글 목록. */
   comments: (diaryId: DiaryId) => [...diaryKeys.detail(diaryId), 'comments'] as const,
+  /** 내 일기 달력 전체의 상위 키. */
+  calendars: () => [...diaryKeys.all, 'calendar'] as const,
+  /** 내 일기 달력 한 달(`GET /api/diaries/calendar?year=&month=`). month 는 1~12. */
+  calendar: (year: number, month: number) => [...diaryKeys.calendars(), { year, month }] as const,
   /** 공유 일기(커뮤니티) 피드. */
   community: () => [...diaryKeys.all, 'community'] as const,
+  /** 최근 반응 알림(`GET /api/diaries/reactions/recent`). */
+  recentReactions: () => [...diaryKeys.all, 'reactions', 'recent'] as const,
 };
 
 export const roomKeys = {
   all: ['diary-rooms'] as const,
   /** 내가 방장이거나 멤버인 공유방 목록. */
   list: () => [...roomKeys.all, 'list'] as const,
+  /** 방 하나에 딸린 키 전체의 상위 키. 나가기 · 삭제할 때 이걸로 통째로 지운다. */
   detail: (roomId: RoomId) => [...roomKeys.all, 'detail', roomId] as const,
+  /** 방 하나 정보(`GET /api/diary-rooms/{roomId}`). */
+  room: (roomId: RoomId) => [...roomKeys.detail(roomId), 'room'] as const,
   members: (roomId: RoomId) => [...roomKeys.detail(roomId), 'members'] as const,
   /** 초대코드(방장 · 멤버만). */
   inviteCode: (roomId: RoomId) => [...roomKeys.detail(roomId), 'invite-code'] as const,
   /** 공유방 안의 일기 피드. */
   diaries: (roomId: RoomId) => [...roomKeys.detail(roomId), 'diaries'] as const,
+  /** 그룹 질문 키 전체의 상위 키. */
+  questions: (roomId: RoomId) => [...roomKeys.detail(roomId), 'questions'] as const,
+  /** 지금 그룹 질문(`GET .../questions/current`). */
+  currentQuestion: (roomId: RoomId) => [...roomKeys.questions(roomId), 'current'] as const,
+  /** 질문 하나(`GET .../questions/{questionId}`). 지난 칸의 질문 답 모달이 쓴다. */
+  question: (roomId: RoomId, questionId: RoomQuestionId) =>
+    [...roomKeys.questions(roomId), 'question', questionId] as const,
+  /** 지난 질문 목록(`GET .../questions`). */
+  questionHistory: (roomId: RoomId) => [...roomKeys.questions(roomId), 'history'] as const,
+  /** 그날(KST "YYYY-MM-DD") 질문만. 지난 질문 목록 키 아래라 그 목록을 무효화하면 같이 새로 받는다. */
+  questionHistoryOn: (roomId: RoomId, date: string) => [...roomKeys.questionHistory(roomId), date] as const,
 };
 
 /** 오늘의 밸런스 게임(`/api/daily_questions`). */
-export const dailyQuestionKeys = {
-  today: ['daily-questions', 'today'] as const,
+export const balanceGameKeys = {
+  today: ['balance-game', 'today'] as const,
 };

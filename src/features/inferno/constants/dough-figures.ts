@@ -35,6 +35,11 @@ export const INFERNO_DOUGH_FIGURES: Partial<Record<BreadType, InfernoDoughFigure
     chatSizeClass: 'h-[67px] w-[86px]',
     optionSizeClass: 'h-[38px] w-[50px]',
   },
+  // `ep1-시작` Introduce(7855:3382) 의 마들렌 90x65. 선택지 크기는 시안이 없어 같은 비율로 폭 50 에 맞췄다.
+  madeleine: {
+    chatSizeClass: 'h-[65px] w-[90px]',
+    optionSizeClass: 'h-[36px] w-[50px]',
+  },
 };
 
 /** 시안에 없는 반죽이 나왔을 때 쓰는 임시 값. 실제 값이 나오면 위 표에 넣을 것. */

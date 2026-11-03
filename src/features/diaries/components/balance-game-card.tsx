@@ -2,11 +2,12 @@ import { View } from 'react-native';
 
 import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
-import type { DailyQuestionOption } from '@/src/features/diaries/types';
+import type { BalanceGameOption } from '@/src/features/diaries/types';
+import { formatBalanceGameQuestion } from '@/src/features/diaries/utils/balance-game';
 
 interface BalanceGameCardProps {
   question: string;
-  options: DailyQuestionOption[];
+  options: BalanceGameOption[];
   /** 아직 고르지 않았으면 undefined. */
   selectedOptionId?: number;
   /** 이미 답했거나 답을 보내는 중이면 다시 못 누르게 막는다. */
@@ -14,8 +15,13 @@ interface BalanceGameCardProps {
   onOptionPress: (optionId: number) => void;
 }
 
+/*
+ * 보기 버튼에는 서버 보기 문구(예: "가능하다" / "불가능하다")를 그대로 쓴다 — Figma 감정일기 홈
+ * (5950:6585) 시안. 리뷰 LUV-83 때는 O / X 로 고정했지만, 질문이 O/X 로 답할 수 없는 형태로도 와서
+ * 시안대로 되돌렸다.
+ */
 interface BalanceGameOptionButtonProps {
-  option: DailyQuestionOption;
+  option: BalanceGameOption;
   selected: boolean;
   disabled: boolean;
   /** 누른 보기의 id 를 돌려준다. 목록에서 익명 함수를 만들지 않으려고 여기서 감싼다(§16). */
@@ -56,7 +62,7 @@ export default function BalanceGameCard({
   return (
     <View className="w-full flex-col items-center gap-[12px] rounded-[12px] px-[24px] py-[16px]">
       <Text variant="heading-h4" className="text-center text-brown-1000">
-        {question}
+        {formatBalanceGameQuestion(question)}
       </Text>
       <View className="flex-row items-start gap-[16px]">
         {options.map((option) => (

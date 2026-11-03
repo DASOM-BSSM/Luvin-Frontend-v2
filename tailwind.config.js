@@ -11,6 +11,7 @@ const {
   tailwindFontFamily,
   tailwindFontSize,
   infernoMiniGameLayout,
+  bakingLayout,
 } = require('./src/constants/typography');
 
 module.exports = {
@@ -21,9 +22,9 @@ module.exports = {
       colors,
       fontFamily: tailwindFontFamily,
       fontSize: tailwindFontSize,
-      width: infernoMiniGameLayout.width,
-      height: infernoMiniGameLayout.height,
-      spacing: infernoMiniGameLayout.spacing,
+      width: { ...infernoMiniGameLayout.width, ...bakingLayout.width },
+      height: { ...infernoMiniGameLayout.height, ...bakingLayout.height },
+      spacing: { ...infernoMiniGameLayout.spacing, ...bakingLayout.spacing },
     },
   },
   plugins: [],

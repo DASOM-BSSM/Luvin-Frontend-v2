@@ -79,6 +79,17 @@ export const AIR_OBSTACLE_MIN_SCORE = 50;
  */
 export const SCORE_UNIT_PX = 120;
 
+/**
+ * 배경 스크롤(시차). 땅은 장애물과 같은 속도(1배)로 흘러야 반죽이 땅 위에 놓여 다가오는 것처럼
+ * 보이고, 구름은 멀리 있으니 훨씬 느리게 흘린다.
+ */
+export const CLOUD_PARALLAX_RATIO = 0.15;
+/**
+ * 흙바닥 패치 한 벌의 반복 폭. 마지막 패치(left 281 + width 62)가 343 에서 끝나므로 그보다 1px 넓게
+ * 잡아 이어 붙인 다음 벌의 첫 패치와 겹치지 않게 한다.
+ */
+export const GROUND_TILE_WIDTH = 344;
+
 /** 숙이기 판정 제스처 임계값(px). */
 export const DUCK_TRIGGER_OFFSET = 12;
 export const DUCK_HORIZONTAL_TOLERANCE = 24;

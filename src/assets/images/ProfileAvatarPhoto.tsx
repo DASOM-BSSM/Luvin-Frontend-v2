@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { cssInterop } from 'nativewind';
+import { View } from 'react-native';
 
 import type { Gender } from '@/src/features/my-page/types';
 
@@ -16,10 +17,19 @@ const SOURCES: Record<Gender, number> = {
 };
 
 interface ProfileAvatarPhotoProps {
-  gender: Gender;
+  /** 아직 성별을 고르지 않았으면 undefined. 성별을 짐작하지 않고 빈 원만 그린다. */
+  gender: Gender | undefined;
 }
 
 export default function ProfileAvatarPhoto({ gender }: ProfileAvatarPhotoProps) {
+  // NOTE: 성별 없는 아바타는 시안이 없어 기존 회색 토큰으로 빈 원만 둔다. 시안이 나오면 바꿀 것.
+  if (!gender)
+    return (
+      <View
+        className="h-[84px] w-[84px] rounded-full bg-default-gray"
+        accessibilityLabel="내 프로필 사진"
+      />
+    );
   return (
     <InteropImage
       className="h-[84px] w-[84px] rounded-full"

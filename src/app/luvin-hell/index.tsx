@@ -22,6 +22,10 @@ export default function LuvinHellModeSelectScreen() {
     router.replace('/');
   }
 
+  function handleBreadBakingPress() {
+    router.push('/luvin-hell/bread-baking/play');
+  }
+
   return (
     <View className="flex-1 bg-default-bg">
       <View className="h-[70px]" />
@@ -57,15 +61,17 @@ export default function LuvinHellModeSelectScreen() {
             <Text variant="body-m" className="text-default-black">
               현재 보유 토큰: 🥐x{balance}
             </Text>
-            {/* 빵건너친구들은 아직 별도 PR로 진행 중이라 이번 범위에서 onPress를 넣지 않는다. */}
+            {/* Figma 5916:5300 은 두 게임만 둔다. 빵건너친구들 버튼은 시안대로 뺐다(2026-10-30 사용자 결정,
+                게임 코드는 그대로). */}
             <View className="w-full flex-col gap-[20px]">
               <Button
                 label="공룡빵게임"
-                variant="modeSelectPrimary"
+                variant="modeSelect"
                 className="w-full"
                 onPress={() => router.push('/luvin-hell/dino-runner/play')}
               />
-              <Button label="빵건너친구들" variant="modeSelectSecondary" className="w-full" />
+              <Button label="다솜이의 소금빵게임" variant="modeSelect" className="w-full"
+                onPress={handleBreadBakingPress} />
             </View>
           </View>
 

@@ -4,14 +4,16 @@ import { Pressable, View } from 'react-native';
 import LandscapeOnly from '@/src/components/landscape-only';
 import InfernoIntroCard from '@/src/features/inferno/components/inferno-intro-card';
 import { infernoEpisodeHref } from '@/src/features/inferno/constants/routes';
-import useViewedSeason from '@/src/features/inferno/hooks/use-viewed-season';
 import { findInfernoEpisode } from '@/src/features/inferno/utils/episodes';
 
-/** 회차를 넘기지 않고 들어왔을 때 보여줄 회차. 기존 `/inferno` 링크는 ep0 로 남는다. */
-const DEFAULT_ORDER = 0;
+/**
+ * 회차를 넘기지 않고 들어왔을 때 보여줄 회차. 가이드 ep0 를 없애서(사용자 결정) 기존 `/inferno`
+ * 링크와 ep0 를 가리키던 링크는 모두 1화로 연다(§13).
+ */
+const DEFAULT_ORDER = 1;
 
 /**
- * 러빈지옥 회차 시작 화면. Figma `ep0-시작` (6159:3315), `ep1-시작` (5397:4269).
+ * 러빈지옥 회차 시작 화면. Figma `ep1-시작` (5397:4269).
  *
  * 회차마다 시작 화면이 똑같고 하단 알약의 제목만 달라서 화면을 하나만 두고 회차를
  * 검색 파라미터로 받는다(`/inferno?order=1`). 회차별로 파일을 늘리면 같은 화면이 복사된다.
@@ -26,12 +28,12 @@ const DEFAULT_ORDER = 0;
  */
 export default function InfernoScreen() {
   const { order } = useLocalSearchParams<{ order?: string }>();
-  // 지난 시즌 다시 보기면 시즌을 본문으로 그대로 넘긴다(constants/routes 의 infernoIntroHref).
-  const { pastSeasonId } = useViewedSeason();
 
-  // 파라미터는 문자열이고 사용자가 딥링크로 아무 값이나 넣을 수 있다. 숫자가 아니면 ep0 로 본다(§13).
+  // 파라미터는 문자열이고 사용자가 딥링크로 아무 값이나 넣을 수 있다. 숫자가 아니거나 없앤 ep0 이면
+  // 1화로 본다(§13).
   const parsedOrder = Number.parseInt(order ?? '', 10);
-  const episodeOrder = Number.isNaN(parsedOrder) ? DEFAULT_ORDER : parsedOrder;
+  const episodeOrder =
+    Number.isNaN(parsedOrder) || parsedOrder < DEFAULT_ORDER ? DEFAULT_ORDER : parsedOrder;
 
   const episode = findInfernoEpisode(episodeOrder);
 
@@ -41,7 +43,7 @@ export default function InfernoScreen() {
   }
 
   function handleScreenPress() {
-    const href = infernoEpisodeHref(episodeOrder, pastSeasonId);
+    const href = infernoEpisodeHref(episodeOrder);
 
     // 본문이 아직 없는 회차라면 시작 화면에 머문다.
     if (!href) {

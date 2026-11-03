@@ -83,6 +83,15 @@ export const heart = {
   empty: defaultColor.gray,
 };
 
+/**
+ * 그룹 설정하기의 멤버 내보내기(x) 버튼 바탕. `Color system` 컬렉션에 없는 값이라 Figma
+ * `dashicons:no-alt`(6606:4159) SVG 에 박힌 값을 그대로 옮겼다. x 는 `state.error` 와 같다.
+ */
+export const removeBadge = {
+  bg: '#FFD4DC',
+  icon: state.error,
+};
+
 export const colors = {
   /** Figma 5726:3281은 text/primary가 아닌 순수 검정을 사용한다. */
   inferno: { instruction: '#000000' },
@@ -90,6 +99,7 @@ export const colors = {
   yellow,
   pink,
   heart,
+  removeBadge,
   state,
   text,
   default: defaultColor,

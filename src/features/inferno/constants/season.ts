@@ -1,21 +1,18 @@
-/**
- * 러빈지옥 시즌 규칙과 안내 문구.
- *
- * 첫 시즌은 무료이고, 다음 시즌은 미니게임으로 모은 토큰을 써야 시작할 수 있다(제품 결정).
- */
+import type { SeasonSetting } from '@/src/features/inferno/types/story';
 
-/** 다음 시즌 하나를 시작하는 데 드는 토큰 수. */
-export const NEXT_SEASON_TOKEN_COST = 1;
+/** 러빈지옥 시즌 규칙. 시즌은 사용자마다 하나이고 10화가 끝나면 끝이다(사용자 결정). */
+/** [DRAFT] 바뀐 규칙: 10화가 끝나면 "새로운 시즌 만들기"로 다음 시즌을 연다(사용자 결정, use-start-next-season.ts). */
 
 /** `AiSeasonStatusView.status` 가 끝난 시즌일 때의 값. 실기기 응답으로 확인함. */
 export const COMPLETED_SEASON_STATUS = 'COMPLETED';
 
-/** 다음 시즌 안내 모달 문구. 시안이 따로 없어 홈의 NOTICE 모달(6602:3711) 모양에 문구만 바꿔 쓴다. */
-export const NEXT_SEASON_NOTICE = {
-  message: `다음 시즌을 시작하려면 토큰 ${NEXT_SEASON_TOKEN_COST}개가 필요해요!`,
-  actionLabel: '미니게임으로 토큰 모으기',
-  /** 토큰이 충분할 때의 버튼. 누르면 `POST /api/ai/seasons/next` 로 새 시즌을 연다. */
-  startLabel: `토큰 ${NEXT_SEASON_TOKEN_COST}개로 시작하기`,
-  /** 새 시즌을 여는 요청이 진행 중일 때의 버튼. */
-  startingLabel: '새 시즌 준비 중...',
+/**
+ * 배경별 시즌 제목. 1화 무대 소개 제목과 같다(Figma `ep1-시작` "In School"). 10화까지 끝낸 시즌은
+ * 홈·오븐의 시즌 카드에 "SEASON 01" 대신 이 제목을 쓴다(사용자 결정).
+ */
+export const SEASON_STAGE_TITLES: Record<SeasonSetting, string> = {
+  school: 'In School',
+  campus: 'In Campus',
+  office: 'In Office',
+  cafe: 'In Cafe',
 };

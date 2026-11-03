@@ -27,10 +27,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * 공유방 단건 조회
+         * @description 방장(owner_id)이거나 diary_room_member에 있는 사람만 조회 가능, 아니면 403. 없는 방은 404(권한 확인보다 먼저).
+         */
+        get: operations["getRoom"];
         /**
          * 공유방 수정
-         * @description 방장만 가능 (403).
+         * @description 방장만 가능 (403). maxMemberCount를 현재 인원보다 적게 하면 409 DIARY_ROOM_MAX_BELOW_MEMBER_COUNT, ownerNickname이 다른 멤버와 겹치면 409 DIARY_ROOM_NICKNAME_DUPLICATED.
          */
         put: operations["updateRoom"];
         post?: never;
@@ -272,22 +276,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/episodes/{episodeId}/rebakes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["saveRebakeConversations"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/episodes/{episodeId}/games/{gameId}/result": {
         parameters: {
             query?: never;
@@ -351,9 +339,98 @@ export interface paths {
         put?: never;
         /**
          * 공유방 생성
-         * @description 만든 사람이 방장(OWNER)으로 자동 등록.
+         * @description 만든 사람이 방장(OWNER)으로 자동 등록되고 ownerNickname이 방장의 방 닉네임이 된다. maxMemberCount는 방장 포함 2~6명(범위 밖이면 400). 응답의 memberCount는 방장 1명이라 항상 1.
          */
         post: operations["createRoom"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/{roomId}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 지난 그룹 질문 목록
+         * @description 최신순(`slotStartAt`). page는 0부터, size 기본 20·최대 50. 답 수(answerCount) 포함 — 답 내용은
+         *     GET `/{questionId}`로 따로 요청한다.
+         *     `from`·`to`(KST 날짜 `yyyy-MM-dd`, 둘 다 포함)를 주면 그 날짜의 칸만 준다. 한쪽만 줘도 된다(다른 쪽은 끝까지).
+         *     예: `?from=2026-11-02&to=2026-11-02` → 그날 칸들(최대 24개).
+         *
+         *     **400 code**: `ROOM_QUESTION_RANGE_INVALID`(날짜 형식이 틀렸거나 from이 to보다 뒤)
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        get: operations["getRoomQuestionHistory"];
+        put?: never;
+        /**
+         * 그룹 질문 생성
+         * @description 그룹 멤버면 누구나 누를 수 있다. 그룹당 KST 정각 칸(예: 09:00~09:59)마다 1개.
+         *     칸은 이 API를 부른 시각을 KST 정각으로 내린 것이고, 응답 `slotStartAt`에 담긴다(예: 09:42에 누르면 `09:00:00+09:00`).
+         *     **비동기**: 바로 202와 함께 `status: generating`인 질문을 돌려준다. 1~3초 간격으로 GET current를 다시 요청해서
+         *     `ready`(content·answers 채워짐)나 `failed`를 확인한다. `failed`면 이 API를 다시 눌러 재시도할 수 있다.
+         *     AI에는 그룹 이름·멤버 수·최근 질문만 넘기고 일기 본문은 넘기지 않는다.
+         *
+         *     **409 code**
+         *     - `ROOM_QUESTION_ALREADY_EXISTS`: 이 칸의 질문이 이미 있다(생성 중 포함). data에 그 질문(QuestionView)이 담긴다
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/{roomId}/questions/{questionId}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 그룹 질문 답하기
+         * @description body `{ content }` — 앞뒤 공백 제외 1~200자. 한 사람당 1개이고 다시 보내면 수정된다. 응답은 답이 반영된 질문.
+         *     지난 질문(ready)에도 답할 수 있다.
+         *
+         *     **400 code**: `ROOM_ANSWER_INVALID`(1~200자가 아님)
+         *     **404 code**: `ROOM_QUESTION_NOT_FOUND`(이 그룹의 질문이 아님)
+         *     **409 code**: `ROOM_QUESTION_NOT_READY`(generating·failed인 질문)
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        post: operations["answer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/daily_questions/{questionId}/answer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 밸런스 게임 보기 고르기
+         * @description body `{ selectedOption }` — 고른 보기의 optionId. 한 사람당 질문 하나에 1번이고 **바꿀 수 없다**.
+         *     응답은 결과(results·totalCount)가 채워진 질문이다(GET today와 같은 형식).
+         *
+         *     **400 code**: `DAILY_QUESTION_INVALID_OPTION`(selectedOption 누락, 없는 optionId, 다른 질문의 보기)
+         *     **404 code**: `DAILY_QUESTION_NOT_FOUND`(없는 questionId)
+         *     **409 code**: `DAILY_QUESTION_ALREADY_ANSWERED`(이미 고름)
+         */
+        post: operations["answerBalanceGame"];
         delete?: never;
         options?: never;
         head?: never;
@@ -369,15 +446,59 @@ export interface paths {
         };
         /**
          * 멤버 목록
-         * @description 방장·멤버만 조회 가능 (403).
+         * @description 방장·멤버만 조회 가능 (403). 방 닉네임·역할 포함, 먼저 들어온 순.
          */
         get: operations["getRoomMembers"];
         put?: never;
         /**
          * 멤버 추가(초대)
-         * @description 방장만 가능 (403). 없는 사용자 404. 이미 멤버여도 200.
+         * @description 방장만 가능 (403). 없는 사용자 404. 이미 멤버여도 200(닉네임 변경 없음). nickname은 이 방에서 쓸 닉네임(1~10자), 비우면 계정 닉네임(없으면 이름). 꽉 찼으면 409 DIARY_ROOM_FULL, 닉네임이 겹치면 409 DIARY_ROOM_NICKNAME_DUPLICATED.
          */
         post: operations["addMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/{roomId}/invite-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 초대 코드 조회
+         * @description 방장·멤버만 조회 가능 (403). 코드는 영구이며 공유해서 다른 사람을 초대한다.
+         */
+        get: operations["getInviteCode"];
+        put?: never;
+        /**
+         * 초대 코드 재발급
+         * @description 방장만 가능 (403). 이전 코드는 바로 쓸 수 없게 된다.
+         */
+        post: operations["regenerateInviteCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 초대 코드로 참여
+         * @description 코드를 아는 사람은 최대 인원까지 참여 가능. 대소문자 구분 없음. nickname은 이 방에서 쓸 닉네임. 이미 멤버면 200(닉네임 변경 없음), 없는 코드면 404, 인원이 가득 찼으면 409 DIARY_ROOM_FULL, 같은 방에 같은 닉네임이 있으면 409 DIARY_ROOM_NICKNAME_DUPLICATED.
+         */
+        post: operations["joinByInviteCode"];
         delete?: never;
         options?: never;
         head?: never;
@@ -437,7 +558,7 @@ export interface paths {
         };
         /**
          * 댓글 목록
-         * @description 일기를 볼 수 있는 사람만 가능 (403). 작성순.
+         * @description 일기를 볼 수 있는 사람만 가능 (403). 작성순. 작성자 정보(authorNickname, authorBreadType)와 내 댓글 여부(isMine)는 DiaryFeedItem과 같은 규칙이다.
          */
         get: operations["getComments"];
         put?: never;
@@ -452,7 +573,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/daily_questions/{questionId}/answer": {
+    "/api/dev/ai/seasons/current/story/reset": {
         parameters: {
             query?: never;
             header?: never;
@@ -461,7 +582,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["answer"];
+        /**
+         * AI 시즌 초기화(시즌 삭제, 토큰 환불)
+         * @description 테스트용. 앱의 시즌 초기화 버튼은 정식 경로 `POST /api/ai/seasons/reset`(환불 없음)을 쓴다.
+         *     이 경로는 그와 같고, 쓴 토큰을 돌려주는 것만 다르다.
+         *
+         *     내 AI 시즌을 **시즌 행까지 모두 지운다**. 진행 중이든 완료했든 같고, 시즌이 여러 개면 전부 지운다.
+         *     계정·설문 결과와 빵 유형·감정일기·공유방은 남는다.
+         *
+         *     - 지우는 것: 회차 본문·선택 결과 장면·선택 기록·열린 회차·회차 완료 상태, 1:1 장면 좋아요·피드백(학습 입력 포함),
+         *       회차 정리 기록·관계 기록·회차 쪽지·시즌 편지·최종 리포트, 출연진, 새 시즌 설정, 시즌 생성 입력
+         *     - 그 시즌들에서 4~10화를 열며 쓴 토큰은 돌려준다(`refundedTokens`, 내역은 REWARD "러빈지옥 시즌 초기화 환불").
+         *     - 초기화 전에 돌던 회차 생성·완료·선택 결과 생성은 시즌이 없어져 결과를 버린다.
+         *     - 시즌이 없으면 아무것도 하지 않고 200(`deletedSeasons` 0).
+         *
+         *     초기화 뒤: `GET /api/ai/seasons/me`는 404 `SEASON_NOT_FOUND` → `POST /api/ai/seasons/from-survey`
+         *     (`surveyResultId`는 최신 설문 결과)로 새 시즌 → `GET /api/ai/seasons/episodes/1/content`로 1화부터 시작.
+         */
+        post: operations["resetSeasons"];
         delete?: never;
         options?: never;
         head?: never;
@@ -555,6 +693,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * 시즌 목록
+         * @description 지난 시즌까지 최신 시즌부터(seasonNumber 내림차순) 돌려준다. setting(배경)·settingTitle(카드 제목, 예: In School)을 함께 준다. 지난 시즌 리포트는 GET /report?season_id=, 회차 다시 보기는 season_id를 받는 API를 쓴다.
+         */
         get: operations["listSeasons"];
         put?: never;
         post: operations["createSeason"];
@@ -573,6 +715,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * 새로운 시즌 만들기
+         * @description 가장 최근 시즌이 끝났으면(10화 완료, status COMPLETED) 다음 번호의 시즌을 새 출연진으로 만들고 바로 1화부터
+         *     시작할 수 있는 상태로 돌려준다(seasonNumber = 직전 + 1, status IN_PROGRESS, currentEpisode 1,
+         *     story.unlockedOrders [1,2,3], completedOrders·choices 빈 값, route null).
+         *     배경(setting)은 나이에 맞는 배경 중 지난 시즌들에서 안 쓴 배경을, 다 썼으면 가장 오래전에 쓴 배경을 고른다(같은
+         *     조건이면 랜덤) — 직전 시즌과 겹치지 않는다. 나이에 맞는 배경: 19세 이하 school·cafe, 20~29세 campus·cafe·office,
+         *     30세 이상 office·cafe. (첫 시즌·시즌 초기화 뒤의 시즌은 from-survey에서 나이로 정한다.)
+         *     시즌 만들기는 무료이고, 새 시즌도 1~3화는 무료, 4화부터 회차마다 `story.episodeTokenCost`만큼 토큰을 쓴다.
+         *
+         *     - surveyResultId: 내 분신 성향 기준이 되는 최신 설문 결과. 생략하면 서버의 최신 설문 결과를 쓴다.
+         *     - clientRequestId: 멱등 키. 같은 값으로 다시 오면 그 요청이 만든 시즌을 그대로 200으로 돌려준다. 동시에 여러 번
+         *       와도 시즌은 하나만 생긴다.
+         *
+         *     **오류**: 409 `SEASON_IN_PROGRESS`(가장 최근 시즌이 진행 중 — 그 시즌으로 들어가면 된다),
+         *     409 `STORY_NOT_STARTED`(시즌이 하나도 없음), 409 `AGE_REQUIRED`(나이·성별 없음),
+         *     409 `SURVEY_RESULT_STALE`(surveyResultId가 최신 설문 결과가 아님), 404 `SURVEY_RESULT_NOT_FOUND`
+         *     (본인 설문 결과가 없음).
+         */
         post: operations["startNextSeason"];
         delete?: never;
         options?: never;
@@ -612,6 +773,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/seasons/episodes/{order}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 회차 열기
+         * @description 1~3화는 무료라 차감 없이 열린 응답이다. 4~10화는 처음 열 때만 토큰(`story.episodeTokenCost`)을 쓰고, 이미 연 회차는
+         *     차감 없이 같은 응답이다. 차감은 생성 전에 하고, 열린 뒤 생성이 실패해도 열린 상태로 남는다.
+         *     순서: 이전 회차 완료 → 회차 열기 → content 요청. 열지 않은 4~10화의 content는 409 `EPISODE_NOT_UNLOCKED`.
+         *     열리면 서버가 그 회차 생성을 바로 시작한다(content 요청 전에 미리 만든다).
+         *
+         *     **오류**: 409 `INSUFFICIENT_TOKENS`(data: required, balance — 미니게임으로 안내), `PREVIOUS_EPISODE_NOT_COMPLETED`,
+         *     `STORY_NOT_STARTED`, `SEASON_COMPLETED`
+         */
+        post: operations["unlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/scene-likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 1:1 장면 좋아요
+         * @description 1:1 장면(상대가 있는 `pair` 블록)에서 내 빵의 대사 좋아요를 켜고 끈다(`liked`). 상대 대사·독백·내레이션은 400.
+         *     좋아요한 대사는 다음 회차 생성 입력(learnedProfile.likedMessages)으로 쓰인다.
+         *
+         *     **400 code**: `SCENE_ORDER_MISMATCH`, `SCENE_BLOCK_NOT_FOUND`, `SCENE_NOT_PAIR`, `SCENE_MESSAGE_NOT_FOUND`,
+         *     `SCENE_NOT_MY_LINE`, `SCENE_MONOLOGUE`(피드백과 같은 뜻) / 409 `CONTENT_NOT_READY`, `STORY_NOT_STARTED`
+         */
+        post: operations["setLike"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/scene-feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 1:1 장면 피드백
+         * @description 1:1 장면(상대가 있는 `pair` 블록)에서 내 빵의 대사(독백 제외) 하나에 피드백을 남긴다. 회차 본문 pair 블록과 선택 거절 뒤
+         *     대체 pair 블록(`choices` 응답의 blocks)에 남길 수 있고, 혼자인 독백 장면·그룹·메신저·인터뷰·선택 결과에는 안 된다.
+         *     메시지당 하나이고 다시 보내면 글을 바꾼다. body의 `order`는 생략해도 되고, 보내면 경로의 order와 같아야 한다.
+         *     남긴 피드백은 다음 회차 생성 입력(learnedProfile.feedbacks)으로 쓰인다.
+         *
+         *     **400 code**
+         *     - `SCENE_ORDER_MISMATCH`: body의 order가 경로의 order와 다르다
+         *     - `SCENE_BLOCK_NOT_FOUND`: 이 회차에 없는 blockId
+         *     - `SCENE_NOT_PAIR`: pair 블록(1:1 장면)이 아니다
+         *     - `SCENE_MESSAGE_NOT_FOUND`: 그 블록에 없는 messageId
+         *     - `SCENE_NOT_MY_LINE`: 내 빵의 대사가 아니다(상대 대사·내레이션)
+         *     - `SCENE_MONOLOGUE`: 혼자인 독백 장면이거나 독백 대사다
+         *     - `FEEDBACK_TOO_LONG`: text가 200자를 넘는다
+         *
+         *     **409 code**: `CONTENT_NOT_READY`, `STORY_NOT_STARTED`
+         */
+        post: operations["submitFeedback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 회차 완료
+         * @description 관계 기록을 갱신하고(정리 단계) 회차 쪽지를 보낸다. 10화면 최종 리포트를 만들고 시즌을 완료한다.
+         *     AI 생성을 여러 번 기다려 수십 초가 걸리므로 **접수만 하고 바로 응답한다**(비동기).
+         *
+         *     **쪽지(1~9화)**: 서버가 회차를 끝내기 전에 미리 만들어 두고(선택 없는 회차는 본문 생성 직후, 선택 회차는 선택 결과
+         *     장면이 준비된 직후) 이 요청에서 도착시킨다 — 응답을 받은 직후 `GET /api/ai/seasons/letters/unread`로 바로 조회된다.
+         *     아직 만드는 중이면 만들어지는 대로(보통 몇 초 안에) 조회된다. 정리 단계(completion)가 끝나기를 기다리지 않아도 된다.
+         *     쪽지를 만들지 못해도 회차 완료는 계속되고, 쪽지는 다시 만든다. 10화 시즌 종료 쪽지는 지금처럼 완료가 끝날 때 생긴다.
+         *
+         *     - 응답의 `completion`이 `{"order":N,"status":"completing"}`이면 진행 중이다.
+         *       `GET /api/ai/seasons/me`의 `story.completion`을 2~3초 간격으로 폴링한다.
+         *       `completion.progress`에 완료 단계(`stage`: summarize | episode-note | season-report)와 `regenerating`이 있다.
+         *     - 끝나면 `completion`이 null이 되고 `completedOrders`에 N이 들어간다(다음 회차 진행 가능).
+         *     - `status`가 `failed`(`errorCode` `STORY_GENERATION_FAILED`)면 아무것도 저장되지 않았다.
+         *       이 API를 다시 보내면 처음부터 다시 시도한다.
+         *     - 완료 중에 다시 보내도 새로 시작하지 않고 진행 상태만 돌려준다. 이미 완료한 회차면 상태만 돌려준다.
+         *
+         *     **오류**: 409 `CONTENT_NOT_READY`, `CHOICE_REQUIRED`(선택 회차인데 선택 전),
+         *     `CHOICE_RESULT_NOT_READY`(선택 결과 장면을 아직 만드는 중이거나 실패), `STORY_NOT_STARTED`, `AGE_REQUIRED`
+         */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/episodes/{order}/choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 선택 처리 (3·5·6·8화)
+         * @description body `{ pointId, breadId | null }` — breadId가 null이면 혼자 있기. 수락·거절은 서버 코드 규칙으로 정한다.
+         *     선택(수락·거절, 호감·흐름 반영)은 **바로 저장하고**, 결과 장면(`choice_result`, 거절이면 대체 장면 포함)은
+         *     AI가 만드는 데 수십 초가 걸릴 수 있어 **백그라운드에서 만든다**(비동기).
+         *
+         *     - 응답 `choice.status`
+         *       - `generating`: 결과 장면을 만드는 중. `blocks`는 빈 배열이다. `GET /api/ai/seasons/me`의 `story.choice`를
+         *         2~3초 간격으로 폴링한다.
+         *       - `ready`: `blocks`에 결과 장면이 있다. 혼자 있기는 AI를 부르지 않아 바로 ready다.
+         *       - `failed`(`errorCode` `STORY_GENERATION_FAILED`): 선택은 저장된 채 결과 장면만 실패했다. 같은 선택을 다시
+         *         보내면 결과 장면만 다시 만든다(판정·호감은 그대로). 다른 빵으로 바꿀 수는 없다.
+         *     - `story.choice`가 null이 되면 결과 장면이 준비된 것이다. 같은 선택을 다시 보내 `blocks`를 받거나, 회차 콘텐츠를
+         *       다시 받으면 choice 블록 바로 뒤에 결과 장면이 들어 있다.
+         *     - 같은 선택을 다시 보내면: 만드는 중이면 새로 시작하지 않고 상태만, 끝났으면 저장된 결과(200)를 돌려준다.
+         *       다른 빵(또는 혼자 있기)으로 보내면 409 `CHOICE_ALREADY_MADE`.
+         *     - `season.choices[].accepted`와 흐름(`route`)은 접수 응답에서 바로 바뀐다. `resultStatus`는 그 선택의 결과 장면
+         *       상태(generating | ready | failed)다.
+         *     - 결과 장면이 준비되기 전에는 회차를 완료할 수 없다(409 `CHOICE_RESULT_NOT_READY`).
+         *
+         *     **오류**: 400 회차와 pointId 불일치·후보가 아닌 breadId / 409 `CONTENT_NOT_READY`, `CHOICE_ALREADY_MADE`,
+         *     `STORY_NOT_STARTED`, `AGE_REQUIRED`
+         */
+        post: operations["choose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/seasons/episodes/{number}/seen": {
         parameters: {
             query?: never;
@@ -628,22 +949,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/ai/seasons/episodes/{number}/rerolls": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRerollStatus"];
-        put?: never;
-        post: operations["requestReroll"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ai/seasons/episodes/{number}/likes": {
         parameters: {
             query?: never;
@@ -653,6 +958,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 2·4화 좋아요. 새 흐름에서는 쓰지 않는다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["toggleEpisodeMessageLike"];
         delete?: never;
         options?: never;
@@ -669,6 +978,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 회차 생성. 새 흐름은 GET /episodes/{order}/content를 쓴다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["requestGeneration"];
         delete?: never;
         options?: never;
@@ -685,6 +998,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 2·4화 피드백. 새 흐름에서는 쓰지 않는다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisodeFeedback"];
         delete?: never;
         options?: never;
@@ -701,6 +1018,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 3화 미니게임 선택. 새 흐름에는 에피소드 안 미니게임이 없다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisode3Result"];
         delete?: never;
         options?: never;
@@ -717,6 +1038,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 1화 선택. 새 흐름은 POST /episodes/{order}/choices를 쓴다. 프론트 전환 후 삭제 예정.
+         */
         post: operations["submitEpisode1Selection"];
         delete?: never;
         options?: never;
@@ -916,22 +1241,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/episodes/{episodeId}/rebakes/{participantId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getRebakeConversation"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/episodes/{episodeId}/participants": {
         parameters: {
             query?: never;
@@ -1012,6 +1321,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/diary-rooms/{roomId}/questions/{questionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 그룹 질문 상세
+         * @description 질문 하나(지난 질문 포함). 응답은 GET current와 같은 형태다(content·myAnswer·answers는 `status: ready`일 때만).
+         *
+         *     **404 code**: `ROOM_QUESTION_NOT_FOUND`(이 그룹의 질문이 아님)
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        get: operations["getRoomQuestion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/{roomId}/questions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 지금 그룹 질문
+         * @description 가장 최근 칸(`slotStartAt`)의 질문. 질문이 한 번도 없으면 `data: null`.
+         *     content·myAnswer·answers는 `status: ready`일 때만 채워진다. answers는 내 답을 포함한 멤버 답(작성순)이다.
+         *     `creatorNickname`·`creatorBreadType`은 질문을 만든 사람(실패 후 다시 누르면 다시 누른 사람)이고 탈퇴했으면 null.
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        get: operations["getCurrent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/daily_questions/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 오늘의 밸런스 게임
+         * @description 하루(KST 자정 기준) 1개, 모든 사용자에게 같은 질문이다. 미리 준비해 둔 목록에서 날짜별로 고른다.
+         *     answered·selectedOptionId는 요청한 사용자 기준이다.
+         *     **results·totalCount는 내가 고른 뒤에만 채워진다** — 고르기 전에는 `results: []`, `totalCount: 0`.
+         *     오늘 질문이 없으면 `data: null`(200)이다. 이때는 섹션을 숨긴다.
+         */
+        get: operations["getTodayBalanceGame"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/diary-rooms/{roomId}/diaries": {
         parameters: {
             query?: never;
@@ -1052,14 +1430,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/daily_questions/today": {
+    "/api/diaries/calendar": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getTodayQuestion"];
+        /**
+         * 내 일기 달력
+         * @description year년 month월(한국 시간 기준으로 그 달 1일 00:00 ~ 다음 달 1일 00:00 전)에 내가 쓴 일기의 날짜와 id.
+         *     모든 공유방의 내 일기가 대상이고 본문은 주지 않는다(상세는 GET /api/diaries/{diaryId}).
+         *
+         *     - 날짜(`date`, yyyy-MM-dd)는 작성 시각을 한국 시간으로 바꾼 날짜이고, 오름차순이다.
+         *     - 하루에 여러 개면 그날 항목 하나의 `diaryIds`에 작성순(오래된 것 먼저)으로 모두 담는다.
+         *     - 일기가 없는 날은 목록에 없다. 그 달에 일기가 없으면 빈 배열.
+         *     - month가 1~12가 아니면 400.
+         */
+        get: operations["getMyCalendar"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1212,6 +1600,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ai/seasons/episodes/{order}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 회차 블록 목록
+         * @description 선택을 마친 회차면 선택 결과 블록(`choice_result`, 거절이면 뒤이은 대체 `pair`)이 `choice` 블록 바로 뒤에 들어 있다
+         *     (choices 응답과 같은 순서, 완료한 회차를 다시 볼 때도 같다).
+         *     저장된 회차가 있으면 그대로, 없으면 생성을 시작하고 `status: generating`으로 응답한다(1~3초 간격으로 다시 요청).
+         *     실패하면 그다음 요청 한 번은 `failed`(errorCode 포함)로 응답하고, 그 뒤에 다시 요청하면 생성을 다시 시도한다. 1화 요청이 새 흐름의 시작이다(나이로 배경 결정, 1화에 stageIntro 포함).
+         *     `generating`이면 `progress`에 생성 단계(`stage`: stage-intro | episode | interview)와 `regenerating`이 있다.
+         *     `regenerating: true`는 AI가 문장을 다시 다듬는 중이라는 뜻이고 실패가 아니다("문장을 다듬고 있어요" 등으로 표시).
+         *     생성이 오래 걸려도 같은 요청을 계속 보내면 같은 생성의 진행 상태를 이어서 본다.
+         *
+         *     **블록 단위 반환**: `generating`이어도 지금까지 확정된 블록이 `blocks`에 설계 순서대로 들어 있다(아직 없으면 null).
+         *     `intro`는 첫 블록과 함께, 1화 `stageIntro`는 본문보다 먼저 들어온다. `progress.readyBlocks`/`progress.totalBlocks`는
+         *     확정된 블록 수/전체 블록 수(선택 결과 블록 제외)다. 한 번 나간 블록은 내용·순서·blockId·messageId가 바뀌지 않으므로
+         *     앱은 새로 붙은 블록만 이어서 재생한다(blockId로 중복 재생을 막는다). 전체 완료 신호는 `status: ready`다.
+         *     중간에 실패해 `failed`여도 이미 나간 블록은 `blocks`에 그대로 있고, 다시 요청하면 그 뒤부터 이어서 만든다.
+         *     드물게 이어서 만들 수 없으면 처음부터 다시 만들고 `revision`이 1 오른다 — 앱은 `revision`이 바뀌면 처음부터 다시
+         *     재생한다. 생성 중에 나간 1:1 장면 대사에도 피드백·좋아요를 남길 수 있다.
+         *
+         *     서버는 다음 회차를 미리 만든다 — 2·3화는 이전 회차 완료 직후, 4~10화는 회차를 연(unlock) 직후. 그래서 처음 요청해도
+         *     이미 `ready`이거나 `generating` 진행 중일 수 있다(응답 형식은 같다). 미리 만들다 실패한 경우에는 `failed`를 보여 주지
+         *     않고 바로 다시 생성해 `generating`으로 응답한다.
+         *
+         *     **409 code**
+         *     - `AGE_REQUIRED`: 나이 또는 성별이 없다 — 둘 다 입력(PUT /api/users/me `{ age, gender }`) 후 다시 요청
+         *     - `STORY_NOT_STARTED`: 1화부터 요청해야 한다
+         *     - `PREVIOUS_EPISODE_NOT_COMPLETED`: 이전 회차를 먼저 완료해야 한다(선택 회차는 선택 후 완료)
+         *     - `EPISODE_NOT_RELEASED`: 아직 공개 전
+         *     - `SEASON_COMPLETED`: 끝난 시즌에서 생성하지 않은 회차
+         *     - `EPISODE_NOT_UNLOCKED`: 열지 않은 4~10화 — 회차 열기(POST /{order}/unlock) 후 다시 요청
+         */
+        get: operations["getContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/seasons/episodes/{number}": {
         parameters: {
             query?: never;
@@ -1219,10 +1653,78 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @deprecated
+         * @description 기존 5화 흐름 메시지 페이지 조회. 새 흐름은 GET /episodes/{order}/content가 블록 목록을 한 번에 내려준다. 프론트 전환 후 삭제 예정.
+         */
         get: operations["getEpisodeMessages"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/jobs/{jobId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * job 진행 이벤트 구독 (SSE)
+         * @description generation 요청 응답의 `jobId`로 연결한다. 헤더: `Authorization: Bearer <토큰>`, `Accept: text/event-stream`.
+         *     `Last-Event-ID` 없이 연결하면 그 job의 첫 이벤트부터 전부 받는다(이미 끝난 job이면 전부 받은 뒤 종료 이벤트로 닫힘).
+         *     재연결할 때만 마지막으로 받은 `id`를 `Last-Event-ID` 헤더(또는 `after_event_id` query)로 보낸다.
+         *
+         *     **이벤트** (data는 snake_case JSON, `segment`: `scene` | `candidates` | `one_to_one` | `report`)
+         *     - `segment_start` `{"segment":"scene"}`
+         *     - `delta` `{"segment":"scene","text":"{\"messages\":["}` — text는 검증 전 JSON 조각. 화면에 그대로 표시하지 않는다.
+         *     - `segment_end` `{"segment":"scene","message_count":45}` — 그 구간 검증 완료. 아직 조회 API에는 없다.
+         *     - `segment_error` `{"segment":"scene","error_code":"INVALID_OUTPUT"}` — 그 구간 버퍼를 버린다(`STREAM_FAILED`도 있음).
+         *     - `completed` `{"result_version_id":"<uuid>","revision":2}` — 이 이벤트를 받은 뒤 조회 API로 결과를 가져온다.
+         *       서버가 결과를 DB에 반영한 뒤 보내므로 바로 조회된다. 반영이 드물게 실패하면 조회가 409일 수 있으니 잠시 후 다시 조회한다.
+         *       job 상태로 보충 생성된 종료 이벤트면 `{"status":"succeeded","result_version_id":"<uuid>","error_code":null}`.
+         *     - `error` `{"error_code":"STALE_JOB"}` — job 실패.
+         *     - `stream_error` `{"error_code":"..."}` — 백엔드가 보내는 중계 실패.
+         *       `INVALID_LAST_EVENT_ID`(id 없이 재연결), `JOB_NOT_FOUND`(polling 확인),
+         *       `AI_UNAVAILABLE` / `STREAM_INTERRUPTED` / `INTERNAL_ERROR`(마지막 id로 재연결 또는 polling).
+         *     - 15초마다 `: keep-alive` 주석. `completed` / `error` / `stream_error` 뒤에는 서버가 연결을 닫으니 클라이언트도 닫는다.
+         *
+         *     **오류 응답** (SSE가 아니라 JSON)
+         *     - 401 토큰 없음/만료: `{"success":false,"data":null,"message":"인증이 필요합니다. 로그인 후 다시 시도해주세요.","code":null}`
+         *     - 404 내 job이 아님/없는 job
+         *     - 503 서버당 동시 스트림 한도 초과
+         */
+        get: operations["streamJobEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diary-rooms/{roomId}/questions/{questionId}/answers/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 내 그룹 질문 답 삭제
+         * @description 내 답을 지운다(답이 없어도 200). 그 답은 학습에서도 빠진다. 응답은 갱신된 질문.
+         *
+         *     **404 code**: `ROOM_QUESTION_NOT_FOUND`
+         *     **공통 오류**: 404 `ROOM_NOT_FOUND`(없는 그룹) / 403 `ROOM_FORBIDDEN`(그룹 멤버가 아님)
+         */
+        delete: operations["deleteMyAnswer"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1260,9 +1762,67 @@ export interface paths {
         post?: never;
         /**
          * 멤버 강퇴
-         * @description 방장만 가능 (403). 방장 자신은 강퇴 불가 (400). 멤버가 아닌 id여도 200.
+         * @description 방장만 가능 (403). 방장 자신은 강퇴 불가 (400). 멤버가 아닌 id여도 200. 실제로 강퇴되면 초대 코드가 새로 발급되어 이전 코드는 쓸 수 없다.
          */
         delete: operations["kickMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/diaries/reactions/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 최근 반응 알림
+         * @description 내가 방장이거나 멤버인 공유방들의 일기에 남긴 반응, 최신순(감정일기 홈 "쫀쫀한 조합들" 맨 위 카드:
+         *     "{reactorBreadName}님이 {diaryAuthorBreadName}님의 일기에 '{emoji}' 반응을 했습니다.").
+         *
+         *     - 내가 남긴 반응은 빼고, 내 일기에 다른 사람이 남긴 반응은 포함한다.
+         *     - limit: 1~20(기본 1). after(ISO-8601 시각, 선택): 이 시각보다 뒤의 반응만 — 앱이 마지막으로 본 반응의
+         *       reactedAt을 저장해 두고 넘기면 이미 본 알림을 다시 받지 않는다(서버에 읽음 상태는 없다).
+         *     - reactedAt은 반응을 남기거나 다른 이모지로 바꾼 시각이다. 반응을 취소하면 목록에서 빠진다.
+         *     - 빵 이름은 설문 전·탈퇴면 null이다. 없으면 빈 배열.
+         */
+        get: operations["getRecentReactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/seasons/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 시즌 초기화
+         * @description 내 AI 시즌을 **시즌 행까지 모두 지우고** 처음부터 다시 시작하게 한다. 진행 중이든 완료했든 같고, 시즌이 여러 개면
+         *     지난 시즌까지 전부 지운다. 계정·설문 결과와 빵 유형·감정일기·공유방·토큰은 남는다.
+         *
+         *     - 지우는 것: 회차 본문·선택 결과 장면·선택 기록·열린 회차·회차 완료 상태, 1:1 장면 좋아요·피드백,
+         *       회차 정리 기록·관계 기록·회차 쪽지·시즌 편지·최종 리포트, 출연진, 새 시즌 설정, 시즌 생성 입력
+         *     - 4~10화를 열며 쓴 토큰은 **돌려주지 않는다**(`refundedTokens`는 항상 0, `tokenBalance`는 현재 잔액).
+         *       새 시즌에서도 4화부터 다시 토큰을 쓴다.
+         *     - 초기화 전에 돌던 회차 생성·완료·선택 결과 생성은 시즌이 없어져 결과를 버린다.
+         *     - 시즌이 없으면 아무것도 하지 않고 200(`deletedSeasons` 0).
+         *
+         *     초기화 뒤: `GET /api/ai/seasons/me`는 404 `SEASON_NOT_FOUND` → `POST /api/ai/seasons/from-survey`
+         *     (`surveyResultId`는 최신 설문 결과)로 새 시즌 → `GET /api/ai/seasons/episodes/1/content`로 1화부터 시작.
+         */
+        post: operations["resetMySeasons"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1274,33 +1834,117 @@ export interface components {
     schemas: {
         UserProfileUpdateRequest: {
             nickname?: string;
-            gender?: string;
+            /**
+             * @description MALE | FEMALE. 대소문자는 무관하고 대문자로 저장된다. 그 외 값은 400
+             * @enum {string}
+             */
+            gender?: "MALE" | "FEMALE";
+            /** Format: int32 */
+            age?: number;
             job?: string;
             bio?: string;
+            /** @description 감정일기 학습 동의. 보내지 않으면 기존 값 유지 */
+            learningEnabled?: boolean;
         };
         MessageResponse: {
             message?: string;
         };
-        Request: {
-            name?: string;
+        /** @description 방장만 가능. 모든 필드를 다시 보낸다(PUT). */
+        DiaryRoomUpdateRequest: {
+            /** @description 공유방 이름. 공백만 있으면 400 */
+            name: string;
+            /** @description 공유방 소개. 생략 가능 */
             description?: string;
+            /**
+             * Format: int32
+             * @description 최대 인원(방장 포함). 현재 인원보다 적으면 409 DIARY_ROOM_MAX_BELOW_MEMBER_COUNT
+             */
+            maxMemberCount: number;
+            /** @description 방장 닉네임. 공백만 있으면 400, 10자 이하, 저장할 때 앞뒤 공백을 뺀다. 다른 멤버와 겹치면 409 DIARY_ROOM_NICKNAME_DUPLICATED */
+            ownerNickname: string;
         };
-        ApiResponseResponse: {
+        /** @description 오류 응답. success는 항상 false */
+        ApiErrorResponse: {
+            /** @example false */
             success?: boolean;
-            data?: components["schemas"]["Response"];
+            /** @description 대부분 null. 일부 오류만 추가 정보를 담는다 */
+            data?: Record<string, never>;
+            message?: string;
+            /** @description machine code. 오류마다 다르며 code가 없는 오류는 null */
+            code?: string;
+        };
+        ApiResponseDiaryRoomResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryRoomResponse"];
             message?: string;
             code?: string;
         };
-        Response: {
+        /** @description 공유방. 목록·단건 조회·생성·수정 공통 */
+        DiaryRoomResponse: {
             /** Format: int64 */
             id?: number;
             name?: string;
+            description?: string;
             /** Format: int64 */
             ownerId?: number;
+            /**
+             * Format: int32
+             * @description 최대 인원(방장 포함)
+             */
+            maxMemberCount?: number;
+            /**
+             * Format: int64
+             * @description 현재 참여 인원(방장 포함). diary_room_member 행 수
+             */
+            memberCount?: number;
         };
-        UpdateRequest: {
+        DiaryUpdateRequest: {
             title?: string;
             content?: string;
+        };
+        ApiResponseDiaryResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryResponse"];
+            message?: string;
+            code?: string;
+        };
+        DiaryResponse: {
+            /** Format: int64 */
+            diaryId?: number;
+            /** Format: int64 */
+            roomId?: number;
+            title?: string;
+            content?: string;
+            isMine?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        DiaryCommentRequest: {
+            content?: string;
+        };
+        ApiResponseDiaryCommentResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryCommentResponse"];
+            message?: string;
+            code?: string;
+        };
+        DiaryCommentResponse: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            userId?: number;
+            content?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            authorNickname?: string;
+            authorBreadType?: string;
+            isMine?: boolean;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
         };
         TokenUseRequest: {
             /** Format: int32 */
@@ -1431,14 +2075,6 @@ export interface components {
             picks?: components["schemas"]["PickItem"][];
             matches?: components["schemas"]["MatchItem"][];
         };
-        OutcomeItem: {
-            /** Format: int64 */
-            participantId?: number;
-            messages?: components["schemas"]["MessageItem"][];
-        };
-        RebakeSaveRequest: {
-            outcomes?: components["schemas"]["OutcomeItem"][];
-        };
         GameResultRequest: {
             success?: boolean;
         };
@@ -1455,17 +2091,168 @@ export interface components {
             messageId?: number;
             message?: string;
         };
-        AddMemberRequest: {
-            /** Format: int64 */
-            userId: number;
+        DiaryRoomCreateRequest: {
+            /** @description 공유방 이름. 공백만 있으면 400 */
+            name: string;
+            /** @description 공유방 소개. 생략 가능 */
+            description?: string;
+            /**
+             * Format: int32
+             * @description 최대 인원(방장 포함). 2~6명, 범위 밖이면 400. 혼자 쓰는 방(1명)은 허용하지 않는다
+             */
+            maxMemberCount: number;
+            /** @description 이 방에서 쓸 방장 닉네임(요청자 본인이 방장이 된다). 공백만 있으면 400, 10자 이하, 저장할 때 앞뒤 공백을 뺀다 */
+            ownerNickname: string;
         };
-        ApiResponseMembershipResponse: {
+        RoomQuestionAlreadyExistsError: {
+            /** @example false */
             success?: boolean;
-            data?: components["schemas"]["MembershipResponse"];
+            /** @description 이미 있는 이 칸의 질문(생성 중 포함) */
+            data?: components["schemas"]["RoomQuestionView"];
+            message?: string;
+            /** @enum {string} */
+            code?: "ROOM_QUESTION_ALREADY_EXISTS";
+        };
+        RoomQuestionAnswerItem: {
+            /** Format: int64 */
+            answerId?: number;
+            /** Format: int64 */
+            authorId?: number;
+            authorNickname?: string;
+            content?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** @description 작성자 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전·탈퇴면 null */
+            authorBreadType?: string;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
+        };
+        RoomQuestionView: {
+            /** Format: int64 */
+            questionId?: number;
+            /** Format: int64 */
+            roomId?: number;
+            /**
+             * Format: date
+             * @description 이 질문 칸의 날짜(KST). slotStartAt의 날짜와 같다
+             */
+            questionDate?: string;
+            /**
+             * Format: date-time
+             * @description 이 질문의 칸 시작 시각(KST 정각, +09:00). 그룹당 칸마다 1개. 칸은 slotStartAt ~ +1시간
+             * @example 2026-11-02T09:00:00+09:00
+             */
+            slotStartAt?: string;
+            content?: string;
+            /**
+             * @description generating이면 1~3초 간격으로 GET current를 다시 요청. failed면 POST로 다시 생성할 수 있다
+             * @enum {string}
+             */
+            status?: "generating" | "ready" | "failed";
+            /** Format: date-time */
+            createdAt?: string;
+            /** @description 질문을 만든 사람의 닉네임(계정 닉네임, 없으면 이름). 탈퇴했으면 null */
+            creatorNickname?: string;
+            /** @description 질문을 만든 사람의 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전·탈퇴면 null */
+            creatorBreadType?: string;
+            /** @description 내 답. 없으면 null */
+            myAnswer?: components["schemas"]["RoomQuestionAnswerItem"];
+            /** @description 그룹 멤버들의 답(내 답 포함), 작성순 */
+            answers?: components["schemas"]["RoomQuestionAnswerItem"][];
+            /**
+             * Format: int64
+             * @description 질문을 만든 사람의 id. 내가 만든 질문인지 알 때 쓴다
+             */
+            creatorId?: number;
+            /** @description 질문을 만든 사람의 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            creatorBreadName?: string;
+        };
+        ApiResponseRoomQuestionView: {
+            success?: boolean;
+            data?: components["schemas"]["RoomQuestionView"];
             message?: string;
             code?: string;
         };
-        MembershipResponse: {
+        RoomQuestionAnswerRequest: {
+            /** @description 1~200자(앞뒤 공백 제외). 아니면 400 ROOM_ANSWER_INVALID */
+            content?: string;
+        };
+        BalanceGameAnswerRequest: {
+            /**
+             * Format: int64
+             * @description 고른 보기의 optionId. 없거나 이 질문의 보기가 아니면 400 DAILY_QUESTION_INVALID_OPTION
+             */
+            selectedOption?: number;
+        };
+        BalanceGameOption: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+        };
+        BalanceGameResult: {
+            /** Format: int64 */
+            optionId?: number;
+            content?: string;
+            /**
+             * Format: int64
+             * @description 이 보기를 고른 사람 수
+             */
+            voteCount?: number;
+            /**
+             * Format: double
+             * @description 전체 중 비율(0~100, 소수 첫째 자리까지)
+             * @example 62.5
+             */
+            percentage?: number;
+        };
+        BalanceGameView: {
+            /** Format: int64 */
+            questionId?: number;
+            /** @description 질문 문장 */
+            question?: string;
+            /**
+             * Format: date
+             * @description 이 질문의 날짜(KST). 하루 1개, 모든 사용자 공통
+             */
+            questionDate?: string;
+            /** @description 보기 2개 */
+            options?: components["schemas"]["BalanceGameOption"][];
+            /** @description 내가 이미 골랐는지 */
+            answered?: boolean;
+            /**
+             * Format: int64
+             * @description 내가 고른 optionId. 안 골랐으면 null
+             */
+            selectedOptionId?: number;
+            /** @description 보기별 결과(options와 같은 순서). 고르기 전에는 빈 목록 */
+            results?: components["schemas"]["BalanceGameResult"][];
+            /**
+             * Format: int64
+             * @description 전체 응답 수. 고르기 전에는 0
+             */
+            totalCount?: number;
+        };
+        ApiResponseBalanceGameView: {
+            success?: boolean;
+            data?: components["schemas"]["BalanceGameView"];
+            message?: string;
+            code?: string;
+        };
+        DiaryRoomAddMemberRequest: {
+            /** Format: int64 */
+            userId: number;
+            /** @description 이 방에서 쓸 닉네임. 앞뒤 공백 제외 1~10자. 비우면 계정 닉네임(없으면 이름) */
+            nickname?: string;
+        };
+        ApiResponseDiaryRoomMembershipResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryRoomMembershipResponse"];
+            message?: string;
+            code?: string;
+        };
+        DiaryRoomMembershipResponse: {
             /** Format: int64 */
             roomId?: number;
             /** Format: int64 */
@@ -1474,22 +2261,39 @@ export interface components {
             /** Format: int64 */
             memberCount?: number;
         };
-        CreateRequest: {
+        ApiResponseDiaryRoomInviteCodeResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryRoomInviteCodeResponse"];
+            message?: string;
+            code?: string;
+        };
+        DiaryRoomInviteCodeResponse: {
+            /** Format: int64 */
+            roomId?: number;
+            inviteCode?: string;
+        };
+        DiaryRoomJoinRequest: {
+            /** @description 8자리 초대 코드. 대소문자·앞뒤 공백 무시 */
+            inviteCode: string;
+            /** @description 이 방에서 쓸 닉네임. 공백만 있으면 400, 10자 이하, 저장할 때 앞뒤 공백을 뺀다. 이미 멤버면 무시된다(닉네임 변경 없음) */
+            nickname: string;
+        };
+        DiaryCreateRequest: {
             /** Format: int64 */
             roomId: number;
             title?: string;
             content?: string;
         };
-        ReactionRequest: {
+        DiaryReactionRequest: {
             emoji?: string;
         };
-        ApiResponseReactionResponse: {
+        ApiResponseDiaryReactionResponse: {
             success?: boolean;
-            data?: components["schemas"]["ReactionResponse"];
+            data?: components["schemas"]["DiaryReactionResponse"];
             message?: string;
             code?: string;
         };
-        ReactionResponse: {
+        DiaryReactionResponse: {
             /** Format: int64 */
             diaryId?: number;
             emoji?: string;
@@ -1497,9 +2301,19 @@ export interface components {
             /** Format: int64 */
             likeCount?: number;
         };
-        DailyQuestionAnswerRequest: {
-            /** Format: int64 */
-            selectedOption?: number;
+        AiSeasonResetView: {
+            /** Format: int32 */
+            deletedSeasons?: number;
+            /** Format: int32 */
+            refundedTokens?: number;
+            /** Format: int32 */
+            tokenBalance?: number;
+        };
+        ApiResponseAiSeasonResetView: {
+            success?: boolean;
+            data?: components["schemas"]["AiSeasonResetView"];
+            message?: string;
+            code?: string;
         };
         ApiResponseVoid: {
             success?: boolean;
@@ -1578,7 +2392,32 @@ export interface components {
             /** Format: uuid */
             characterId?: string;
             role?: string;
-            gender?: string;
+            /** @enum {string} */
+            gender?: "MALE" | "FEMALE";
+            castRole?: string;
+            attachmentStyle?: string;
+            name?: string;
+            description?: string;
+        };
+        AiChoiceStatusView: {
+            /** Format: int32 */
+            order?: number;
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: uuid */
+            breadId?: string;
+            /** @enum {string} */
+            status?: "generating" | "ready" | "failed";
+            errorCode?: string | null;
+        };
+        AiGenerationProgressView: {
+            /** @enum {string|null} */
+            stage?: "stage-intro" | "episode" | "interview" | "summarize" | "episode-note" | "season-report" | null;
+            regenerating?: boolean;
+            /** Format: int32 */
+            readyBlocks?: number | null;
+            /** Format: int32 */
+            totalBlocks?: number | null;
         };
         AiSeasonStatusView: {
             /** Format: uuid */
@@ -1587,18 +2426,65 @@ export interface components {
             revision?: number;
             /** Format: int32 */
             currentEpisode?: number;
-            status?: string;
+            /** @enum {string} */
+            status?: "IN_PROGRESS" | "COMPLETED";
             characters?: components["schemas"]["AiCharacterView"][];
             /** Format: uuid */
             sourceSurveyResultId?: string;
             /** Format: int32 */
             seasonNumber?: number;
+            episodeFormat?: string;
+            story?: components["schemas"]["AiStoryStateView"];
+        };
+        AiStoryStateView: {
+            /** @enum {string} */
+            setting?: "school" | "campus" | "office" | "cafe";
+            /** Format: int32 */
+            currentOrder?: number;
+            completedOrders?: number[];
+            /** @enum {string|null} */
+            route?: "romance" | "solo" | null;
+            /** Format: uuid */
+            romancePartnerId?: string;
+            choices?: components["schemas"]["ChoiceHistory"][];
+            breads?: components["schemas"]["BreadStatus"][];
+            unlockedOrders?: number[];
+            /** Format: int32 */
+            episodeTokenCost?: number;
+            completion?: components["schemas"]["Completion"];
+            choice?: components["schemas"]["AiChoiceStatusView"];
         };
         ApiResponseAiSeasonStatusView: {
             success?: boolean;
             data?: components["schemas"]["AiSeasonStatusView"];
             message?: string;
             code?: string;
+        };
+        BreadStatus: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            role?: string;
+            statusText?: string;
+        };
+        ChoiceHistory: {
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: int32 */
+            episodeOrder?: number;
+            /** Format: uuid */
+            breadId?: string;
+            accepted?: boolean;
+            /** @enum {string} */
+            resultStatus?: "generating" | "ready" | "failed";
+        };
+        Completion: {
+            /** Format: int32 */
+            order?: number;
+            /** @enum {string} */
+            status?: "completing" | "failed";
+            errorCode?: string | null;
+            progress?: components["schemas"]["AiGenerationProgressView"];
         };
         StartNextSeasonRequest: {
             /** Format: uuid */
@@ -1609,29 +2495,39 @@ export interface components {
             /** Format: uuid */
             surveyResultId: string;
         };
-        MarkSeenHttpRequest: {
-            /** Format: int32 */
-            sequence?: number;
-        };
-        RerollHttpRequest: {
-            /** Format: uuid */
-            partnerId: string;
-        };
-        AiRerollView: {
-            /** Format: uuid */
-            jobId?: string;
-            jobStatus?: string;
-            errorCode?: string;
-        };
-        ApiResponseAiRerollView: {
+        AiInsufficientTokensError: {
             success?: boolean;
-            data?: components["schemas"]["AiRerollView"];
+            data?: components["schemas"]["AiInsufficientTokensView"];
+            message?: string;
+            /** @enum {string} */
+            code?: "INSUFFICIENT_TOKENS";
+        };
+        AiInsufficientTokensView: {
+            /** Format: int32 */
+            required?: number;
+            /** Format: int32 */
+            balance?: number;
+        };
+        AiEpisodeUnlockView: {
+            /** Format: int32 */
+            order?: number;
+            unlocked?: boolean;
+            /** Format: int32 */
+            tokenBalance?: number;
+        };
+        ApiResponseAiEpisodeUnlockView: {
+            success?: boolean;
+            data?: components["schemas"]["AiEpisodeUnlockView"];
             message?: string;
             code?: string;
         };
-        EpisodeMessageLikeHttpRequest: {
+        AiStoryLikeHttpRequest: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
             /** Format: uuid */
             messageId: string;
+            liked: boolean;
         };
         AiMessageLikeView: {
             /** Format: uuid */
@@ -1643,6 +2539,127 @@ export interface components {
             data?: components["schemas"]["AiMessageLikeView"];
             message?: string;
             code?: string;
+        };
+        AiStoryFeedbackHttpRequest: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
+            /** Format: uuid */
+            messageId: string;
+            text?: string;
+        };
+        AiStoryFeedbackView: {
+            /** Format: int32 */
+            order?: number;
+            blockId?: string;
+            /** Format: uuid */
+            messageId?: string;
+            text?: string;
+        };
+        ApiResponseAiStoryFeedbackView: {
+            success?: boolean;
+            data?: components["schemas"]["AiStoryFeedbackView"];
+            message?: string;
+            code?: string;
+        };
+        ApiResponseAiStoryStateView: {
+            success?: boolean;
+            data?: components["schemas"]["AiStoryStateView"];
+            message?: string;
+            code?: string;
+        };
+        AiChoiceHttpRequest: {
+            /** Format: int32 */
+            pointId: number;
+            /**
+             * Format: uuid
+             * @description null이면 혼자 있기
+             */
+            breadId?: string | null;
+        };
+        AiChoiceOutcomeView: {
+            blocks?: components["schemas"]["AiSceneBlockView"][];
+            season?: components["schemas"]["AiStoryStateView"];
+            choice?: components["schemas"]["AiChoiceStatusView"];
+        };
+        AiSceneBlockView: {
+            id?: string;
+            /** @enum {string} */
+            type?: "group" | "pair" | "transition" | "messenger" | "choice" | "choice_result" | "interview";
+            participants?: components["schemas"]["AiStoryParticipantView"][];
+            messages?: components["schemas"]["AiStoryMessageView"][];
+            transitionText?: string;
+            messenger?: components["schemas"]["SceneMessenger"];
+            choice?: components["schemas"]["SceneChoice"];
+            choiceResult?: components["schemas"]["SceneChoiceResult"];
+            interview?: components["schemas"]["SceneInterview"];
+        };
+        AiStoryMessageView: {
+            /** Format: uuid */
+            messageId?: string;
+            /** Format: int32 */
+            sequence?: number;
+            /** Format: uuid */
+            speakerId?: string;
+            /** @enum {string} */
+            kind?: "chat" | "monologue" | "narration";
+            fromRepresentative?: boolean;
+            text?: string;
+            read?: boolean;
+            typing?: boolean;
+            deletedAfterSend?: boolean;
+            sentAtLabel?: string;
+        };
+        AiStoryParticipantView: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            role?: string;
+            attachmentStyle?: string;
+            isMe?: boolean;
+            breadType?: string;
+            stageRole?: string;
+        };
+        ApiResponseAiChoiceOutcomeView: {
+            success?: boolean;
+            data?: components["schemas"]["AiChoiceOutcomeView"];
+            message?: string;
+            code?: string;
+        };
+        SceneChoice: {
+            /** Format: int32 */
+            pointId?: number;
+            question?: string;
+            candidates?: components["schemas"]["SceneChoiceCandidate"][];
+        };
+        SceneChoiceCandidate: {
+            /** Format: uuid */
+            breadId?: string;
+            memory?: string;
+        };
+        SceneChoiceResult: {
+            /** Format: int32 */
+            pointId?: number;
+            /** Format: uuid */
+            breadId?: string;
+            accepted?: boolean;
+        };
+        SceneInterview: {
+            /** Format: uuid */
+            breadId?: string;
+        };
+        SceneMessenger: {
+            /** @enum {string} */
+            kind?: "group" | "direct";
+            roomName?: string;
+        };
+        MarkSeenHttpRequest: {
+            /** Format: int32 */
+            sequence?: number;
+        };
+        EpisodeMessageLikeHttpRequest: {
+            /** Format: uuid */
+            messageId: string;
         };
         AiEpisodeProgressView: {
             /** Format: int32 */
@@ -1706,7 +2723,11 @@ export interface components {
             memberId?: number;
             name?: string;
             nickname?: string;
-            gender?: string;
+            /**
+             * @description MALE | FEMALE. 입력 전이면 null
+             * @enum {string}
+             */
+            gender?: "MALE" | "FEMALE";
             /** Format: int32 */
             age?: number;
             job?: string;
@@ -1715,6 +2736,10 @@ export interface components {
             surveyCompleted?: boolean;
             /** Format: uuid */
             latestSurveyResultId?: string;
+            /** @description 감정일기 학습 동의. 끄면 일기·댓글·그룹 답을 내 빵 학습에 쓰지 않는다 */
+            learningEnabled?: boolean;
+            /** @description 내 빵 이름(예: "쫀쫀한 카스테라"). 감정일기에서 다른 사람에게 보이는 이름과 같다. 설문 전이면 null */
+            breadName?: string;
         };
         TokenBalanceResponse: {
             /** Format: int32 */
@@ -1842,31 +2867,64 @@ export interface components {
             messageId?: number;
             text?: string;
         };
-        ApiResponseListResponse: {
+        ApiResponseListDiaryRoomResponse: {
             success?: boolean;
-            data?: components["schemas"]["Response"][];
+            data?: components["schemas"]["DiaryRoomResponse"][];
             message?: string;
             code?: string;
         };
-        ApiResponseListMemberResponse: {
+        ApiResponseListRoomQuestionHistoryItem: {
             success?: boolean;
-            data?: components["schemas"]["MemberResponse"][];
+            data?: components["schemas"]["RoomQuestionHistoryItem"][];
             message?: string;
             code?: string;
         };
-        MemberResponse: {
+        RoomQuestionHistoryItem: {
+            /** Format: int64 */
+            questionId?: number;
+            /** Format: date */
+            questionDate?: string;
+            /**
+             * Format: date-time
+             * @description 이 질문의 칸 시작 시각(KST 정각, +09:00)
+             * @example 2026-11-02T09:00:00+09:00
+             */
+            slotStartAt?: string;
+            content?: string;
+            /** @enum {string} */
+            status?: "generating" | "ready" | "failed";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: int64 */
+            answerCount?: number;
+        };
+        ApiResponseListDiaryRoomMemberResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryRoomMemberResponse"][];
+            message?: string;
+            code?: string;
+        };
+        DiaryRoomMemberResponse: {
             /** Format: int64 */
             id?: number;
             name?: string;
             email?: string;
+            /** @description 이 방에서 쓰는 닉네임 */
+            nickname?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "MEMBER";
+            /** @description 빵 이름(예: "쫀쫀한 카스테라"). 설문 전이면 null */
+            breadName?: string;
+            /** @description 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값). 설문 전이면 null */
+            breadType?: string;
         };
-        ApiResponseListFeedItem: {
+        ApiResponseListDiaryFeedItem: {
             success?: boolean;
-            data?: components["schemas"]["FeedItem"][];
+            data?: components["schemas"]["DiaryFeedItem"][];
             message?: string;
             code?: string;
         };
-        FeedItem: {
+        DiaryFeedItem: {
             /** Format: int64 */
             diaryId?: number;
             /** Format: int64 */
@@ -1888,32 +2946,34 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
+            /** @description 작성자 빵 이름(예: "쫀쫀한 카스테라"). 설문 전·탈퇴면 null */
+            authorBreadName?: string;
         };
-        DailyQuestionOptionResponse: {
-            /** Format: int64 */
-            optionId?: number;
-            content?: string;
+        ApiResponseListDiaryResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryResponse"][];
+            message?: string;
+            code?: string;
         };
-        DailyQuestionOptionResultResponse: {
-            /** Format: int64 */
-            optionId?: number;
-            content?: string;
-            /** Format: int64 */
-            voteCount?: number;
-            /** Format: double */
-            percentage?: number;
+        ApiResponseListDiaryCommentResponse: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryCommentResponse"][];
+            message?: string;
+            code?: string;
         };
-        DailyQuestionTodayResponse: {
-            /** Format: int64 */
-            questionId?: number;
-            question?: string;
-            options?: components["schemas"]["DailyQuestionOptionResponse"][];
-            answered?: boolean;
-            /** Format: int64 */
-            selectedOptionId?: number;
-            results?: components["schemas"]["DailyQuestionOptionResultResponse"][];
-            /** Format: int64 */
-            totalCount?: number;
+        ApiResponseListDiaryCalendarDay: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryCalendarDay"][];
+            message?: string;
+            code?: string;
+        };
+        DiaryCalendarDay: {
+            /**
+             * Format: date
+             * @example 2026-10-03
+             */
+            date?: string;
+            diaryIds?: number[];
         };
         ContentRecommendationListResponse: {
             contents?: components["schemas"]["ContentRecommendationResponse"][];
@@ -1971,6 +3031,10 @@ export interface components {
             createdAt?: string;
             /** Format: date-time */
             completedAt?: string;
+            episodeFormat?: string;
+            /** @enum {string|null} */
+            setting?: "school" | "campus" | "office" | "cafe" | null;
+            settingTitle?: string | null;
         };
         ApiResponseListAiSeasonSummaryView: {
             success?: boolean;
@@ -2022,6 +3086,48 @@ export interface components {
             createdAt?: string;
             renderMode?: string;
         };
+        AiEpisodeContentView: {
+            /** Format: int32 */
+            order?: number;
+            /** @enum {string} */
+            status?: "generating" | "ready" | "failed";
+            errorCode?: string;
+            intro?: components["schemas"]["AiStoryIntroView"];
+            stageIntro?: components["schemas"]["AiStageIntroView"];
+            blocks?: components["schemas"]["AiSceneBlockView"][];
+            completed?: boolean;
+            feedbacks?: components["schemas"]["AiStoryFeedbackView"][];
+            likedMessageIds?: string[];
+            progress?: components["schemas"]["AiGenerationProgressView"];
+            /** Format: int32 */
+            revision?: number;
+        };
+        AiStageIntroView: {
+            /** @enum {string} */
+            setting?: "school" | "campus" | "office" | "cafe";
+            title?: string;
+            subtitle?: string;
+            cast?: components["schemas"]["StageCast"][];
+        };
+        AiStoryIntroView: {
+            title?: string;
+            episodeName?: string;
+            situation?: string;
+        };
+        ApiResponseAiEpisodeContentView: {
+            success?: boolean;
+            data?: components["schemas"]["AiEpisodeContentView"];
+            message?: string;
+            code?: string;
+        };
+        StageCast: {
+            /** Format: uuid */
+            breadId?: string;
+            name?: string;
+            breadType?: string;
+            role?: string;
+            description?: string;
+        };
         AiEpisodeMessagesView: {
             /** Format: int32 */
             episodeNumber?: number;
@@ -2058,18 +3164,41 @@ export interface components {
             message?: string;
             code?: string;
         };
-        ApiResponseKickResponse: {
+        ApiResponseDiaryRoomKickResponse: {
             success?: boolean;
-            data?: components["schemas"]["KickResponse"];
+            data?: components["schemas"]["DiaryRoomKickResponse"];
             message?: string;
             code?: string;
         };
-        KickResponse: {
+        DiaryRoomKickResponse: {
             /** Format: int64 */
             roomId?: number;
             /** Format: int64 */
             userId?: number;
             message?: string;
+        };
+        ApiResponseListDiaryRecentReaction: {
+            success?: boolean;
+            data?: components["schemas"]["DiaryRecentReaction"][];
+            message?: string;
+            code?: string;
+        };
+        DiaryRecentReaction: {
+            /** Format: int64 */
+            diaryId?: number;
+            /** Format: int64 */
+            roomId?: number;
+            emoji?: string;
+            /** Format: date-time */
+            reactedAt?: string;
+            /** Format: int64 */
+            reactorId?: number;
+            reactorBreadName?: string;
+            /** @description 반응한 사람의 빵 타입 id(DiaryFeedItem.authorBreadType과 같은 값) */
+            reactorBreadType?: string;
+            /** Format: int64 */
+            diaryAuthorId?: number;
+            diaryAuthorBreadName?: string;
         };
     };
     responses: never;
@@ -2144,6 +3273,62 @@ export interface operations {
             };
         };
     };
+    getRoom: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomResponse"];
+                };
+            };
+            /** @description 방장·멤버가 아님(나갔거나 강퇴된 사람 포함). code는 null */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "권한이 없습니다.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 방. code는 null */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방을 찾을 수 없습니다. roomId=1",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     updateRoom: {
         parameters: {
             query?: never;
@@ -2155,7 +3340,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["DiaryRoomUpdateRequest"];
             };
         };
         responses: {
@@ -2165,7 +3350,67 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomResponse"];
+                };
+            };
+            /** @description 검증 실패(생성과 같은 규칙). code는 null */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "최대 인원은 2~6명입니다.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 방장이 아님. code는 null */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "권한이 없습니다.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 방. code는 null */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방을 찾을 수 없습니다. roomId=1",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DIARY_ROOM_MAX_BELOW_MEMBER_COUNT(maxMemberCount < 현재 인원) 또는 DIARY_ROOM_NICKNAME_DUPLICATED(ownerNickname이 다른 멤버와 겹침) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -2209,7 +3454,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryResponse"];
                 };
             };
         };
@@ -2225,7 +3470,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateRequest"];
+                "application/json": components["schemas"]["DiaryUpdateRequest"];
             };
         };
         responses: {
@@ -2235,7 +3480,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryResponse"];
                 };
             };
         };
@@ -2274,7 +3519,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["DiaryCommentRequest"];
             };
         };
         responses: {
@@ -2284,7 +3529,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryCommentResponse"];
                 };
             };
         };
@@ -2687,32 +3932,6 @@ export interface operations {
             };
         };
     };
-    saveRebakeConversations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RebakeSaveRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["MessageResponse"];
-                };
-            };
-        };
-    };
     saveGameResult: {
         parameters: {
             query?: never;
@@ -2829,7 +4048,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryRoomResponse"];
                 };
             };
         };
@@ -2843,7 +4062,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["DiaryRoomCreateRequest"];
             };
         };
         responses: {
@@ -2853,7 +4072,333 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomResponse"];
+                };
+            };
+            /** @description 검증 실패(name·ownerNickname 공백, ownerNickname 10자 초과, maxMemberCount 누락·2~6 밖). code는 null */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "최대 인원은 2~6명입니다.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getRoomQuestionHistory: {
+        parameters: {
+            query?: {
+                /** @description 이 날짜(KST)부터, 포함 */
+                from?: string;
+                /** @description 이 날짜(KST)까지, 포함 */
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListRoomQuestionHistoryItem"];
+                };
+            };
+            /** @description code: ROOM_QUESTION_RANGE_INVALID(날짜 형식이 틀렸거나 from이 to보다 뒤) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "from은 to보다 늦을 수 없습니다.",
+                     *       "code": "ROOM_QUESTION_RANGE_INVALID"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 그룹. code: ROOM_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방을 찾을 수 없습니다.",
+                     *       "code": "ROOM_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 생성 시작. data.status = generating */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 그룹. code: ROOM_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방을 찾을 수 없습니다.",
+                     *       "code": "ROOM_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_QUESTION_ALREADY_EXISTS. 이 칸의 질문이 이미 있다(생성 중 포함). data에 그 질문 */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomQuestionAlreadyExistsError"];
+                };
+            };
+        };
+    };
+    answer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoomQuestionAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description code: ROOM_ANSWER_INVALID(앞뒤 공백 제외 1~200자가 아님, content 누락 포함) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "답은 1~200자로 입력해주세요.",
+                     *       "code": "ROOM_ANSWER_INVALID"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_NOT_FOUND(없는 그룹) 또는 ROOM_QUESTION_NOT_FOUND(이 그룹의 질문이 아님) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_QUESTION_NOT_READY(generating·failed인 질문) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "아직 질문이 준비되지 않았습니다.",
+                     *       "code": "ROOM_QUESTION_NOT_READY"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    answerBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BalanceGameAnswerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_INVALID_OPTION(selectedOption 누락, 없는 optionId, 다른 질문의 보기) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이 질문의 보기가 아닙니다.",
+                     *       "code": "DAILY_QUESTION_INVALID_OPTION"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_NOT_FOUND(없는 questionId) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "밸런스 게임 질문을 찾을 수 없습니다.",
+                     *       "code": "DAILY_QUESTION_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DAILY_QUESTION_ALREADY_ANSWERED(이미 고름. 답은 바꿀 수 없다) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "이미 답한 질문입니다.",
+                     *       "code": "DAILY_QUESTION_ALREADY_ANSWERED"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -2875,7 +4420,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListMemberResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryRoomMemberResponse"];
                 };
             };
         };
@@ -2891,7 +4436,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AddMemberRequest"];
+                "application/json": components["schemas"]["DiaryRoomAddMemberRequest"];
             };
         };
         responses: {
@@ -2901,7 +4446,119 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseMembershipResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomMembershipResponse"];
+                };
+            };
+            /** @description code: DIARY_ROOM_FULL(현재 인원 >= maxMemberCount) 또는 DIARY_ROOM_NICKNAME_DUPLICATED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getInviteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomInviteCodeResponse"];
+                };
+            };
+        };
+    };
+    regenerateInviteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomInviteCodeResponse"];
+                };
+            };
+        };
+    };
+    joinByInviteCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiaryRoomJoinRequest"];
+            };
+        };
+        responses: {
+            /** @description 참여 완료 또는 이미 멤버(멱등) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomMembershipResponse"];
+                };
+            };
+            /** @description 검증 실패(inviteCode·nickname 공백, nickname 10자 초과). code는 null */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 초대 코드(재발급·강퇴로 바뀐 이전 코드 포함). code는 null */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "초대 코드가 올바르지 않습니다. 다시 확인해주세요.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: DIARY_ROOM_FULL(현재 인원 >= maxMemberCount) 또는 DIARY_ROOM_NICKNAME_DUPLICATED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -2924,7 +4581,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryResponse"];
                 };
             };
         };
@@ -2938,7 +4595,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateRequest"];
+                "application/json": components["schemas"]["DiaryCreateRequest"];
             };
         };
         responses: {
@@ -2948,7 +4605,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryResponse"];
                 };
             };
         };
@@ -2964,7 +4621,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReactionRequest"];
+                "application/json": components["schemas"]["DiaryReactionRequest"];
             };
         };
         responses: {
@@ -2974,7 +4631,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseReactionResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryReactionResponse"];
                 };
             };
         };
@@ -2996,7 +4653,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryCommentResponse"];
                 };
             };
         };
@@ -3012,7 +4669,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Request"];
+                "application/json": components["schemas"]["DiaryCommentRequest"];
             };
         };
         responses: {
@@ -3022,25 +4679,19 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryCommentResponse"];
                 };
             };
         };
     };
-    answer: {
+    resetSeasons: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                questionId: number;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DailyQuestionAnswerRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -3048,7 +4699,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MessageResponse"];
+                    "*/*": components["schemas"]["ApiResponseAiSeasonResetView"];
                 };
             };
         };
@@ -3299,6 +4950,137 @@ export interface operations {
             };
         };
     };
+    unlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiEpisodeUnlockView"];
+                };
+            };
+            /** @description INSUFFICIENT_TOKENS면 data에 required(필요 토큰)·balance(현재 잔액). 다른 409 code는 data가 null */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiInsufficientTokensError"];
+                };
+            };
+        };
+    };
+    setLike: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiStoryLikeHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiMessageLikeView"];
+                };
+            };
+        };
+    };
+    submitFeedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiStoryFeedbackHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiStoryFeedbackView"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiStoryStateView"];
+                };
+            };
+        };
+    };
+    choose: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiChoiceHttpRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiChoiceOutcomeView"];
+                };
+            };
+        };
+    };
     markMessagesSeen: {
         parameters: {
             query?: never;
@@ -3321,56 +5103,6 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    getRerollStatus: {
-        parameters: {
-            query?: {
-                season_id?: string;
-            };
-            header?: never;
-            path: {
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAiRerollView"];
-                };
-            };
-        };
-    };
-    requestReroll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                number: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RerollHttpRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseAiRerollView"];
                 };
             };
         };
@@ -3751,29 +5483,6 @@ export interface operations {
             };
         };
     };
-    getRebakeConversation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                episodeId: number;
-                participantId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ConversationMessageResponse"][];
-                };
-            };
-        };
-    };
     getParticipants: {
         parameters: {
             query?: never;
@@ -3882,6 +5591,131 @@ export interface operations {
             };
         };
     };
+    getRoomQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_NOT_FOUND(없는 그룹) 또는 ROOM_QUESTION_NOT_FOUND(이 그룹의 질문이 아님) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getCurrent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description 없는 그룹. code: ROOM_NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방을 찾을 수 없습니다.",
+                     *       "code": "ROOM_NOT_FOUND"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    getTodayBalanceGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBalanceGameView"];
+                };
+            };
+        };
+    };
     getRoomDiaries: {
         parameters: {
             query?: never;
@@ -3899,7 +5733,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListFeedItem"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryFeedItem"];
                 };
             };
         };
@@ -3919,14 +5753,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListFeedItem"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryFeedItem"];
                 };
             };
         };
     };
-    getTodayQuestion: {
+    getMyCalendar: {
         parameters: {
-            query?: never;
+            query: {
+                year: number;
+                month: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3939,7 +5776,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["DailyQuestionTodayResponse"];
+                    "*/*": components["schemas"]["ApiResponseListDiaryCalendarDay"];
                 };
             };
         };
@@ -4127,6 +5964,28 @@ export interface operations {
             };
         };
     };
+    getContent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiEpisodeContentView"];
+                };
+            };
+        };
+    };
     getEpisodeMessages: {
         parameters: {
             query?: {
@@ -4153,6 +6012,132 @@ export interface operations {
             };
         };
     };
+    streamJobEvents: {
+        parameters: {
+            query?: {
+                after_event_id?: string;
+            };
+            header?: {
+                "Last-Event-ID"?: string;
+            };
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description SSE 스트림 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description 토큰 없음/만료 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "인증이 필요합니다. 로그인 후 다시 시도해주세요.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+            /** @description 내 job이 아니거나 없는 job */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "job을 찾을 수 없습니다: <jobId>",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+            /** @description 서버당 동시 스트림 한도 초과 — 기존 polling으로 진행 */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "요청이 많아 처리가 지연되고 있습니다. 잠시 후 다시 시도해주세요.",
+                     *       "code": null
+                     *     }
+                     */
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    deleteMyAnswer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roomId: number;
+                questionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoomQuestionView"];
+                };
+            };
+            /** @description 그룹 멤버가 아님. code: ROOM_FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "success": false,
+                     *       "data": null,
+                     *       "message": "공유방 멤버만 이용할 수 있습니다.",
+                     *       "code": "ROOM_FORBIDDEN"
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            /** @description code: ROOM_NOT_FOUND(없는 그룹) 또는 ROOM_QUESTION_NOT_FOUND(이 그룹의 질문이 아님) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     leave: {
         parameters: {
             query?: never;
@@ -4170,7 +6155,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseMembershipResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomMembershipResponse"];
                 };
             };
         };
@@ -4194,7 +6179,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseKickResponse"];
+                    "*/*": components["schemas"]["ApiResponseDiaryRoomKickResponse"];
+                };
+            };
+        };
+    };
+    getRecentReactions: {
+        parameters: {
+            query?: {
+                limit?: number;
+                after?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListDiaryRecentReaction"];
+                };
+            };
+        };
+    };
+    resetMySeasons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAiSeasonResetView"];
                 };
             };
         };

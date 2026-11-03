@@ -9,20 +9,30 @@ import type {
   DiaryRoomMember,
   DiaryRoomMembership,
   DiaryRoomWriteRequest,
+  JoinRoomRequest,
   RoomId,
   UserId,
 } from '@/src/features/diaries/types';
 
 /**
- * 공유방 API. 스펙: `docs/api/diaries.md` "공유방". 응답은 전부 `ApiEnvelope` 로 감싸져 온다.
+ * 공유방 API. 스펙: `docs/api/openapi.json` "감정일기 공유방". 응답은 전부 `ApiEnvelope` 로 감싸져 온다.
  *
  * 참여는 초대코드로 한다 — 방장 · 멤버가 `getRoomInviteCode` 로 코드를 보고, 받은 사람이
  * `joinRoomByInviteCode` 로 들어온다. 방장이 userId 로 직접 넣는 `addRoomMember` 도 남아 있다.
  */
 
-/** `POST /api/diary-rooms`. 만든 사람이 방장이 되고 멤버로도 들어간다. */
+/**
+ * `POST /api/diary-rooms`. 만든 사람이 방장이 되고 `ownerNickname` 이 그 방의 방장 닉네임이 된다.
+ * `maxMemberCount` 가 2~6 밖이면 400.
+ */
 export async function createRoom(input: DiaryRoomWriteRequest): Promise<DiaryRoom> {
   const { data } = await httpClient.post<ApiEnvelope<DiaryRoom>>('/api/diary-rooms', input);
+  return data.data;
+}
+
+/** `GET /api/diary-rooms/{roomId}` — 방 하나. 방장 · 멤버만(403), 없는 방은 404. */
+export async function getRoom(roomId: RoomId): Promise<DiaryRoom> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryRoom>>(`/api/diary-rooms/${roomId}`);
   return data.data;
 }
 
@@ -36,7 +46,11 @@ export interface UpdateRoomInput extends DiaryRoomWriteRequest {
   roomId: RoomId;
 }
 
-/** `PUT /api/diary-rooms/{roomId}`. 방장만(403). */
+/**
+ * `PUT /api/diary-rooms/{roomId}`. 방장만(403). 모든 필드를 다시 보낸다. 최대 인원을 지금 인원보다
+ * 적게 하면 409 `DIARY_ROOM_MAX_BELOW_MEMBER_COUNT`, 방장 닉네임이 다른 멤버와 겹치면
+ * 409 `DIARY_ROOM_NICKNAME_DUPLICATED`.
+ */
 export async function updateRoom({ roomId, ...body }: UpdateRoomInput): Promise<DiaryRoom> {
   const { data } = await httpClient.put<ApiEnvelope<DiaryRoom>>(`/api/diary-rooms/${roomId}`, body);
   return data.data;
@@ -111,12 +125,14 @@ export async function reissueRoomInviteCode(roomId: RoomId): Promise<DiaryRoomIn
 }
 
 /**
- * `POST /api/diary-rooms/join` — 초대코드로 참여. 대소문자 상관없고, 이미 멤버여도 200.
- * 틀린 코드면 404.
+ * `POST /api/diary-rooms/join` — 초대코드로 참여. 대소문자 상관없고, 이미 멤버여도 200(닉네임은 안 바뀐다).
+ * 틀린 코드면 404, 인원이 가득 찼으면 409 `DIARY_ROOM_FULL`, 같은 방에 같은 닉네임이 있으면
+ * 409 `DIARY_ROOM_NICKNAME_DUPLICATED`.
  */
-export async function joinRoomByInviteCode(inviteCode: string): Promise<DiaryRoomMembership> {
-  const { data } = await httpClient.post<ApiEnvelope<DiaryRoomMembership>>('/api/diary-rooms/join', {
-    inviteCode,
-  });
+export async function joinRoomByInviteCode(input: JoinRoomRequest): Promise<DiaryRoomMembership> {
+  const { data } = await httpClient.post<ApiEnvelope<DiaryRoomMembership>>(
+    '/api/diary-rooms/join',
+    input,
+  );
   return data.data;
 }

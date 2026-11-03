@@ -42,6 +42,8 @@ interface InfernoFeedbackSceneProps {
   isSubmitting?: boolean;
   /** 보내기가 실패했을 때 버튼 아래 보여줄 문구. */
   errorMessage?: string;
+  /** [DRAFT] 피드백 글자 수 제한. 새 10화 1:1 장면 피드백은 200자(보정 문서 6장). */
+  maxLength?: number;
 }
 
 /**
@@ -70,6 +72,7 @@ export default function InfernoFeedbackScene({
   onSubmitPress,
   isSubmitting,
   errorMessage,
+  maxLength,
 }: InfernoFeedbackSceneProps) {
   const options: DropdownOption[] = topics.map(({ messageId, message }) => ({
     id: messageId,
@@ -134,11 +137,19 @@ export default function InfernoFeedbackScene({
             />
           </>
         ) : (
-          <TextArea
-            value={feedback}
-            onChangeText={onFeedbackChange}
-            accessibilityLabel={WRITE_MESSAGE}
-          />
+          <>
+            <TextArea
+              value={feedback}
+              onChangeText={onFeedbackChange}
+              accessibilityLabel={WRITE_MESSAGE}
+              maxLength={maxLength}
+            />
+            {maxLength ? (
+              <Text variant="body-xs" className="self-end text-text-muted">
+                {feedback.length} / {maxLength}
+              </Text>
+            ) : null}
+          </>
         )}
       </View>
     </View>

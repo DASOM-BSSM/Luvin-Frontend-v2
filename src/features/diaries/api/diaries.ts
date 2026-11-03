@@ -3,10 +3,12 @@ import type { ApiEnvelope } from '@/src/lib/api-envelope';
 
 import type {
   Diary,
+  DiaryCalendarDay,
   DiaryFeedItem,
   DiaryId,
   DiaryCreateRequest,
   DiaryReactionResult,
+  DiaryRecentReaction,
   DiaryUpdateRequest,
 } from '@/src/features/diaries/types';
 
@@ -29,6 +31,14 @@ export interface MyDiariesParams {
 export async function getMyDiaries({ page, size }: MyDiariesParams): Promise<Diary[]> {
   const { data } = await httpClient.get<ApiEnvelope<Diary[]>>('/api/diaries', {
     params: { page, size },
+  });
+  return data.data;
+}
+
+/** `GET /api/diaries/calendar?year=&month=` — 그달(한국 시간) 내가 일기를 쓴 날, 날짜 오름차순. month 는 1~12. */
+export async function getMyDiaryCalendar(year: number, month: number): Promise<DiaryCalendarDay[]> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryCalendarDay[]>>('/api/diaries/calendar', {
+    params: { year, month },
   });
   return data.data;
 }
@@ -69,6 +79,17 @@ export async function reactToDiary({ diaryId, emoji }: ReactToDiaryInput): Promi
     `/api/diaries/${diaryId}/like`,
     { emoji },
   );
+  return data.data;
+}
+
+/**
+ * `GET /api/diaries/reactions/recent?limit=1` — 내 그룹들의 일기에 다른 사람이 남긴 가장 최근 반응(내 반응은 빠진다).
+ * 없으면 빈 배열. `after`(본 알림 다시 안 받기)는 쓰지 않는다 — 홈에 늘 가장 최근 반응 하나를 보여준다.
+ */
+export async function getRecentReactions(): Promise<DiaryRecentReaction[]> {
+  const { data } = await httpClient.get<ApiEnvelope<DiaryRecentReaction[]>>('/api/diaries/reactions/recent', {
+    params: { limit: 1 },
+  });
   return data.data;
 }
 

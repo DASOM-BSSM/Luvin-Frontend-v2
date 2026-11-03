@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { View } from 'react-native';
 
-import RecBadge from '@/src/components/ui/rec-badge';
-import Text from '@/src/components/ui/text';
 import EpisodeHistoryRow from '@/src/features/oven/components/episode-history-row';
+import SeasonHeaderCard from '@/src/features/oven/components/season-header-card';
 
 /** 시즌 카드 아래에 펼쳐지는 회차 한 줄. */
 export interface SeasonEpisodeItem {
@@ -13,15 +12,21 @@ export interface SeasonEpisodeItem {
   label: string;
   /** 회차 제목. */
   body: string;
+  /** [DRAFT] 회차 열기 상태 표시(utils/season-history 의 accessBadge). */
+  badge?: string;
 }
 
 interface SeasonCardProps {
   /** 1부터 센다. "SEASON 01" 처럼 두 자리로 보여준다. */
   seasonNumber: number;
+  /** 10화까지 끝낸 시즌의 배경 제목(예: "In School"). 있으면 "SEASON 01" 대신 쓴다(사용자 결정). */
+  stageTitle?: string;
   /** 펼쳤을 때 보여줄 회차들. 부르는 쪽이 정한 순서 그대로 쌓는다. */
   episodes: SeasonEpisodeItem[];
   /** 펼친 회차 줄을 눌렀을 때. 그 회차로 들어간다. */
   onEpisodePress: (order: number) => void;
+  /** 펼쳤을 때 회차 줄들 맨 아래(1화 밑)에 붙일 것 — 시즌 초기화 버튼(사용자 결정). */
+  footer?: ReactNode;
 }
 
 interface SeasonEpisodeRowProps {
@@ -35,11 +40,15 @@ const SeasonEpisodeRow = ({ episode, onPress }: SeasonEpisodeRowProps) => {
     onPress(episode.order);
   }
 
-  return <EpisodeHistoryRow label={episode.label} body={episode.body} onPress={handleRowPress} />;
+  return (
+    <EpisodeHistoryRow
+      label={episode.label}
+      body={episode.body}
+      badge={episode.badge}
+      onPress={handleRowPress}
+    />
+  );
 };
-
-/** 시즌 제목 위의 부제. 사용자가 준 시안 이미지의 문구 그대로. */
-const SEASON_SUBTITLE = '내 분신이 관계 앞에서 하는 선택, 러빈지옥';
 
 function formatSeasonTitle(seasonNumber: number): string {
   return `SEASON ${String(seasonNumber).padStart(2, '0')}`;
@@ -57,9 +66,15 @@ function formatSeasonTitle(seasonNumber: number): string {
  * 펼친 회차 줄을 누르면 그 회차로 다시 들어간다. 이미 만든 대화는 서버에 저장돼 있어서
  * 새로 생성하지 않고 그대로 불러온다.
  */
-export default function SeasonCard({ seasonNumber, episodes, onEpisodePress }: SeasonCardProps) {
+export default function SeasonCard({
+  seasonNumber,
+  stageTitle,
+  episodes,
+  onEpisodePress,
+  footer,
+}: SeasonCardProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const title = formatSeasonTitle(seasonNumber);
+  const title = stageTitle ?? formatSeasonTitle(seasonNumber);
 
   function handleSeasonPress() {
     setIsOpen((open) => !open);
@@ -67,30 +82,19 @@ export default function SeasonCard({ seasonNumber, episodes, onEpisodePress }: S
 
   return (
     <View className="w-full flex-col gap-[12px]">
-      <Pressable
-        accessibilityRole="button"
+      <SeasonHeaderCard
+        title={title}
         accessibilityLabel={`${title} ${isOpen ? '접기' : '펼치기'}`}
-        accessibilityState={{ expanded: isOpen }}
+        accessibilityExpanded={isOpen}
         onPress={handleSeasonPress}
-        className="h-[144px] w-full overflow-hidden rounded-[12px] border-2 border-dashed border-pink-500 p-[11px]"
-      >
-        <RecBadge />
-        <View className="h-[40px]" />
-        <View className="flex-col items-start gap-[2px] pl-[12px]">
-          <Text variant="body-s" className="text-text-primary">
-            {SEASON_SUBTITLE}
-          </Text>
-          <Text variant="heading-h3" className="text-text-primary">
-            {title}
-          </Text>
-        </View>
-      </Pressable>
+      />
 
       {isOpen
         ? episodes.map((episode) => (
             <SeasonEpisodeRow key={episode.order} episode={episode} onPress={onEpisodePress} />
           ))
         : null}
+      {isOpen ? footer : null}
     </View>
   );
 }

@@ -5,14 +5,15 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import CloudLargeIcon from "@/src/assets/icons/CloudLargeIcon";
 import CloudMediumIcon from "@/src/assets/icons/CloudMediumIcon";
+import BakingAsset from "@/src/assets/images/bread-baking/BakingAsset";
 import BreadCharacter from "@/src/assets/images/BreadCharacter";
 import PlayerAvatar from "@/src/assets/images/PlayerAvatar";
 import BottomNav from "@/src/components/bottom-nav";
 import Screen from "@/src/components/ui/screen";
 import SectionHeader from "@/src/components/ui/section-header";
 import Text from "@/src/components/ui/text";
+import { okMallangBStyle } from "@/src/constants/typography";
 import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
-import { LANE_ROTATION_DEG } from "@/src/features/luvin-hell/games/bread-crossing/engine/constants";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
 import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
 import SeasonHistoryList from "@/src/features/oven/components/season-history-list";
@@ -29,7 +30,7 @@ function PreviewHearts() {
 }
 
 interface DinoPreviewCardProps {
-  /** 탭하면 게임 이름 라벨 오버레이를 보여준다 — 빵건너친구들 카드와 동일한 반응, 네비게이션 없음. */
+  /** 탭하면 게임 이름 라벨 오버레이를 보여준다 — 소금빵게임 카드와 동일한 반응, 네비게이션 없음. */
   showLabel: boolean;
 }
 
@@ -142,134 +143,69 @@ function DinoPreviewCard({ showLabel }: DinoPreviewCardProps) {
   );
 }
 
-const BREAD_ROTATION_STYLE = {
-  transform: [{ rotate: `${LANE_ROTATION_DEG}deg` }],
-} as const;
-
-const PREVIEW_CARD_WIDTH = 135;
-const PREVIEW_CARD_HEIGHT = 181;
-const PREVIEW_ROTATION_RAD = (LANE_ROTATION_DEG * Math.PI) / 180;
-/**
- * 레인 배경 전체를 하나로 묶어 통째로 회전시킨다(개별 줄마다 따로 회전시키면 각 줄 안에서만
- * 각도가 상쇄돼 사선이 거의 안 보이는 문제가 있었음 — 디자인 QA 재확인). 회전 후에도 카드
- * 네 모서리를 다 덮도록 실제 게임(`LaneSlotView`)과 같은 방식으로 회전 전 크기를 역산한다.
- */
-const PREVIEW_BG_WIDTH =
-  PREVIEW_CARD_WIDTH * Math.cos(PREVIEW_ROTATION_RAD) +
-  PREVIEW_CARD_HEIGHT * Math.sin(PREVIEW_ROTATION_RAD) +
-  20;
-const PREVIEW_BG_HEIGHT =
-  PREVIEW_CARD_WIDTH * Math.sin(PREVIEW_ROTATION_RAD) +
-  PREVIEW_CARD_HEIGHT * Math.cos(PREVIEW_ROTATION_RAD) +
-  20;
-
-/** 기찻길/강 힌트(얇음) - 초원 - 도로(굵음) - 초원 4줄을 이 비율로 나눠 하나의 배경에 담는다. */
-const PREVIEW_LANE_FLEX = [1, 1, 4, 1] as const;
-
-function PreviewLaneBackground() {
-  return (
-    <View
-      className="absolute flex-col overflow-hidden"
-      style={[
-        {
-          left: (PREVIEW_CARD_WIDTH - PREVIEW_BG_WIDTH) / 2,
-          top: (PREVIEW_CARD_HEIGHT - PREVIEW_BG_HEIGHT) / 2,
-          width: PREVIEW_BG_WIDTH,
-          height: PREVIEW_BG_HEIGHT,
-        },
-        BREAD_ROTATION_STYLE,
-      ]}
-    >
-      <View
-        className="w-full"
-        style={{
-          flex: PREVIEW_LANE_FLEX[0],
-          backgroundColor: sceneColors.trackAccent,
-        }}
-      />
-      <View
-        className="w-full"
-        style={{
-          flex: PREVIEW_LANE_FLEX[1],
-          backgroundColor: sceneColors.grass,
-        }}
-      />
-      <View
-        className="w-full"
-        style={{
-          flex: PREVIEW_LANE_FLEX[2],
-          backgroundColor: sceneColors.trackBase,
-        }}
-      />
-      <View
-        className="w-full"
-        style={{
-          flex: PREVIEW_LANE_FLEX[3],
-          backgroundColor: sceneColors.grass,
-        }}
-      />
-    </View>
-  );
-}
-
-interface BreadCrossingPreviewCardProps {
+interface BreadBakingPreviewCardProps {
   /** 탭하면 게임 이름 라벨 오버레이를 보여준다 — 순수 시각 반응, 네비게이션 없음. */
   showLabel: boolean;
 }
 
+/** Figma 8026:4184 "03:00": Ok Mallang B 10px, leading 1.1. 이 자리에서만 쓰는 값이라 토큰으로 올리지 않았다(§8). */
+const BAKING_PREVIEW_TIMER_STYLE = {
+  ...okMallangBStyle,
+  fontSize: 10,
+  lineHeight: 11,
+} as const;
+
 /**
- * 빵건너친구들 미리보기 썸네일. 마찬가지로 실제 `BreadCrossingScene`(라이브 엔진)을 마운트하지
- * 않고, 같은 대각선 레인 회전 기법(`LANE_ROTATION_DEG`)과 색 토큰으로 정지 장면을 흉내낸다.
- * 탭 시 `rgba(29,29,29,0.5)` 오버레이 + 흰 텍스트가 뜬다 — 공룡빵 카드와 동일한 반응(§디자인 QA).
+ * 다솜이의 소금빵게임(빵굽기) 미리보기 썸네일. Figma "Frame 522" (8026:4183) — pink-100 바탕에
+ * 타이머, 재료 두 줄, 거품기, 반죽 그릇. 실제 게임 에셋(`BakingAsset`)을 시안 좌표에 그대로 놓는다.
+ * 탭 시 이름 라벨 오버레이가 뜬다 — 공룡빵 카드와 동일한 반응.
  */
-function BreadCrossingPreviewCard({
-  showLabel,
-}: BreadCrossingPreviewCardProps) {
+function BreadBakingPreviewCard({ showLabel }: BreadBakingPreviewCardProps) {
   return (
-    <View className="relative h-full w-full overflow-hidden">
-      <PreviewLaneBackground />
+    <View className="relative h-full w-full bg-pink-100">
+      <Text
+        className="absolute right-[13px] top-[8px] text-pink-500"
+        style={BAKING_PREVIEW_TIMER_STYLE}
+      >
+        03:00
+      </Text>
 
-      {/* 상단 다리(널빤지) 힌트 — Figma에서 강/기찻길 위를 가로지르는 나무 판. */}
-      <View
-        className="absolute left-[64px] top-[-2px] h-[10px] w-[64px] rounded-[3px]"
-        style={[
-          { backgroundColor: sceneColors.woodAccent },
-          BREAD_ROTATION_STYLE,
-        ]}
-      />
-
-      <PreviewHearts />
-
-      <View className="absolute left-[10px] top-[46px] h-[18px] w-[18px]">
-        <BreadCharacter
-          type="pretzel"
-          state="dough"
-          className="h-full w-full"
-        />
+      <View className="absolute left-[10px] top-[33px] flex-row items-center gap-[4px]">
+        <View className="h-[23px] w-[22px]">
+          <BakingAsset name="flour" />
+        </View>
+        <View className="h-[16px] w-[29px]">
+          <BakingAsset name="eggs" />
+        </View>
+        <View className="h-[17px] w-[22px]">
+          <BakingAsset name="butter" />
+        </View>
+        <View className="h-[24px] w-[21px]">
+          <BakingAsset name="water" />
+        </View>
       </View>
-      <View className="absolute right-[14px] top-[58px] h-[18px] w-[18px]">
-        <BreadCharacter
-          type="castella"
-          state="dough"
-          className="h-full w-full"
-        />
+      <View className="absolute left-[40px] top-[60px] flex-row items-center gap-[4px]">
+        <View className="h-[19px] w-[12px]">
+          <BakingAsset name="salt" />
+        </View>
+        <View className="h-[19px] w-[12px]">
+          <BakingAsset name="sugar" />
+        </View>
+        <View className="h-[19px] w-[13px]">
+          <BakingAsset name="yeast" />
+        </View>
       </View>
-      <View className="absolute left-[16px] top-[92px] h-[18px] w-[18px]">
-        <BreadCharacter type="donut" state="dough" className="h-full w-full" />
+      <View className="absolute left-[77px] top-[70px] h-[41px] w-[30px]">
+        <BakingAsset name="whisk" />
       </View>
-      <View className="absolute right-[12px] top-[104px] h-[18px] w-[18px]">
-        <BreadCharacter type="donut" state="dough" className="h-full w-full" />
+      <View className="absolute left-[38px] top-[106px] h-[41px] w-[49px]">
+        <BakingAsset name="doughBowl" />
       </View>
-
-      <PlayerAvatar
-        facing="back"
-        className="absolute left-1/2 top-[64px] h-[42px] w-[28px] -translate-x-1/2"
-      />
 
       {showLabel ? (
         <View className="absolute inset-0 items-center justify-center bg-default-black/50">
-          <Text variant="body-m" className="text-default-white">
-            빵건너친구들
+          <Text variant="body-m" className="text-center text-default-white">
+            {"다솜이의\n소금빵가게"}
           </Text>
         </View>
       ) : null}
@@ -282,7 +218,7 @@ export default function OvenScreen() {
   const balance = useTokenStore((state) => state.balance);
   useTokenBalance();
   const [dinoPreviewLabelShown, setDinoPreviewLabelShown] = useState(false);
-  const [breadPreviewLabelShown, setBreadPreviewLabelShown] = useState(false);
+  const [bakingPreviewLabelShown, setBakingPreviewLabelShown] = useState(false);
 
   function handleMiniGameNavigate() {
     router.push("/luvin-hell");
@@ -308,6 +244,7 @@ export default function OvenScreen() {
         <View className="w-full flex-col items-start gap-[12px]">
           <SectionHeader title="러빈지옥 에피소드" />
           {/* 시즌마다 카드를 따로 둔다. 최신 시즌이 맨 위, 지난 시즌이 그 아래다. */}
+          {/* 시즌 초기화 버튼은 시즌 카드를 펼쳤을 때 1화 밑에 뜬다(SeasonHistoryList → SeasonCard footer). */}
           <SeasonHistoryList />
         </View>
 
@@ -340,11 +277,11 @@ export default function OvenScreen() {
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="빵건너친구들 미리보기"
+                accessibilityLabel="다솜이의 소금빵가게 미리보기"
                 className="h-[181px] w-[135px] overflow-hidden rounded-[12px] border-[3px] border-default-bg"
-                onPress={() => setBreadPreviewLabelShown((shown) => !shown)}
+                onPress={() => setBakingPreviewLabelShown((shown) => !shown)}
               >
-                <BreadCrossingPreviewCard showLabel={breadPreviewLabelShown} />
+                <BreadBakingPreviewCard showLabel={bakingPreviewLabelShown} />
               </Pressable>
             </View>
           </View>

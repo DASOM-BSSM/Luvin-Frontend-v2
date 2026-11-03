@@ -17,6 +17,8 @@ export interface UserProfile {
   latestSurveyResultId: string | null;
   /** latestSurveyResultId가 본인의 유효한 완료 결과를 가리킬 때만 true. */
   surveyCompleted: boolean;
+  /** 내 빵 이름(예: "쫀쫀한 카스테라") — 감정일기에서 다른 사람에게 보이는 이름과 같다. 설문 전이면 null. */
+  breadName: string | null;
 }
 
 /**
@@ -29,6 +31,8 @@ export interface UserProfile {
 export interface UpdateUserProfileInput {
   nickname?: string;
   gender?: string;
+  /** [DRAFT] 러빈지옥 시즌 배경을 정한다. 시즌을 처음 만들 때 한 번만 반영된다(바꿔도 지금 시즌 배경은 그대로). */
+  age?: number;
   job?: string;
   bio?: string;
 }

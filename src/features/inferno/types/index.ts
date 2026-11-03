@@ -2,9 +2,9 @@ import type { BreadType } from '@/src/assets/images/BreadCharacter';
 
 /** 러빈지옥 에피소드 한 편. */
 export interface InfernoEpisode {
-  /** 0 이면 "Episode 00" 으로 보여준다. 목록의 키 역할도 한다. */
+  /** 1 이면 "Episode 01" 로 보여준다. 목록의 키 역할도 한다. */
   order: number;
-  /** 시작 화면 하단 바에 들어가는 제목. 예: "러빈지옥에 대해 알려드릴게요" */
+  /** 회차 이름. 홈·시작 화면·하단 바·오븐 어디서나 같다. 예: "첫 만남" */
   title: string;
 }
 
@@ -113,35 +113,6 @@ export interface InfernoFeedbackTopic {
 }
 
 /**
- * 1:1 대화 중 "다시 굽기"로 상대를 바꾸는 곁가지. Figma `다시굽기`
- * (5467:5418 확인 모달, 5467:5840 투표지, 5467:5876 새 상대와의 대화).
- *
- * 투표로 새 상대를 고른다는 점은 ep1 투표(InfernoVotePrompt)와 같지만, 후보가 전체대화
- * 참가자 중 이미 매칭된 상대를 뺀 나머지라는 점과 투표 뒤 곧장 1:1 대화로 이어진다는 점이
- * 다르다. 대화 상대는 사용자가 고른 값이라 메시지 데이터가 실제 participant id 를 미리
- * 알 수 없으므로, `chatMessages` 는 상대 쪽 줄에 `EP4_REBAKE_PARTNER_ID` 같은 자리표시자
- * participantId 를 쓰고 화면이 고른 상대로 바꿔 끼운다.
- */
-export interface InfernoRebake {
-  /** 확인 쪽지 문구. 예: "다시 굽기를 진행하시겠어요?" */
-  confirmMessage: string;
-  /** 확인 쪽지 버튼 문구. 예: "다시 굽기 상대 고르기" */
-  confirmActionLabel: string;
-  /** 투표지 문구. 예: "당신과 다시 구워지고 싶어요" */
-  voteMessage: string;
-  /** 고를 수 있는 반죽들의 participant id. 이미 매칭된 상대는 빠져 있다. */
-  candidateIds: string[];
-  /**
-   * 새 상대와의 대화. 상대 쪽 줄의 participantId 는 자리표시자다(위 설명 참고).
-   *
-   * 로컬 대본(conversation.ts)만 채운다. 실제 API 에서는 다시 굽기가 끝나면 서버가 회차 대화를
-   * 새 버전으로 바꿔 두어서, 새 상대와의 대화가 `personalChatPages` 로 내려온다
-   * (use-inferno-rebake 주석 참고).
-   */
-  chatMessages?: InfernoChatMessage[];
-}
-
-/**
  * 에피소드 한 편의 대화 전체.
  *
  * API 가 붙으면 이 타입이 응답 본문이 된다. 그래서 JSON 으로 그대로 직렬화되는 값만 담는다.
@@ -151,10 +122,7 @@ export interface InfernoRebake {
  */
 export interface InfernoConversation {
   episodeOrder: number;
-  /**
-   * 서버가 이 대화에 붙인 버전. "다시 굽기"가 끝나면 서버가 회차 대화를 새 버전으로 바꾸므로,
-   * 이 값이 바뀌었는지로 새 대화가 도착했는지 안다(use-inferno-rebake). 로컬 대본엔 없다.
-   */
+  /** [DRAFT] 기존 서버 시즌의 조회·표시 계약. */
   versionId?: string;
   participants: InfernoParticipant[];
   pages: InfernoChatPage[];
@@ -185,16 +153,13 @@ export interface InfernoConversation {
    * 나갔다 들어오거나 다시 볼 때도 하트가 그대로 있다. 로컬 대본엔 없다.
    */
   likedMessageIds?: string[];
-  /** "다시 굽기" 곁가지. 없으면 이 회차에는 다시 굽기가 없다는 뜻. */
-  rebake?: InfernoRebake;
 }
 
 /**
  * ep5(시즌 마무리) 데이터.
  *
- * [DRAFT] Figma 디자인이 아직 없는 상태에서 먼저 짠 화면이라(AGENTS.md §8 예외 — 사용자
- * 요청으로 디자인보다 동작을 먼저 만든다) 타입도 잠정적이다. 디자인이 나오면 필드가
- * 바뀔 수 있다.
+ * 처음엔 Figma 디자인이 없는 상태에서 먼저 짠 잠정 타입이었다(AGENTS.md §8 예외). 디자인
+ * (ep5-결과 5748:4314·6818:5117, ep5-하이라이트 5760:4351)이 나와서 그 화면에 맞춰 필드를 정했다.
  *
  * ep1~4 는 전부 대화가 있어 `InfernoConversation`(pages/participants 필수)을 썼지만,
  * ep5 는 대화 없이 시즌 리포트만 보여주는 화면이라 그 타입에 억지로 끼워 맞추지 않고
@@ -204,12 +169,13 @@ export interface InfernoConversation {
 /**
  * 최종 매칭 상대 프로필.
  *
- * `state` 가 없는 이유: 이 화면은 매칭 상대와 내 반죽을 personDough(팔다리 있는 반죽)로
- * 나란히 보여주는 "매칭 성사" 장면이라 `InfernoPersonalChatSidebar`와 같은 이유로 항상
- * personDough 로 고정한다 — 회차 대화 데이터의 dough/baked 상태와는 무관하다.
+ * `state` 가 없는 이유: 이 화면은 매칭 상대와 내 반죽을 나란히 보여주는 "매칭 성사" 장면이라
+ * 그림 상태를 장면이 정한다 — 회차 대화 데이터의 dough/baked 상태와는 무관하다. ep1·ep3 다시
+ * 보기(VOTE)는 personDough, ep5 는 굽기 연출이 끝난 구운 빵이다(inferno-final-match-scene 주석).
  *
  * 예전엔 "애착유형" 라벨(`attachmentLabel`)도 있었는데, `AiCharacterView`에 그런 성향
  * 필드가 없다는 게 최신 openapi로 확인돼서 걷어냈다(Figma에도 없던 값이라 손실 없음).
+ * 그 뒤 나온 Figma ep5-결과(5748:4314)에는 상대 성향("안정형")이 있다 — `InfernoFinalMatchResult.tendencyLabel`.
  */
 export interface InfernoFinalMatchProfile {
   type: BreadType;
@@ -225,6 +191,12 @@ export interface InfernoFinalMatchResult {
    * 들고 있는다 — 잘못된 조사 조합을 지어내지 않기 위함(§13과 같은 취지).
    */
   summaryLine: string;
+  /**
+   * 이름 옆 상대 성향 라벨. Figma ep5-결과(5748:4314)의 "안정형". 서버가 아직 이 값을 주지 않아서
+   * (`AiReportView`·`AiCharacterView` 어디에도 없다) 지금은 늘 비어 있고, 비어 있으면 그리지 않는다.
+   * 백엔드에 요청해 둔 상태다(사용자 결정, 2026-10-20) — 오면 매퍼에서 채우기만 하면 보인다.
+   */
+  tendencyLabel?: string;
 }
 
 /**
@@ -232,9 +204,22 @@ export interface InfernoFinalMatchResult {
  * 조언 텍스트)를 썼는데, 백엔드 확인 완료 — AI 시즌 계정은 `simulation_reports`에 애초에
  * 행이 안 생겨서 그 엔드포인트가 영영 404다. `ai/seasons/report`의 `narrative`/`highlights`
  * 로 완전히 대체됐다(레거시 `/api/simulation/*`는 AI 시즌에서 호출하지 않는다).
+ *
+ * 그 뒤 새 형식 리포트가 `tendency`·`feedback`·`strengths`·`weaknesses` 를 따로 주게 되어(AiReportView 주석)
+ * Figma ep5-결과(6818:5117)의 "굵은 한 줄 + 한 줄 + 강점/약점 칩" 모양으로 받는다.
  */
 export interface InfernoSeasonReport {
-  narrative: string;
+  /**
+   * 굵게 보이는 첫 줄(Figma 6818:5115). 새 형식 리포트의 `tendency`(대화에서 보인 성향). 옛 형식
+   * (`narrative` 한 문단)은 이 자리에 문단 전체를 넣는다.
+   */
+  tendency: string;
+  /** 그 아래 한 줄(6818:5138). 새 형식의 `feedback`(조언). 옛 형식엔 없어서 빈 문자열. */
+  feedback: string;
+  /** "강점" 칩들. 옛 형식엔 없어서 빈 배열 — 빈 쪽은 칸째로 그리지 않는다. */
+  strengths: string[];
+  /** "약점" 칩들. 위와 같다. */
+  weaknesses: string[];
 }
 
 /**
@@ -244,36 +229,25 @@ export interface InfernoSeasonReport {
  * 확인: 실제 키는 `text`/`message_id`다 — map-ai-season-report.ts의 `mapAiHighlights` 참고).
  */
 export interface InfernoHighlight {
+  /** 몇 화 대화에서 뽑았는지(Figma "Episode 02"). 새 형식(`episode2` 키)에만 있다. */
+  episodeOrder?: number;
+  /** 대화에서 뽑은 한 줄. */
   text: string;
+  /** 그 줄을 고른 이유(Figma 7360:3352). 새 형식에만 있다. */
+  reason?: string;
 }
 
 export interface InfernoSeasonSummary {
   episodeOrder: number;
-  /**
-   * 최종 매칭 상대 정보. `GET /api/ai/seasons/report`의 `finalPartnerId`에서 뽑는다
-   * (map-ai-season-report.ts 의 `mapFinalMatchFromReport`) — "다시 굽기"로 상대가 바뀐
-   * 경우까지 반영된 값이다(백엔드 확인 완료).
-   */
+  /** [DRAFT] 기존 서버 시즌의 조회·표시 계약. */
   finalMatch: InfernoFinalMatchResult;
   report: InfernoSeasonReport;
   highlights: InfernoHighlight[];
 }
 
-/**
- * EP5 를 끝낸 뒤 앱을 다시 열었을 때 오는 쪽지의 "보낸 사람". EP5 를 끝내는 순간 최종 매칭
- * 상대(`InfernoSeasonSummary.finalMatch`)에서 정해져 MMKV 에 남는다(partner-letter-store.ts).
- *
- * 쪽지 본문은 여기 없다 — 본문은 AI 가 만들어 주는 값이라 펼칠 때 받아 온다(api/partner-letter.ts).
- */
-export interface InfernoPartnerLetterSender {
-  /** 쪽지 한 통을 가리키는 값. 같은 쪽지를 펼치는 동안 본문이 바뀌지 않게 쿼리 키로 쓴다. */
-  id: string;
-  partnerName: string;
-  partnerType: BreadType;
-}
-
 /** 펼친 쪽지. */
 export interface InfernoPartnerLetter {
-  partnerName: string;
+  /** 보낸 빵 이름("형용사 + 빵 종류"). 알 수 없으면 null — 화면은 "From." 줄을 그리지 않는다. */
+  partnerName: string | null;
   message: string;
 }

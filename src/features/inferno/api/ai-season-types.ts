@@ -1,3 +1,5 @@
+/** [DRAFT] Ten-episode block story integration. */
+import type { AiStoryStateView } from '@/src/features/inferno/api/story-types';
 /**
  * `ai-season-controller` DTO. openapi 스키마를 그대로 옮긴 것 — UI 가 쓰는
  * `InfernoConversation` 등과는 별개다. 화면에 보여줄 모양으로 바꾸는 건
@@ -33,6 +35,12 @@ export interface AiCharacterView {
    */
   role: string;
   gender: string;
+  /** [DRAFT] 새 10화 출연진 역할. 화면에 쓰지 않는다 — 판정은 서버가 한다. */
+  castRole?: string;
+  /** [DRAFT] 새 10화 출연진 이름. 쪽지 `partnerId` 를 이름으로 바꿀 때 쓴다. */
+  name?: string;
+  /** 반죽 특징 한 줄. 반죽 소개 모달이 1화 무대 소개보다 먼저 쓴다(utils/dough-profile.ts). */
+  description?: string | null;
 }
 
 export interface AiSeasonStatusView {
@@ -43,8 +51,12 @@ export interface AiSeasonStatusView {
   characters: AiCharacterView[];
   /** 이 시즌을 만든 설문 결과. 옛 경로(`POST /api/ai/seasons`)로 만든 시즌엔 없다. */
   sourceSurveyResultId?: string;
-  /** 몇 번째 시즌인지(1부터). `POST /api/ai/seasons/next`로 다음 시즌을 열 때마다 늘어난다. */
+  /** 몇 번째 시즌인지(1부터). 10화를 끝내고 새 시즌을 열면 하나씩 늘어난다. */
   seasonNumber?: number;
+  /** [DRAFT] 항상 `blocks`(새 10화)로 본다 — legacy 시즌은 없앴다(사용자 결정). */
+  episodeFormat?: string;
+  /** [DRAFT] 새 10화 진행 상태. utils/map-story.ts 의 mapStoryState 로 바꿔서 쓴다. */
+  story?: AiStoryStateView;
 }
 
 /** `GET /api/ai/seasons` 의 한 줄. 지금까지 연 시즌들(지난 시즌 포함)의 요약이다. */
@@ -57,14 +69,6 @@ export interface AiSeasonSummaryView {
   createdAt?: string;
   /** 끝난 시즌만 있다. */
   completedAt?: string;
-}
-
-/** `POST /api/ai/seasons/next` 요청 본문. 둘 다 생략 가능하다. */
-export interface StartNextSeasonRequest {
-  /** 새 시즌의 원천이 될 설문 결과. 생략하면 서버가 최신 결과를 쓴다. */
-  surveyResultId?: string;
-  /** 같은 "다음 시즌 시작" 시도를 재시도해도 시즌이 두 번 생기지 않게 하는 멱등 키. */
-  clientRequestId?: string;
 }
 
 export interface AiMessageView {
@@ -130,11 +134,7 @@ export interface AiEpisodeProgressView {
   errorCode?: string;
 }
 
-export interface AiRerollView {
-  jobId: string;
-  jobStatus: string;
-  errorCode?: string;
-}
+
 
 export interface AiSelectionView {
   selectionId: string;
@@ -173,9 +173,9 @@ export interface AiReportView {
   tendency?: string;
   /** 새 형식: 성향에 대한 조언. */
   feedback?: string;
-  /** 새 형식: 강점. 아직 보여줄 화면이 없다. */
+  /** 새 형식: 강점. ep5 리포트 2페이지의 "강점" 칩(Figma 6818:5117). */
   strengths?: string[];
-  /** 새 형식: 약점. 아직 보여줄 화면이 없다. */
+  /** 새 형식: 약점. ep5 리포트 2페이지의 "약점" 칩. */
   weaknesses?: string[];
   renderMode?: string;
 }

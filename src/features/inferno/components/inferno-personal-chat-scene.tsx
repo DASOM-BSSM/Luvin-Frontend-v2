@@ -1,3 +1,4 @@
+/** [DRAFT] Ten-episode block story integration. */
 import { useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
@@ -20,14 +21,17 @@ interface InfernoPersonalChatSceneProps {
   onFeedbackPress?: () => void;
   /** "나의 빵에게" 피드백을 이미 썼는지. 맞으면 폴더가 쓴 기회 모양(pink/300)이 된다. */
   isFeedbackUsed?: boolean;
-  /** "다시 굽기" 를 눌렀을 때. 넘기지 않으면 갈 곳이 없거나 이미 다시 굽기를 썼다는 뜻. */
-  onRebakePress?: () => void;
-  /** 다시 굽기로 고른 상대와의 대화인지. 맞으면 "다시 굽기" 가 선택된 모양으로 흐려진다. */
-  isRebakeSelected?: boolean;
   /** 하트를 누른 줄 id 목록. */
   likedMessageIds?: string[];
   /** 다 쳐진 말풍선을 눌렀을 때. 그 줄의 하트를 켜고 끈다. 넘기지 않으면 하트를 누를 수 없다. */
   onMessageLikePress?: (messageId: string) => void;
+  /**
+   * [DRAFT] 좋아요를 누를 수 있는 줄. 새 10화는 내 빵의 대사(독백 제외)만 된다(보정 문서 6장).
+   * 없으면 모든 줄이 눌린다(기존 동작).
+   */
+  likeableMessageIds?: string[];
+  /** [DRAFT] 이미 다 본 쪽을 다시 띄울 때(피드백 쪽지에서 돌아올 때) 타자 없이 바로 보여준다. */
+  startFullyTyped?: boolean;
 }
 
 /**
@@ -57,13 +61,13 @@ export default function InfernoPersonalChatScene({
   onPageDone,
   onFeedbackPress,
   isFeedbackUsed,
-  onRebakePress,
-  isRebakeSelected,
   likedMessageIds = [],
   onMessageLikePress,
+  likeableMessageIds,
+  startFullyTyped = false,
 }: InfernoPersonalChatSceneProps) {
   /** 다 쳐진 줄 수. 지금 쳐지고 있는 줄의 인덱스이기도 하다. */
-  const [typedCount, setTypedCount] = useState(0);
+  const [typedCount, setTypedCount] = useState(startFullyTyped ? page.messages.length : 0);
 
   const visibleMessages = page.messages.slice(0, typedCount + 1);
   const isPageDone = typedCount >= page.messages.length;
@@ -96,20 +100,21 @@ export default function InfernoPersonalChatScene({
         partner={partner}
         onFeedbackPress={onFeedbackPress}
         isFeedbackUsed={isFeedbackUsed}
-        onRebakePress={onRebakePress}
-        isRebakeSelected={isRebakeSelected}
+
+
       />
 
       <ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentContainerClassName="flex-col pr-[40px]"
+        // Figma 1:1 대화(5379:3570): 대화 칸은 폭 450, 오른쪽 여백 50(가로 874 화면에서 x 374~824).
+        contentContainerClassName="flex-col items-end pr-[50px]"
         showsVerticalScrollIndicator={false}
         onContentSizeChange={handleContentSizeChange}
       >
         <View className="h-[25px]" />
 
-        <View className="w-full flex-col gap-[20px]">
+        <View className="w-[450px] max-w-full flex-col gap-[20px]">
           {visibleMessages.map((message, index) => {
             const participant = participants.find(({ id }) => id === message.participantId);
 
@@ -126,7 +131,11 @@ export default function InfernoPersonalChatScene({
                 isTyped={index < typedCount}
                 isLiked={likedMessageIds.includes(message.id)}
                 onTypingDone={index === typedCount ? handleMessageDone : undefined}
-                onLikePress={onMessageLikePress}
+                onLikePress={
+                  !likeableMessageIds || likeableMessageIds.includes(message.id)
+                    ? onMessageLikePress
+                    : undefined
+                }
               />
             );
           })}
