@@ -10,6 +10,7 @@ import Text from '@/src/components/ui/text';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
+import LegalLinks from '@/src/features/legal/components/legal-links';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
@@ -132,6 +133,12 @@ export default function MyPageScreen() {
               onPress={handleEarnTokenPress}
             />
           </View>
+        </View>
+
+        {/* 로그인한 뒤에도 앱 안에서 개인정보처리방침을 찾을 수 있어야 한다(App Store 심사 요건, 사용자 결정).
+            시안이 없어 스크롤 맨 아래 가운데에 작은 링크로 뒀다. */}
+        <View className="w-full items-center">
+          <LegalLinks />
         </View>
       </ScrollView>
 

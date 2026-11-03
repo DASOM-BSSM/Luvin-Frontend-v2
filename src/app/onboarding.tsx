@@ -1,13 +1,21 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import BreadCluster from '@/src/components/bread-cluster';
-import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
+import AppleSignInButton from '@/src/features/auth/components/apple-sign-in-button';
+import GoogleSignInButton from '@/src/features/auth/components/google-sign-in-button';
+import LegalLinks from '@/src/features/legal/components/legal-links';
 import { useAuthStore } from '@/src/features/auth/store/auth-store';
+import useAppleSignIn from '@/src/features/auth/hooks/use-apple-sign-in';
 import useGoogleSignIn from '@/src/features/auth/hooks/use-google-sign-in';
-import { getPostLoginHref } from '@/src/features/auth/utils/welcome';
+
+/**
+ * 애플 로그인은 iOS 에서만 띄운다 — Android 에는 애플 로그인 창이 없다(expo-apple-authentication 은
+ * iOS 전용). 플랫폼마다 화면이 달라지는 몇 안 되는 곳이다(§1 예외: 꼭 필요한 경우).
+ */
+const IS_APPLE_SIGN_IN_SUPPORTED = Platform.OS === 'ios';
 
 /**
  * 온보딩 화면. Figma "Luvin-Design" / `온보딩-우린` (5461:3552).
@@ -15,38 +23,59 @@ import { getPostLoginHref } from '@/src/features/auth/utils/welcome';
  * 세로 위치: Figma 프레임(402 x 874)에서 본문 블록 위로 238px, 아래로 259px 이 남는다.
  * 고정 px 로 박으면 기기 높이마다 어긋나서, 같은 비율의 빈 spacer 뷰로 옮겼다(§16).
  * 가로 여백 30px 은 프레임 폭 402 - 본문 폭 342 를 반씩 나눈 값이다.
+ *
+ * 로그인 버튼은 Google·Apple 두 개다(6031:2839, 7635:3361). Android 는 Apple 버튼이 없어서, 빠진
+ * 높이(버튼 40 + 간격 16)만큼 본문 위에 빈 자리를 둬 블록 전체를 그만큼 아래로 내린다 — Google 버튼이
+ * iOS 의 Apple 버튼 자리에 온다(사용자 결정).
+ * 버튼 모양은 시안(6031:2839, 7635:3361)의 노란 텍스트 버튼 대신 각 회사 공식 모양으로 바꿨다 — 로고가
+ * 들어간 Google 브랜딩 가이드 버튼 · Apple 공식 버튼(사용자 결정). 크기(높이 40 · 가로 꽉)는 시안 그대로다.
  */
 export default function OnboardingScreen() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
   const signInMutation = useGoogleSignIn();
+  const appleSignInMutation = useAppleSignIn();
+  // 한쪽 로그인이 진행 중이면 두 버튼 다 막는다 — 두 계정 로그인이 겹치지 않게 한다.
+  const isSigningIn = signInMutation.isPending || appleSignInMutation.isPending;
+  // 마지막으로 실패한 로그인. 두 버튼 아래 같은 자리에 안내를 띄운다.
+  const signInError = signInMutation.error ?? appleSignInMutation.error;
 
   // 이미 로그인돼 있으면(재실행 등) 온보딩을 다시 보여주지 않는다.
   //
   // 로그인 성공 시에도 useGoogleSignIn 의 onSuccess 가 setSession 을 먼저 부르므로 실제로는
-  // 이 effect 가 먼저 화면을 넘긴다. 그래서 첫 로그인이면 환영 화면으로 보내는 판단도 여기서 한다.
+  // 이 effect 가 먼저 화면을 넘긴다. 앱 소개 투어는 로그인 전에 이미 봤으므로(features/welcome/lib/tour-seen)
+  // 첫 로그인이어도 바로 홈으로 간다(사용자 결정).
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(getPostLoginHref(user));
+      router.replace('/');
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
 
   // 로그인 성공(취소가 아닌 실제 성공) 시에만 홈으로 넘어간다.
   useEffect(() => {
-    if (signInMutation.isSuccess && signInMutation.data) {
-      router.replace(getPostLoginHref(signInMutation.data.user));
+    const isGoogleSignedIn = signInMutation.isSuccess && signInMutation.data;
+    const isAppleSignedIn = appleSignInMutation.isSuccess && appleSignInMutation.data;
+    if (isGoogleSignedIn || isAppleSignedIn) {
+      router.replace('/');
     }
-  }, [signInMutation.isSuccess, signInMutation.data]);
+  }, [signInMutation.isSuccess, signInMutation.data, appleSignInMutation.isSuccess, appleSignInMutation.data]);
 
-  function handleLoginButtonPress() {
+  function handleGoogleLoginPress() {
+    appleSignInMutation.reset();
     signInMutation.mutate();
+  }
+
+  function handleAppleLoginPress() {
+    signInMutation.reset();
+    appleSignInMutation.mutate();
   }
 
   return (
     <View className="flex-1 items-center bg-default-bg px-[30px]">
       <View className="flex-[238]" />
+      {/* Android 는 Apple 버튼이 빠진 만큼 아래로 내린다(위 주석). */}
+      {IS_APPLE_SIGN_IN_SUPPORTED ? null : <View className="h-[56px]" />}
 
-      <View className="w-full gap-[40px]">
+      <View className="w-full gap-[50px]">
         <View className="w-full items-center gap-[40px]">
           <View className="w-full gap-[2px]">
             <Text variant="heading-h2" className="text-default-black">
@@ -60,24 +89,21 @@ export default function OnboardingScreen() {
           <BreadCluster state="baked" className="h-[169.2px] w-[236px]" />
         </View>
 
-        <View className="w-full items-center gap-[12px]">
-          <Button
-            label="로그인 하기"
-            variant="primary"
-            disabled={signInMutation.isPending}
-            onPress={handleLoginButtonPress}
-          />
-          <Text variant="body-s" className="text-text-muted">
-            구글 계정으로 로그인 됩니다
-          </Text>
-          {signInMutation.isError ? (
+        <View className="w-full items-center gap-[16px]">
+          <GoogleSignInButton disabled={isSigningIn} onPress={handleGoogleLoginPress} />
+          {IS_APPLE_SIGN_IN_SUPPORTED ? (
+            <AppleSignInButton disabled={isSigningIn} onPress={handleAppleLoginPress} />
+          ) : null}
+          {signInError ? (
             <Text variant="body-s" className="text-state-error">
               {/* 개발 중에만 실제 원인을 보여준다 — 배포 빌드에서는 원인을 숨긴다(§11). */}
               {__DEV__
-                ? `로그인 실패: ${signInMutation.error?.message ?? String(signInMutation.error)}`
+                ? `로그인 실패: ${signInError.message ?? String(signInError)}`
                 : '로그인에 실패했어요. 다시 시도해주세요'}
             </Text>
           ) : null}
+          {/* 로그인 전에 앱이 무엇인지 · 개인정보를 어떻게 다루는지 볼 수 있게 둔다. */}
+          <LegalLinks />
         </View>
       </View>
 

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import { TOUR_PAGE_COUNT } from '@/src/features/welcome/constants/tour';
+import { markTourSeen } from '@/src/features/welcome/lib/tour-seen';
 import { pageFromOffset } from '@/src/features/welcome/utils/tour';
 
 /**
@@ -62,13 +63,11 @@ export default function useWelcomeTour() {
     scrollToPage(TOUR_PAGE_COUNT - 1);
   }
 
-  // 뒤로가기로 투어에 다시 오지 않도록 교체한다. 설문 화면의 "나가기"는 돌아갈 곳이 없으면 홈으로 간다.
+  // 끝까지 본 것으로 기록하고 로그인하러 간다. 뒤로가기로 투어에 다시 오지 않도록 교체한다.
+  // 중간에 앱을 끄면 기록되지 않아 다음에 켤 때 투어가 다시 뜬다.
   function handleStartPress() {
-    router.replace('/survey');
-  }
-
-  function handleLaterPress() {
-    router.replace('/');
+    markTourSeen();
+    router.replace('/onboarding');
   }
 
   return {
@@ -80,6 +79,5 @@ export default function useWelcomeTour() {
     handleNextPress,
     handleSkipPress,
     handleStartPress,
-    handleLaterPress,
   };
 }
