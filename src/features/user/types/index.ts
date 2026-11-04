@@ -19,6 +19,8 @@ export interface UserProfile {
   surveyCompleted: boolean;
   /** 내 빵 이름(예: "쫀쫀한 카스테라") — 감정일기에서 다른 사람에게 보이는 이름과 같다. 설문 전이면 null. */
   breadName: string | null;
+  /** AI 캐릭터 개인화(감정일기 학습) 동의. 기본 true. 끄면 일기·댓글·답변을 내 캐릭터에 쓰지 않는다. */
+  learningEnabled: boolean;
 }
 
 /**
@@ -35,4 +37,6 @@ export interface UpdateUserProfileInput {
   age?: number;
   job?: string;
   bio?: string;
+  /** 보내지 않으면 서버가 기존 값을 유지한다. */
+  learningEnabled?: boolean;
 }
