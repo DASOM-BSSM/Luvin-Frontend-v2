@@ -47,6 +47,12 @@ if (Platform.OS !== "web") {
   colorScheme.set("light");
 }
 
+const TAB_SCREEN_OPTIONS = {
+  animation: "slide_from_right",
+  animationTypeForReplace: "push",
+  animationDuration: 280,
+} as const;
+
 export default function RootLayout() {
   // 키 이름이 곧 RN 의 fontFamily 값이다.
   // tailwind.config.js 의 fontFamily / src/constants/typography.ts 와 반드시 일치해야 한다.
@@ -113,7 +119,14 @@ export default function RootLayout() {
             // 전환 중 흰색이 비치지 않도록 기본 배경을 토큰 색으로 맞춘다.
             contentStyle: { backgroundColor: theme.colors.default.bg },
           }}
-        />
+        >
+          {/* 하단 탭 4개 화면: 창문을 미는 것처럼 가로로 미끄러진다. 탭 이동은 replace 라서
+              animationTypeForReplace 를 push 로 두어야 같은 방향으로 슬라이드한다. */}
+          <Stack.Screen name="index" options={TAB_SCREEN_OPTIONS} />
+          <Stack.Screen name="oven" options={TAB_SCREEN_OPTIONS} />
+          <Stack.Screen name="diaries/index" options={TAB_SCREEN_OPTIONS} />
+          <Stack.Screen name="bread" options={TAB_SCREEN_OPTIONS} />
+        </Stack>
         {/* 회차 쪽지. 안 읽은 쪽지가 있으면 어느 화면이든 가장 먼저 뜬다(use-partner-letter). */}
         <PartnerLetterModal />
       </QueryProvider>

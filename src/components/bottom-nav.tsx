@@ -22,26 +22,29 @@ interface BottomNavProps {
   active?: BottomNavItem;
 }
 
-/** 하단 알약형 내비게이션. 탭 이동은 이 컴포넌트가 직접 처리한다(bread-survey-prompt-card 등과 같은 패턴). */
+/**
+ * 하단 알약형 내비게이션. 탭 이동은 이 컴포넌트가 직접 처리한다(bread-survey-prompt-card 등과 같은 패턴).
+ * 탭끼리 오갈 때 히스토리가 쌓이지 않도록 push 가 아니라 replace 로 이동한다.
+ */
 export default function BottomNav({ active = 'home' }: BottomNavProps) {
   function handleHomeTabPress() {
     if (active === 'home') return;
-    router.push('/');
+    router.replace('/');
   }
 
   function handleOvenTabPress() {
     if (active === 'oven') return;
-    router.push('/oven');
+    router.replace('/oven');
   }
 
   function handleDiaryTabPress() {
     if (active === 'diary') return;
-    router.push('/diaries');
+    router.replace('/diaries');
   }
 
   function handleBreadTabPress() {
     if (active === 'bread') return;
-    router.push('/bread');
+    router.replace('/bread');
   }
 
   return (
