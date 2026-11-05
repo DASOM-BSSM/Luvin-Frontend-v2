@@ -8,17 +8,18 @@ import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import BreadTraitList from '@/src/features/bread/components/bread-trait-list';
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
-import RecommendedVideoCard from '@/src/features/bread/components/recommended-video-card';
-import type { RecommendedVideo } from '@/src/features/bread/types';
+// TODO(LUV-102): 영상 제작자 동의 전까지 추천 영상 기능 임시 비활성화. 동의를 받으면 주석 해제.
+// import RecommendedVideoCard from '@/src/features/bread/components/recommended-video-card';
+// import type { RecommendedVideo } from '@/src/features/bread/types';
 import BreadSurveyPromptCard from '@/src/features/home/components/bread-survey-prompt-card';
 import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import useMySurveyResult from '@/src/features/survey/hooks/use-my-survey-result';
 
 // 썸네일은 ID 로 주소를 만들어 원격에서 불러온다. 저장소에 이미지를 두지 않는다.
-const RECOMMENDED_VIDEO: RecommendedVideo | null = {
-  title: '[비치키] 원하면서 도망치는 이유',
-  youtubeId: 'fhYqGTqvd7A',
-};
+// const RECOMMENDED_VIDEO: RecommendedVideo | null = {
+//   title: '[비치키] 원하면서 도망치는 이유',
+//   youtubeId: 'fhYqGTqvd7A',
+// };
 
 /**
  * 내 성향 화면. Figma "Luvin-Design" / `내 성향-우린` (5747:4183).
@@ -95,15 +96,18 @@ export default function BreadScreen() {
             )}
           </View>
 
-          {RECOMMENDED_VIDEO ? (
-            <View className="w-full flex-col items-start gap-[12px]">
-              {/* Figma 에서 이 줄만 변수 바인딩 없이 #000000 이라 default/black 토큰으로 맞췄다. */}
-              <Text variant="body-s" className="text-default-black">
-                내 반죽에 맞는 심리학 영상 컨텐츠 추천
-              </Text>
-              <RecommendedVideoCard video={RECOMMENDED_VIDEO} />
-            </View>
-          ) : null}
+          {/* TODO(LUV-102): 영상 제작자 동의 전까지 임시 비활성화. 동의를 받으면 주석 해제. */}
+          {
+            // {RECOMMENDED_VIDEO ? (
+            //   <View className="w-full flex-col items-start gap-[12px]">
+            //     {/* Figma 에서 이 줄만 변수 바인딩 없이 #000000 이라 default/black 토큰으로 맞췄다. */}
+            //     <Text variant="body-s" className="text-default-black">
+            //       내 반죽에 맞는 심리학 영상 컨텐츠 추천
+            //     </Text>
+            //     <RecommendedVideoCard video={RECOMMENDED_VIDEO} />
+            //   </View>
+            // ) : null}
+          }
 
           {!isLoading && !isError && profile ? (
             <Button
