@@ -36,8 +36,9 @@ export default function BreadScreen() {
   const reasonTexts = resultQuery.data?.reasonTexts ?? [];
 
   function handleSaveAndExitPress() {
-    // 설문 마지막 답변을 제출할 때 서버 저장이 완료된다. 여기서는 홈으로 돌아간다.
-    router.dismissTo('/');
+    // 설문 마지막 답변을 제출할 때 서버 저장이 완료된다. 여기서는 홈 탭으로 돌아간다.
+    // 홈이 스택이 아니라 (tabs) 안에 있어서 dismissTo 는 아무 일도 하지 않는다 — navigate 를 쓴다.
+    router.navigate('/');
   }
 
   function handleBackPress() {
