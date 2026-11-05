@@ -10,7 +10,7 @@ import Text, { type TextVariant } from '@/src/components/ui/text';
  */
 export const TYPEWRITER_SPEED_MS = 17;
 
-interface TypewriterTextProps {
+export interface TypewriterTextProps {
   text: string;
   variant?: TextVariant;
   className?: string;

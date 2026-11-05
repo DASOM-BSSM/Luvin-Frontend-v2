@@ -2,7 +2,7 @@ import { View } from "react-native";
 
 import BreadCharacter from "@/src/assets/images/BreadCharacter";
 import Text from "@/src/components/ui/text";
-import TypewriterText from "@/src/components/ui/typewriter-text";
+import SpeedTypewriterText from '@/src/features/dialogue-speed/components/speed-typewriter-text';
 import InfernoChatBubble from "@/src/features/inferno/components/inferno-chat-bubble";
 import {
   CHAT_AVATAR_SLOT_CLASS,
@@ -69,7 +69,7 @@ export default function InfernoChatRow({
         {participant.name}
       </Text>
       <InfernoChatBubble side={message.side} isMine={participant.isMine}>
-        <TypewriterText
+        <SpeedTypewriterText
           text={message.text}
           variant="body-m"
           className="text-text-primary"

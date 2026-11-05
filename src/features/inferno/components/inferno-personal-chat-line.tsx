@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import HeartBadgeIcon from '@/src/assets/icons/HeartBadgeIcon';
-import TypewriterText from '@/src/components/ui/typewriter-text';
+import SpeedTypewriterText from '@/src/features/dialogue-speed/components/speed-typewriter-text';
 import theme from '@/src/constants/theme';
 import InfernoChatBubble from '@/src/features/inferno/components/inferno-chat-bubble';
 import InfernoHeartPop from '@/src/features/inferno/components/inferno-heart-pop';
@@ -62,7 +62,7 @@ export default function InfernoPersonalChatLine({
           onPress={handleBubblePress}
         >
           <InfernoChatBubble side={message.side} isMine={participant.isMine} palette="pink">
-            <TypewriterText
+            <SpeedTypewriterText
               text={message.text}
               variant="body-m"
               className="text-text-primary"

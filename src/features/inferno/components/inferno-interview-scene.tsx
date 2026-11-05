@@ -12,7 +12,7 @@ import { View } from 'react-native';
 
 import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import Text from '@/src/components/ui/text';
-import TypewriterText from '@/src/components/ui/typewriter-text';
+import SpeedTypewriterText from '@/src/features/dialogue-speed/components/speed-typewriter-text';
 import { okMallangBTitleStyle } from '@/src/constants/typography';
 import type { InfernoChatMessage, InfernoParticipant } from '@/src/features/inferno/types';
 import { getBreadFlavorName } from '@/src/features/inferno/utils/character-persona';
@@ -57,7 +57,7 @@ export default function InfernoInterviewScene({
               {answerer.name}
             </Text>
           </View>
-          <TypewriterText
+          <SpeedTypewriterText
             key={message.id}
             text={message.text}
             variant="body-s"
