@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
-import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import BalanceGameSection from '@/src/features/diaries/components/balance-game-section';
 import DiariesHeader from '@/src/features/diaries/components/diaries-header';
@@ -52,7 +51,7 @@ export default function DiariesHomeScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[40px] px-[30px] pb-[24px] pt-[36px]"
@@ -69,9 +68,6 @@ export default function DiariesHomeScreen() {
         </View>
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="diary" />
-      </View>
 
       <InfernoNoticeModal
         visible={isStartModalVisible}

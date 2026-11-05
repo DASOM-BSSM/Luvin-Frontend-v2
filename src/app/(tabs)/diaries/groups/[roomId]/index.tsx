@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
 import CreateDiaryModal from '@/src/features/diaries/components/create-diary-modal';
@@ -90,7 +89,7 @@ export default function GroupMainScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         // 좌우 여백 30 은 시간대 넘기기 탭 자리(GroupSlotBody)라 컨테이너가 아니라 머리 · 안내 줄에 둔다.
@@ -128,9 +127,6 @@ export default function GroupMainScreen() {
         )}
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="diary" />
-      </View>
 
       <CreateDiaryModal
         visible={isWriteOpen}

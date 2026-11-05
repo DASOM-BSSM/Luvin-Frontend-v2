@@ -2,7 +2,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import BottomNav from '@/src/components/bottom-nav';
 import BackHeader from '@/src/components/ui/back-header';
 import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
@@ -105,7 +104,7 @@ export default function GroupSettingsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[60px] px-[30px] pb-[24px] pt-[36px]"
@@ -164,9 +163,6 @@ export default function GroupSettingsScreen() {
         </View>
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="diary" />
-      </View>
 
       <LeaveGroupModal
         visible={isLeaveModalVisible}
