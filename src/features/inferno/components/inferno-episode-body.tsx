@@ -56,6 +56,8 @@ export default function InfernoEpisodeBody({
     surface,
     onPreviousPress,
     onNextPress,
+    onPreviousTap,
+    onNextTap,
     tokenCost,
     loaderActive,
     handleUnlocked,
@@ -102,6 +104,8 @@ export default function InfernoEpisodeBody({
       onSkipPress={handleLeavePress}
       onPreviousPress={onPreviousPress}
       onNextPress={onNextPress}
+      onPreviousTap={onPreviousTap}
+      onNextTap={onNextTap}
     >
       {gate ? (
         <InfernoEpisodeGateView
