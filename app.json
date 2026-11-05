@@ -3,6 +3,7 @@
     "name": "luvin-frontend-v2",
     "slug": "luvin-frontend-v2",
     "version": "1.0.0",
+    "icon": "./assets/images/icon.png",
     "orientation": "default",
     "scheme": "luvinfrontendv2",
     "userInterfaceStyle": "automatic",
