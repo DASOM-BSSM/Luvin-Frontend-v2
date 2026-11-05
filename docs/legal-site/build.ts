@@ -7,25 +7,25 @@
  *
  * Node 스크립트라 앱 tsconfig 의 typecheck 에서는 뺐다(tsconfig exclude) — 앱에는 Node 타입이 없다.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { colors } from '@/src/constants/colors';
-import { ABOUT_DOCUMENT } from '@/src/features/legal/constants/about';
-import { ACCOUNT_DELETION_DOCUMENT } from '@/src/features/legal/constants/account-deletion';
-import { PRIVACY_POLICY_DOCUMENT } from '@/src/features/legal/constants/privacy-policy';
-import { SERVICE_INFO } from '@/src/features/legal/constants/service-info';
-import type { LegalDocument, LegalSection } from '@/src/features/legal/types';
+import { colors } from "@/src/constants/colors";
+import { ABOUT_DOCUMENT } from "@/src/features/legal/constants/about";
+import { ACCOUNT_DELETION_DOCUMENT } from "@/src/features/legal/constants/account-deletion";
+import { PRIVACY_POLICY_DOCUMENT } from "@/src/features/legal/constants/privacy-policy";
+import { SERVICE_INFO } from "@/src/features/legal/constants/service-info";
+import type { LegalDocument, LegalSection } from "@/src/features/legal/types";
 
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), 'public');
+const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "public");
 
 /**
  * Google Search Console 소유 확인 값. Search Console → URL 접두어 → "HTML 태그" 방식에서 주는
  * `<meta name="google-site-verification" content="...">` 의 content 값만 여기 넣고 다시 빌드한다.
  * 비어 있으면 태그를 넣지 않는다. 비밀값이 아니라 커밋해도 된다.
  */
-const GOOGLE_SITE_VERIFICATION = '';
+const GOOGLE_SITE_VERIFICATION = "4xtgrWQQj1E4OSR-XZeh6MaLHVCJYfPOVH6b4ehC9sQ";
 
 interface Page {
   fileName: string;
@@ -33,38 +33,32 @@ interface Page {
 }
 
 const PAGES: readonly Page[] = [
-  { fileName: 'index.html', document: ABOUT_DOCUMENT },
-  { fileName: 'privacy.html', document: PRIVACY_POLICY_DOCUMENT },
-  { fileName: 'delete-account.html', document: ACCOUNT_DELETION_DOCUMENT },
+  { fileName: "index.html", document: ABOUT_DOCUMENT },
+  { fileName: "privacy.html", document: PRIVACY_POLICY_DOCUMENT },
+  { fileName: "delete-account.html", document: ACCOUNT_DELETION_DOCUMENT },
 ];
 
 function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 /** 글 안의 줄바꿈(\n)은 <br> 로 바꾼다. */
 function toHtmlText(value: string): string {
-  return escapeHtml(value).replace(/\n/g, '<br>');
+  return escapeHtml(value).replace(/\n/g, "<br>");
 }
 
 function renderSection(section: LegalSection): string {
-  const body = section.body ? `<p>${toHtmlText(section.body)}</p>` : '';
-  const items = section.items
-    ? `<ul>${section.items.map((item) => `<li>${toHtmlText(item)}</li>`).join('')}</ul>`
-    : '';
+  const body = section.body ? `<p>${toHtmlText(section.body)}</p>` : "";
+  const items = section.items ? `<ul>${section.items.map(item => `<li>${toHtmlText(item)}</li>`).join("")}</ul>` : "";
   return `<section><h2>${escapeHtml(section.title)}</h2>${body}${items}</section>`;
 }
 
 function renderPage({ document }: Page): string {
   const title = `${document.title} | ${SERVICE_INFO.serviceName}`;
-  const caption = document.caption ? `<p class="caption">${escapeHtml(document.caption)}</p>` : '';
+  const caption = document.caption ? `<p class="caption">${escapeHtml(document.caption)}</p>` : "";
   const verification = GOOGLE_SITE_VERIFICATION
     ? `<meta name="google-site-verification" content="${escapeHtml(GOOGLE_SITE_VERIFICATION)}">\n`
-    : '';
+    : "";
 
   return `<!doctype html>
 <html lang="ko">
@@ -107,13 +101,13 @@ ${verification}<title>${escapeHtml(title)}</title>
 <main>
 <nav>
 ${PAGES.map(
-  (page) =>
-    `<a href="./${page.fileName}"${page.document === document ? ' aria-current="page"' : ''}>${escapeHtml(page.document.title)}</a>`,
-).join('\n')}
+  page =>
+    `<a href="./${page.fileName}"${page.document === document ? ' aria-current="page"' : ""}>${escapeHtml(page.document.title)}</a>`,
+).join("\n")}
 </nav>
 <h1>${escapeHtml(document.title)}</h1>
 ${caption}
-${document.sections.map(renderSection).join('\n')}
+${document.sections.map(renderSection).join("\n")}
 <footer>© ${escapeHtml(SERVICE_INFO.operator)} · ${escapeHtml(SERVICE_INFO.contactEmail)}</footer>
 </main>
 </body>
@@ -125,4 +119,4 @@ mkdirSync(OUT_DIR, { recursive: true });
 for (const page of PAGES) {
   writeFileSync(join(OUT_DIR, page.fileName), renderPage(page));
 }
-process.stdout.write(`생성 완료: ${PAGES.map((page) => page.fileName).join(', ')} → ${OUT_DIR}\n`);
+process.stdout.write(`생성 완료: ${PAGES.map(page => page.fileName).join(", ")} → ${OUT_DIR}\n`);
