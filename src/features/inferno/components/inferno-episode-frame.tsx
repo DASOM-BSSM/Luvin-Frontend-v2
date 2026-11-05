@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import LandscapeOnly from '@/src/components/landscape-only';
 import InfernoBottomBar from '@/src/features/inferno/components/inferno-bottom-bar';
 import InfernoDotBackground from '@/src/features/inferno/components/inferno-dot-background';
+import InfernoEpisodeTapZones from '@/src/features/inferno/components/inferno-episode-tap-zones';
 import InfernoNoteCard from '@/src/features/inferno/components/inferno-note-card';
 import InfernoTopBar from '@/src/features/inferno/components/inferno-top-bar';
 import type { InfernoEpisode } from '@/src/features/inferno/types';
@@ -27,6 +28,12 @@ interface InfernoEpisodeFrameProps {
   /** 넘기지 않으면 해당 버튼이 연해지고 눌리지 않는다. */
   onPreviousPress?: () => void;
   onNextPress?: () => void;
+  /**
+   * 본문 왼쪽/오른쪽 절반 탭. 넘기지 않으면 해당 쪽 탭은 무시한다.
+   * 상단 버튼과 달리 말풍선이 다 나온 뒤에만 넘겨야 한다(use-episode-playback).
+   */
+  onPreviousTap?: () => void;
+  onNextTap?: () => void;
   onSkipPress?: () => void;
   children: ReactNode;
 }
@@ -44,6 +51,8 @@ export default function InfernoEpisodeFrame({
   skipLabel,
   onPreviousPress,
   onNextPress,
+  onPreviousTap,
+  onNextTap,
   onSkipPress,
   children,
 }: InfernoEpisodeFrameProps) {
@@ -59,13 +68,15 @@ export default function InfernoEpisodeFrame({
           onPreviousPress={onPreviousPress}
           onNextPress={onNextPress}
         />
-        {isNote ? (
-          <View className="flex-1 px-[46px]">
-            <InfernoNoteCard>{children}</InfernoNoteCard>
-          </View>
-        ) : (
-          <View className="flex-1">{children}</View>
-        )}
+        <InfernoEpisodeTapZones onPreviousTap={onPreviousTap} onNextTap={onNextTap}>
+          {isNote ? (
+            <View className="flex-1 px-[46px]">
+              <InfernoNoteCard>{children}</InfernoNoteCard>
+            </View>
+          ) : (
+            <View className="flex-1">{children}</View>
+          )}
+        </InfernoEpisodeTapZones>
         <InfernoBottomBar
           label={formatIntroLabel(episode.order, episode.title)}
           skipLabel={skipLabel}
