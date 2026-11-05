@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
-import BottomNav from '@/src/components/bottom-nav';
 import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
@@ -51,7 +50,7 @@ export default function JoinGroupScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[60px] px-[30px] pb-[24px] pt-[36px]"
@@ -110,9 +109,6 @@ export default function JoinGroupScreen() {
         </View>
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="diary" />
-      </View>
     </Screen>
   );
 }

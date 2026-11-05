@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
-import BottomNav from '@/src/components/bottom-nav';
 import Button from '@/src/components/ui/button';
 import Screen from '@/src/components/ui/screen';
 import Text from '@/src/components/ui/text';
@@ -37,8 +36,9 @@ export default function BreadScreen() {
   const reasonTexts = resultQuery.data?.reasonTexts ?? [];
 
   function handleSaveAndExitPress() {
-    // 설문 마지막 답변을 제출할 때 서버 저장이 완료된다. 여기서는 홈으로 돌아간다.
-    router.dismissTo('/');
+    // 설문 마지막 답변을 제출할 때 서버 저장이 완료된다. 여기서는 홈 탭으로 돌아간다.
+    // 홈이 스택이 아니라 (tabs) 안에 있어서 dismissTo 는 아무 일도 하지 않는다 — navigate 를 쓴다.
+    router.navigate('/');
   }
 
   function handleBackPress() {
@@ -51,7 +51,7 @@ export default function BreadScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[20px] px-[30px] pb-[24px] pt-[26px]"
@@ -119,9 +119,6 @@ export default function BreadScreen() {
         </View>
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="bread" />
-      </View>
     </Screen>
   );
 }

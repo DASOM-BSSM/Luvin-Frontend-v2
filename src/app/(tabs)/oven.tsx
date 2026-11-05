@@ -8,7 +8,6 @@ import CloudMediumIcon from "@/src/assets/icons/CloudMediumIcon";
 import BakingAsset from "@/src/assets/images/bread-baking/BakingAsset";
 import BreadCharacter from "@/src/assets/images/BreadCharacter";
 import PlayerAvatar from "@/src/assets/images/PlayerAvatar";
-import BottomNav from "@/src/components/bottom-nav";
 import Screen from "@/src/components/ui/screen";
 import SectionHeader from "@/src/components/ui/section-header";
 import Text from "@/src/components/ui/text";
@@ -225,7 +224,7 @@ export default function OvenScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[40px] px-[30px] pb-[24px] pt-[26px]"
@@ -288,9 +287,6 @@ export default function OvenScreen() {
         </View>
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="oven" />
-      </View>
     </Screen>
   );
 }

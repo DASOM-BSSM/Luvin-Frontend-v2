@@ -4,7 +4,6 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import ProfileIcon from '@/src/assets/icons/ProfileIcon';
 import LuvinLogo from '@/src/assets/images/LuvinLogo';
-import BottomNav from '@/src/components/bottom-nav';
 import Screen from '@/src/components/ui/screen';
 import SectionHeader from '@/src/components/ui/section-header';
 import Text from '@/src/components/ui/text';
@@ -316,7 +315,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={['top']}>
       <ScrollView
         className="flex-1"
         contentContainerClassName="flex-col gap-[40px] px-[30px] pb-[24px] pt-[26px]"
@@ -375,9 +374,6 @@ export default function HomeScreen() {
         />
       </ScrollView>
 
-      <View className="pb-[10px]">
-        <BottomNav active="home" />
-      </View>
 
       <InfernoNoticeModal
         visible={isNoticeVisible}
