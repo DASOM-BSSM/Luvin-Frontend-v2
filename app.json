@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "usesAppleSignIn": true,
-      "bundleIdentifier": "com.dasom.luvinapp"
+      "bundleIdentifier": "com.dasom.luvinapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "predictiveBackGestureEnabled": false,
