@@ -160,8 +160,7 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
         ? 'intro'
         : null;
 
-  const tapNavigable =
-    !gate && flow.ready && block?.type !== 'choice' && block?.type !== 'transition';
+  const tapNavigable = !gate && flow.ready;
 
   return {
     exit,
@@ -192,7 +191,7 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
           ? flow.next
           : undefined,
     // 화면 좌우 절반 탭. 상단 버튼이 활성일 때만 동작하고, 말풍선이 다 나오기 전(flow.ready 전)에는
-    // 이전/다음 모두 무시한다. 선택·전환 장면은 자체 버튼으로 넘기므로 탭 이동을 쓰지 않는다.
+    // 이전/다음 모두 무시한다. 배경 탭만 받으므로 선택 카드·버튼·말풍선 같은 요소는 영향이 없다.
     onPreviousTap: tapNavigable ? flow.previous : undefined,
     onNextTap: tapNavigable && flow.ready ? flow.next : undefined,
     introStep: intro.step,
