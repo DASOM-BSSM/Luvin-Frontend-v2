@@ -20,6 +20,8 @@ interface InfernoTopBarProps {
   /** 넘기지 않으면 갈 곳이 없다는 뜻이라 버튼이 흐려지고 눌리지 않는다. */
   onPreviousPress?: () => void;
   onNextPress?: () => void;
+  /** 넘기면 "대화속도" 버튼이 나오고, 누르면 속도 조절 모달을 연다. */
+  onSpeedPress?: () => void;
 }
 
 /**
@@ -31,6 +33,7 @@ export default function InfernoTopBar({
   titleVariant = 'image',
   onPreviousPress,
   onNextPress,
+  onSpeedPress,
 }: InfernoTopBarProps) {
   return (
     <View className="h-[51px] w-full flex-row items-center justify-between overflow-hidden bg-yellow-200 px-[28px]">
@@ -42,6 +45,11 @@ export default function InfernoTopBar({
         <InfernoTitle width={TITLE_WIDTH} />
       )}
       <View className="flex-row items-center gap-[28px]">
+        {onSpeedPress ? (
+          <Text variant="body-m" className="text-text-muted" onPress={onSpeedPress}>
+            대화속도
+          </Text>
+        ) : null}
         <Text
           variant="body-m"
           className={`text-text-muted ${onPreviousPress ? '' : DISABLED_CLASS}`}
