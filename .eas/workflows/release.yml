@@ -1,0 +1,35 @@
+# `release` 브랜치에 푸시되면 production 빌드를 만든다.
+#
+# - Android: 빌드까지만. 결과물(AAB)은 Play Console / 원스토어에 직접 올린다.
+# - iOS: 빌드 후 App Store Connect(TestFlight)까지 자동 제출한다. 심사 제출은 App Store Connect 에서 직접 한다.
+#
+# 두 플랫폼 빌드는 서로 기다리지 않고 동시에 돈다. 한쪽이 실패해도 다른 쪽은 계속된다.
+# 빌드 번호는 eas.json 의 production 프로필(`autoIncrement`)이 올린다.
+name: Release build
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  build_android:
+    name: Android production build
+    type: build
+    params:
+      platform: android
+      profile: production
+
+  build_ios:
+    name: iOS production build
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit_ios:
+    name: iOS submit to App Store Connect
+    needs: [build_ios]
+    type: submit
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
