@@ -175,8 +175,8 @@ Before developing any page: identify reusable UI shared across pages and build i
 
 See `CONTRIBUTING.md` for the full table.
 
-- Branch: `<type>/<jira-number>` → `feat/LUV-26`
+- Branch: `<type>/<jira-number>` → `feat/LUV-26` (`release` is a commit type only — not allowed as a branch type)
 - Commit: `<type>(<jira-number>) :: 변경 사항 요약` → `chore(LUV-26) :: 커밋 컨벤션 추가`
-- Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `delete`, `build`; subject ≤ 50 chars; body optional, wrap at 72
+- Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `delete`, `build`, `release` (bundle version bump); subject ≤ 50 chars; body optional, wrap at 72
 - Ask before committing or pushing; never commit directly to `main`
 - Once a pre-commit hook exists, do not bypass it with `--no-verify`
