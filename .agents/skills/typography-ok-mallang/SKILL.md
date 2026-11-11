@@ -5,7 +5,7 @@ description: Luvin 폰트 규칙 상세 — Ok Mallang B(러빈지옥 제목·�
 
 # Typography 상세 (Ok Mallang B)
 
-기본 규칙(폰트 3종, `fontWeight` 금지, 토큰 사용)은 AGENTS.md §8에 있다. 이 문서는 Ok Mallang B와 폰트 등록의 세부 규칙이다.
+기본 규칙(폰트 3종, `fontWeight` 금지, 토큰 사용)은 AGENTS.md §5에 있다. 이 문서는 Ok Mallang B와 폰트 등록의 세부 규칙이다.
 
 ## 폰트 등록
 

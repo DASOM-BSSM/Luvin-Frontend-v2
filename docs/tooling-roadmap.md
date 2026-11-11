@@ -1,6 +1,6 @@
 # Tooling Roadmap (lint · format · test · CI)
 
-AGENTS.md §5–§7의 "현재 상태" 요약에서 분리한 목표 구성이다. 사용자가 승인했을 때만 진행한다.
+AGENTS.md §4(품질 게이트·테스트·CI)에서 분리한 목표 구성이다. 사용자가 승인했을 때만 진행한다.
 
 ## 현재 상태
 
