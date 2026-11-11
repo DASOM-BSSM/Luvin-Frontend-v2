@@ -173,10 +173,11 @@ Before developing any page: identify reusable UI shared across pages and build i
 
 # 10. Git Conventions
 
-`CONTRIBUTING.md` is the source of truth: per-type descriptions plus branch and commit message formats with examples. Summary:
+`CONTRIBUTING.md` is the source of truth: per-type descriptions, branch and commit message formats with examples, and the bundle version bump rules (patch/minor/major; major needs team agreement). Read it before bumping a version. Summary:
 
 - Branch: `<type>/<jira-number>` → `feat/LUV-26` (`release` is a commit type only — not allowed as a branch type)
 - Commit: `<type>(<jira-number>) :: 변경 사항 요약` → `chore(LUV-26) :: 커밋 컨벤션 추가`
 - Types: `feat`, `fix`, `refactor`, `test`, `chore`, `docs`, `delete`, `build`, `release` (bundle version bump); subject ≤ 50 chars; body optional, wrap at 72
+- A `release` (version bump) commit must **always be its own standalone commit** — never mix it with other changes
 - Ask before committing or pushing; never commit directly to `main`
 - Once a pre-commit hook exists, do not bypass it with `--no-verify`
