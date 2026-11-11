@@ -25,6 +25,8 @@ Load these when the task touches the area — they are not repeated here:
 | Prettier / husky / test / CI setup (not done yet) | `docs/tooling-roadmap.md` |
 | AGENTS.md audit | `.claude/skills/review-agents-md` |
 
+**Keeping this file accurate:** update AGENTS.md in the same PR only when a change makes a statement here wrong — a dependency added/removed (§2), a path or script name referenced here renamed, or a convention changed. Do not touch it for other changes, and do not add current-state facts that can be read from the repo (`package.json`, the file tree).
+
 ---
 
 # 1. Platform Principles
@@ -53,9 +55,9 @@ Load these when the task touches the area — they are not repeated here:
 | Auth | Google (`@react-native-google-signin`) and Apple (`expo-apple-authentication`); no separate sign-up |
 | Deep linking | `expo-linking`, scheme `luvinfrontendv2` |
 
-## Not installed — ask before adding
+## Ask before adding
 
-`prettier`, `husky`, `lint-staged` (§5) · `jest-expo` / `@testing-library/react-native` / Maestro (§6) · `expo-notifications` · `@sentry/react-native` · any analytics SDK · any toast library (build in-house) · any icon package.
+Check `package.json` for what is installed. Never add on your own initiative: formatter/hooks (§5), test tooling (§6), push notifications, crash reporting, analytics SDKs, toast libraries (build in-house), or icon packages.
 
 `app.json` enables `experiments.typedRoutes` and `experiments.reactCompiler`:
 
@@ -80,7 +82,7 @@ Load these when the task touches the area — they are not repeated here:
 
 # 5. Quality Gate
 
-ESLint is set up (`eslint.config.js`): `no-explicit-any` (error), `no-console` (warn), `Animated`/`Image` from `react-native` banned, `react-native-mmkv` banned outside `src/lib/`. **Prettier and pre-commit hooks are not set up** — see `docs/tooling-roadmap.md`; until then, follow the style of existing files (single quotes, semicolons, 2-space indent, width 100).
+Lint rules live in `eslint.config.js`. Formatter and pre-commit hooks are a pending decision — see `docs/tooling-roadmap.md`; follow the style of existing files (single quotes, semicolons, 2-space indent, width 100).
 
 Before reporting any code change done, run and report the result honestly:
 
@@ -99,7 +101,7 @@ Rules not machine-enforced (inline styles, manual memoization, margin/padding, e
 
 # 7. CI
 
-There is no PR CI and no `.github/`. The only workflow is `.eas/workflows/release.yml` (EAS release, runs only when build-affecting paths change). Git conventions (§17) are enforced by review. Do not add native builds or EAS Build to PR CI without asking. Target setup: `docs/tooling-roadmap.md`.
+CI lives in `.eas/workflows/`; PR CI is a pending decision (`docs/tooling-roadmap.md`). Do not add native builds or EAS Build to PR CI without asking.
 
 ---
 
@@ -219,7 +221,7 @@ Before developing any page:
 - Editing `ios/` / `android/`; installing packages from §2's "Not installed" list on your own initiative
 - Claiming a change was verified on device when you did not run it (§6)
 
-> Known gap: existing code still contains some inline `style={{}}` (17 files), `useMemo`/`useCallback` (8 places) and `console.*` (12 places) that predate these rules. Do not copy them into new code; clean them up only when touching that code.
+> Existing code may still contain inline `style={{}}`, `useMemo`/`useCallback` and `console.*` that predate these rules. Do not copy them into new code; clean them up only when touching that code.
 
 # 17. Git Conventions
 
