@@ -173,7 +173,7 @@ Before developing any page: identify reusable UI shared across pages and build i
 
 # 10. Git Conventions
 
-See `CONTRIBUTING.md` for the full table.
+`CONTRIBUTING.md` is the source of truth: per-type descriptions plus branch and commit message formats with examples. Summary:
 
 - Branch: `<type>/<jira-number>` → `feat/LUV-26` (`release` is a commit type only — not allowed as a branch type)
 - Commit: `<type>(<jira-number>) :: 변경 사항 요약` → `chore(LUV-26) :: 커밋 컨벤션 추가`
