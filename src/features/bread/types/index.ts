@@ -1,3 +1,5 @@
+import type { BreadType } from '@/src/assets/images/BreadCharacter';
+
 /**
  * "내 성향" 화면 도메인 타입. Figma "Luvin-Design" / `내 성향-우린` (5747:4183).
  *
@@ -13,4 +15,15 @@ export interface RecommendedVideo {
    * 남의 영상 이미지라 저장소에 두지 않고 항상 원격에서 불러온다.
    */
   youtubeId: string;
+}
+
+/** 빵 소개 화면에서 보여주는 빵 한 종류의 소개. */
+export interface BreadIntro {
+  type: BreadType;
+  /** 예: "소금빵" */
+  name: string;
+  /** 한 줄 요약. */
+  summary: string;
+  /** "#" 없이 문구만. `BreadTraitList` 가 앞에 "#" 을 붙인다. */
+  traits: string[];
 }

@@ -41,6 +41,10 @@ export default function BreadScreen() {
     router.navigate('/');
   }
 
+  function handleBreadsPress() {
+    router.push('/breads');
+  }
+
   function handleBackPress() {
     // 탭으로 들어온 경우가 정상 경로고, 딥링크로 바로 열렸으면 돌아갈 곳이 없다.
     if (router.canGoBack()) {
@@ -94,6 +98,8 @@ export default function BreadScreen() {
             ) : (
               <BreadSurveyPromptCard />
             )}
+            {/* LUV-113: 시안 없이 넣은 빵 소개 화면 입구. 시안이 나오면 위치·모양을 맞출 것. */}
+            <Button label="다른 빵들도 알아보기" onPress={handleBreadsPress} />
           </View>
 
           {/* TODO(LUV-102): 영상 제작자 동의 전까지 임시 비활성화. 동의를 받으면 주석 해제. */}
