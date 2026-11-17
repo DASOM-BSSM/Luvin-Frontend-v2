@@ -20,6 +20,8 @@ export default function useHomeGroupFeed() {
   const roomsQuery = useMyRooms();
   const feedQuery = useCommunityDiaries();
   const shortcutRoomId = feedQuery.data?.[0]?.roomId ?? roomsQuery.data?.[0]?.id;
+  // 섹션 제목은 바로가기 그룹의 이름이다(LUV-110). 목록에 아직 없으면 undefined.
+  const shortcutRoomName = roomsQuery.data?.find((room) => room.id === shortcutRoomId)?.name;
   // 그룹이 정해지기 전에는 NaN 이라 부르지 않는다(useCurrentQuestion 의 enabled).
   const questionQuery = useCurrentQuestion(shortcutRoomId ?? Number.NaN);
 
@@ -42,6 +44,8 @@ export default function useHomeGroupFeed() {
 
   return {
     shortcutRoomId,
+    /** 바로가기 그룹의 이름 — 섹션 제목으로 쓴다. */
+    shortcutRoomName,
     announcedQuestion,
     /** 지금 칸(질문이 있으면 그 질문의 칸 — 같은 칸이다)에 그 그룹에서 쓴 일기 전부(최신순), 내 것 · 남의 것 모두. */
     slotDiaries: visibleFeed,
