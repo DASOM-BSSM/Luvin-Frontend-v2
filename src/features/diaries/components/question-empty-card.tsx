@@ -14,7 +14,7 @@ export default function QuestionEmptyCard({ onCreatePress }: QuestionEmptyCardPr
       <Text variant="body-s" className="text-text-primary">
         질문을 생성하여 친구들과 의견을 공유해요
       </Text>
-      <Button label="질문 생성하기" variant="filled" onPress={onCreatePress} />
+      <Button label="질문 생성하기" variant="filledSelected" onPress={onCreatePress} />
     </View>
   );
 }
