@@ -44,7 +44,16 @@ export default function GroupFeedSection({
   shortcutLabel = '바로가기→',
 }: GroupFeedSectionProps) {
   const feed = useHomeGroupFeed();
-  const { shortcutRoomId, announcedQuestion, slotDiaries, hasNoRoom, isLoading, isError, refetch } = feed;
+  const {
+    shortcutRoomId,
+    shortcutRoomName,
+    announcedQuestion,
+    slotDiaries,
+    hasNoRoom,
+    isLoading,
+    isError,
+    refetch,
+  } = feed;
 
   function handleRetryPress() {
     refetch();
@@ -55,6 +64,7 @@ export default function GroupFeedSection({
     onGroupPress(shortcutRoomId);
   }
   const shellProps = {
+    roomName: shortcutRoomName,
     shortcutLabel,
     onShortcutPress: handleShortcutPress,
     onReactionPress: onGroupPress,
