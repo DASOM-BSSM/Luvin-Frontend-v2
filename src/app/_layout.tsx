@@ -112,6 +112,9 @@ export default function RootLayout() {
             headerShown: false,
             // 전환 중 흰색이 비치지 않도록 기본 배경을 토큰 색으로 맞춘다.
             contentStyle: { backgroundColor: theme.colors.default.bg },
+            // 플랫폼 기본 전환은 Android 에서 거의 즉시 바뀌어 화면이 휙휙 넘어간다는 피드백이
+            // 있었다(LUV-111). iOS 와 같은 오른쪽에서 밀려 들어오는 전환으로 맞춘다.
+            animation: 'slide_from_right',
           }}
         />
         {/* 회차 쪽지. 안 읽은 쪽지가 있으면 어느 화면이든 가장 먼저 뜬다(use-partner-letter). */}
