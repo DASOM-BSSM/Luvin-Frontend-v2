@@ -39,7 +39,7 @@ export default function InfernoSeasonReset() {
     <View className="w-full flex-col items-start gap-[12px]">
       <Button
         label={reset.isPending ? '초기화 중…' : '시즌 초기화'}
-        variant="noticeSoft"
+        variant="notice"
         disabled={reset.isPending}
         onPress={handleResetPress}
       />

@@ -131,7 +131,7 @@ export default function InfernoFeedbackScene({
             </View>
             <Button
               label={WRITE_ACTION}
-              variant="noticeSoft"
+              variant="notice"
               disabled={!shownTopic}
               onPress={onWriteStartPress}
             />
