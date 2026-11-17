@@ -2,6 +2,7 @@ import "@/global.css";
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useFonts } from "expo-font";
+import { NavigationBar } from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -106,6 +107,11 @@ export default function RootLayout() {
       <QueryProvider>
         {/* 밝은 배경 위 어두운 글씨. */}
         <StatusBar style="dark" />
+        {/* 안드로이드 하단 시스템 내비게이션 바(뒤로·홈·최근 앱)를 앱 전체에서 숨긴다(iOS 는 무시).
+            app.json 플러그인의 hidden 만으로도 시작 때 숨지만, 그건 스와이프 동작을 정하지 않아
+            한 번 꺼내면 그대로 남는다. 여기서 한 번 더 숨겨야 가장자리 스와이프로 잠깐 나왔다가
+            다시 사라지는 동작이 걸린다. */}
+        <NavigationBar hidden />
         <Stack
           screenOptions={{
             // 화면 헤더는 각 시안이 직접 그리므로 네비게이터 헤더는 쓰지 않는다.
