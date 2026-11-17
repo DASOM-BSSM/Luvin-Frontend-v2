@@ -47,7 +47,13 @@
       ],
       "expo-secure-store",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-navigation-bar",
+        {
+          "hidden": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
