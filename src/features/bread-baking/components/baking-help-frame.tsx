@@ -11,6 +11,7 @@ import type { BakingHelpPage } from '@/src/features/bread-baking/constants/help'
 import type { BakingState } from '@/src/features/bread-baking/types';
 import { BAKING_RULES, createBakingState, formatBakingTime } from '@/src/features/bread-baking/utils/game';
 import GameFrame from '@/src/features/luvin-hell/components/GameFrame';
+import HelpBubble from '@/src/features/luvin-hell/components/HelpBubble';
 
 interface BakingHelpFrameProps {
   page: BakingHelpPage;
@@ -44,12 +45,10 @@ export default function BakingHelpFrame({ page, onNext }: BakingHelpFrameProps) 
           </Text>
         </View>
         <View className="absolute inset-0 z-20 bg-default-black/50">
-          <View className={`absolute left-[93px] top-[306px] gap-[8px] ${page.bubbleWidthClass}`}>
+          {/* Figma top 306 대신 아래쪽 기준 — "다음 설명" 버튼 위에서 시작해 글자가 커지면 위로 늘어난다. */}
+          <View className="absolute bottom-[58px] left-[93px] right-[8px] flex-col items-start gap-[8px]">
             {page.bubbles.map((bubble) => (
-              <View key={bubble}
-                className="w-full rounded-tl-[20px] rounded-tr-[20px] rounded-br-[20px] bg-yellow-200 px-[20px] py-[10px]">
-                <Text variant="body-s" className="text-text-primary">{bubble}</Text>
-              </View>
+              <HelpBubble key={bubble} text={bubble} minWidthClass={page.bubbleWidthClass} />
             ))}
           </View>
           <View className="absolute left-[28px] top-[324px] h-[118px] w-[53px]">
