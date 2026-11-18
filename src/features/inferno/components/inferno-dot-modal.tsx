@@ -9,8 +9,10 @@ interface InfernoDotModalProps {
   minWidthClass: string;
   /** 스크린리더가 읽는 바깥 영역 이름. 예: "VOTE 닫기" */
   closeLabel: string;
+  /** 저장 대기처럼 사용자가 닫으면 안 되는 상태에서는 바깥 탭과 뒤로가기를 막는다. */
+  dismissible?: boolean;
   /** 바깥을 누르거나 안드로이드 뒤로가기를 했을 때. */
-  onClose: () => void;
+  onClose?: () => void;
   /** 완전히 닫힌 뒤(iOS 닫힘 애니메이션 끝) 불린다. 다른 모달을 이어서 띄울 때 쓴다. */
   onDismiss?: () => void;
   children: ReactNode;
@@ -27,10 +29,15 @@ export default function InfernoDotModal({
   visible,
   minWidthClass,
   closeLabel,
+  dismissible = true,
   onClose,
   onDismiss,
   children,
 }: InfernoDotModalProps) {
+  function handleRequestClose() {
+    if (dismissible) onClose?.();
+  }
+
   return (
     <Modal
       visible={visible}
@@ -40,13 +47,14 @@ export default function InfernoDotModal({
       // 러빈지옥에서 그대로 띄우면 "지원 방향이 겹치지 않는다"며 앱이 죽는다(시뮬레이터에서
       // 실제로 죽는 것을 확인했다. 안드로이드에는 없는 제약이라 그쪽만 보면 놓친다).
       supportedOrientations={['portrait', 'landscape']}
-      onRequestClose={onClose}
+      onRequestClose={handleRequestClose}
       onDismiss={onDismiss}
     >
       <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={closeLabel}
+        accessibilityRole={dismissible ? 'button' : undefined}
+        accessibilityLabel={dismissible ? closeLabel : undefined}
         className="flex-1 items-center justify-center bg-default-black/30"
+        disabled={!dismissible}
         onPress={onClose}
       >
         {/* 안쪽을 눌렀을 때 닫히지 않도록 이벤트를 여기서 멈춘다. */}

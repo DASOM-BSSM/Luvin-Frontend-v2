@@ -4,6 +4,7 @@ import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
 import { okMallangBTitleStyle } from '@/src/constants/typography';
 import InfernoDotModal from '@/src/features/inferno/components/inferno-dot-modal';
+import { InfernoEpisodeSavingContent } from '@/src/features/inferno/components/inferno-episode-saving-modal';
 
 interface InfernoNoteModalProps {
   visible: boolean;
@@ -26,6 +27,8 @@ interface InfernoNoteModalProps {
   onActionPress: () => void;
   /** 버튼을 막는다. 서버 요청이 오가는 동안 다시 누르지 못하게 할 때 쓴다(§11). */
   isActionDisabled?: boolean;
+  /** 같은 모달을 유지한 채 저장 안내로 바꿔 iOS 모달 전환 충돌을 피한다. */
+  isSaving?: boolean;
   /** 완전히 닫힌 뒤(iOS) 불린다. iOS 는 모달 두 개를 겹쳐 띄우지 못해서, 다음 모달은 이걸 기다린다. */
   onDismiss?: () => void;
   /** 바깥을 누르거나 안드로이드 뒤로가기를 했을 때. */
@@ -55,6 +58,7 @@ export default function InfernoNoteModal({
   actionLabel,
   onActionPress,
   isActionDisabled = false,
+  isSaving = false,
   onClose,
   onDismiss,
 }: InfernoNoteModalProps) {
@@ -63,27 +67,32 @@ export default function InfernoNoteModal({
       visible={visible}
       minWidthClass={minWidthClass}
       closeLabel={`${title} 닫기`}
+      dismissible={!isSaving}
       onClose={onClose}
       onDismiss={onDismiss}
     >
-      <View className="flex-col items-center gap-[20px]">
-        <View className="flex-col items-stretch gap-[4px] self-stretch">
-          <Text className="text-center text-pink-500" style={okMallangBTitleStyle}>
-            {title}
-          </Text>
-          <Text variant="body-m" className="text-center text-default-black">
-            {message}
-          </Text>
+      {isSaving ? (
+        <InfernoEpisodeSavingContent />
+      ) : (
+        <View className="flex-col items-center gap-[20px]">
+          <View className="flex-col items-stretch gap-[4px] self-stretch">
+            <Text className="text-center text-pink-500" style={okMallangBTitleStyle}>
+              {title}
+            </Text>
+            <Text variant="body-m" className="text-center text-default-black">
+              {message}
+            </Text>
+          </View>
+          {/* `notice` 가 아니라 `noticeFit` — 폭이 글에 맞춰 정해지는 상자라 `w-full` 버튼을 쓰면
+              상자가 최대 폭까지 늘어난다(Button 의 noticeFit 주석 참고). */}
+          <Button
+            label={actionLabel}
+            variant="noticeFit"
+            disabled={isActionDisabled}
+            onPress={onActionPress}
+          />
         </View>
-        {/* `notice` 가 아니라 `noticeFit` — 폭이 글에 맞춰 정해지는 상자라 `w-full` 버튼을 쓰면
-            상자가 최대 폭까지 늘어난다(Button 의 noticeFit 주석 참고). */}
-        <Button
-          label={actionLabel}
-          variant="noticeFit"
-          disabled={isActionDisabled}
-          onPress={onActionPress}
-        />
-      </View>
+      )}
     </InfernoDotModal>
   );
 }
