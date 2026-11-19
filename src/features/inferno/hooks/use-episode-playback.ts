@@ -8,7 +8,7 @@
  * 그사이 생성이 끝나 더 올 블록이 없으면 회차를 끝낸다. 서버가 처음부터 다시 만들면(`revision` 이 바뀜)
  * 앞서 받은 블록이 무효라 처음부터 다시 재생한다.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import useEpisodeSource from '@/src/features/inferno/hooks/use-episode-source';
 import useEpisodeExit from '@/src/features/inferno/hooks/use-episode-exit';
@@ -23,6 +23,8 @@ import useLeaveAfterModals from '@/src/features/inferno/hooks/use-leave-after-mo
 const LAST_ORDER = 10;
 /** 10화 대화를 다 보고 리포트로 넘어간 자리(scene-season-store). */
 const REPORT_POSITION = -1;
+/** 기기 안의 저장은 즉시 끝나므로 안내가 읽힐 만큼만 쪽지를 보여준다. */
+const LOCAL_SAVE_NOTICE_MS = 650;
 
 export default function useEpisodePlayback(order: number, sessionKey: string) {
   const exit = useEpisodeExit(order);
@@ -40,6 +42,7 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
   const revision = content.data?.revision;
   const [seenRevision, setSeenRevision] = useState(revision);
   const [done, setDone] = useState(false);
+  const [savingOnExit, setSavingOnExit] = useState(false);
   const [report, setReport] = useState(position === REPORT_POSITION);
   // 회차 중간부터 이어 보면 소개를 다시 띄우지 않는다.
   const [introDone, setIntroDone] = useState(position !== undefined && position > 0);
@@ -51,6 +54,17 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
     hasMore,
   );
   const block = flow.block;
+
+  useEffect(() => {
+    if (!savingOnExit) return;
+    const timer = setTimeout(() => {
+      setSavingOnExit(false);
+      leaveGuard.leaveAfterModals(exit.leave);
+    }, LOCAL_SAVE_NOTICE_MS);
+    return () => clearTimeout(timer);
+    // leaveAfterModals와 leave는 렌더마다 새로 만들어지지만, 저장 시작 시점의 동작이면 충분하다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savingOnExit]);
 
   // 서버 응답에 따라 재생 자리를 맞춘다(렌더 중 상태 조정 — 같은 컴포넌트의 상태라 바로 다시 그린다).
   // 처음부터 다시 만든 회차면 처음 블록으로 돌아간다.
@@ -83,8 +97,13 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
   }
 
   function handleLeavePress() {
-    if (!readOnly) save(sessionKey, order, flow.position);
-    exit.leave();
+    if (readOnly) {
+      exit.leave();
+      return;
+    }
+    if (savingOnExit) return;
+    save(sessionKey, order, flow.position);
+    setSavingOnExit(true);
   }
 
   // 투표 결과 모달의 "에피소드 나가기" — 모달이 떠 있는 상태라 먼저 내리고 나간다.
@@ -202,6 +221,7 @@ export default function useEpisodePlayback(order: number, sessionKey: string) {
     handleLeavePress,
     handleLeaveFromModal,
     leaving: leaveGuard.leaving,
+    savingOnExit,
     handleModalGone: leaveGuard.handleModalGone,
     handleSelect,
     handleChoiceNext,

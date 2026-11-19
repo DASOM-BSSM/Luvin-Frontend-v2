@@ -6,7 +6,8 @@ import SectionHeader from '@/src/components/ui/section-header';
 import GroupFeedNotice from '@/src/features/diaries/components/group-feed-notice';
 import type { RoomId, RoomQuestion } from '@/src/features/diaries/types';
 
-const SECTION_TITLE = '쫀쫀한 조합들';
+/** 그룹 이름을 아직 모를 때 대신 쓰는 제목. 평소에는 바로가기 그룹의 이름을 쓴다(LUV-110). */
+const FALLBACK_SECTION_TITLE = '쫀쫀한 조합들';
 
 /** 그룹이 하나도 없을 때(감정일기 시작 전)의 제목. Figma "메인-우린" 6172:3393 과 같다. */
 const NOT_STARTED_TITLE = 'Emodi 감정일기';
@@ -16,6 +17,8 @@ interface SectionShellProps {
 }
 
 export interface GroupSectionShellProps extends SectionShellProps {
+  /** 섹션 제목 — 바로가기 그룹의 이름. 없으면 "쫀쫀한 조합들". */
+  roomName?: string;
   shortcutLabel: string;
   /** "바로가기→"를 누르면. */
   onShortcutPress: () => void;
@@ -34,6 +37,7 @@ export interface GroupSectionShellProps extends SectionShellProps {
  */
 export const SectionShell = ({
   children,
+  roomName,
   shortcutLabel,
   onShortcutPress,
   onReactionPress,
@@ -43,7 +47,7 @@ export const SectionShell = ({
 }: GroupSectionShellProps) => (
   <View className="w-full flex-col items-start gap-[12px]">
     <SectionHeader
-      title={SECTION_TITLE}
+      title={roomName || FALLBACK_SECTION_TITLE}
       icon={<GroupIcon />}
       actionLabel={shortcutLabel}
       onActionPress={onShortcutPress}

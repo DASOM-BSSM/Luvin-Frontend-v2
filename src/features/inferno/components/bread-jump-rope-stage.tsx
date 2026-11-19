@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 
+import Text from '@/src/components/ui/text';
 import { jumpRopeLayout } from '@/src/constants/typography';
 import BreadJumpRope from '@/src/features/inferno/components/bread-jump-rope';
 import BreadJumpRopeHolder from '@/src/features/inferno/components/bread-jump-rope-holder';
 import BreadJumpRopeJumper from '@/src/features/inferno/components/bread-jump-rope-jumper';
 import BreadJumpRopeMessage from '@/src/features/inferno/components/bread-jump-rope-message';
-import { JUMP_ROPE } from '@/src/features/inferno/constants/jump-rope';
+import { JUMP_ROPE, JUMP_ROPE_WAITING_MESSAGE } from '@/src/features/inferno/constants/jump-rope';
 
 const SLOTS = Array.from({ length: JUMP_ROPE.slotCount }, (_, slot) => slot);
 
@@ -38,6 +39,7 @@ export default function BreadJumpRopeStage({ elapsed, exitAt }: BreadJumpRopeSta
     height: jumpRopeLayout.height * scale,
   };
   const messageStyle = { top: jumpRopeLayout.messageTop * scale };
+  const waitingStyle = { height: jumpRopeLayout.messageTop * scale };
 
   function handleStageLayout(event: LayoutChangeEvent) {
     const { width, height } = event.nativeEvent.layout;
@@ -59,6 +61,17 @@ export default function BreadJumpRopeStage({ elapsed, exitAt }: BreadJumpRopeSta
   return (
     <View className="flex-1" onLayout={handleStageLayout} pointerEvents="none">
       <View className="absolute" style={sceneStyle}>
+        {/* 대기 안내는 돌아가는 문구 바로 위에 고정한다. 아래 변이 문구 윗변에 붙도록 위쪽 공간을
+            가득 채우고 바닥 정렬한다. */}
+        <View
+          className="absolute left-0 right-0 top-0 flex-col items-center justify-end"
+          style={waitingStyle}
+        >
+          <Text variant="body-m" className="text-text-primary" accessibilityLiveRegion="polite">
+            {JUMP_ROPE_WAITING_MESSAGE}
+          </Text>
+          <View className="h-[6px]" />
+        </View>
         <View className="absolute left-0 right-0 items-center" style={messageStyle}>
           <BreadJumpRopeMessage />
         </View>

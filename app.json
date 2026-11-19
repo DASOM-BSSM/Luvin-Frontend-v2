@@ -2,7 +2,7 @@
   "expo": {
     "name": "러빈",
     "slug": "luvin-frontend-v2",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "icon": "./assets/images/icon.png",
     "orientation": "default",
     "scheme": "luvinfrontendv2",
@@ -47,7 +47,13 @@
       ],
       "expo-secure-store",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-navigation-bar",
+        {
+          "hidden": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

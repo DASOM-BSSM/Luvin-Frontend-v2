@@ -1,6 +1,6 @@
 /**
  * [DRAFT] 회차가 끝나면 뜨는 "에피소드가 종료되었습니다" 쪽지(마지막 장면 뒤, 또는 투표 직후).
- * 완료 요청 중·실패 상태를 버튼과 문구에 싣는다.
+ * 완료 요청 중에는 같은 쪽지 안에 저장 안내를, 실패 시에는 재시도 문구를 보여준다.
  */
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import InfernoNoteModal from '@/src/features/inferno/components/inferno-note-modal';
@@ -25,11 +25,7 @@ export default function InfernoEpisodeDoneModal({
   onClose,
   onDismiss,
 }: InfernoEpisodeDoneModalProps) {
-  const actionLabel = isSaving
-    ? '저장하는 중…'
-    : isLastEpisode
-      ? '최종 리포트 보기'
-      : '에피소드 끝내기';
+  const actionLabel = isLastEpisode ? '최종 리포트 보기' : '에피소드 끝내기';
   return (
     <InfernoNoteModal
       visible={visible}
@@ -37,6 +33,7 @@ export default function InfernoEpisodeDoneModal({
       title="NOTICE"
       message={hasFailed ? ERROR_MESSAGES.completeFailed : '에피소드가 종료되었습니다'}
       actionLabel={actionLabel}
+      isSaving={isSaving}
       onActionPress={onFinishPress}
       onClose={onClose}
       onDismiss={onDismiss}

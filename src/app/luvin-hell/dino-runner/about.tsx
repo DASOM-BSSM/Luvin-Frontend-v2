@@ -11,6 +11,7 @@ import PlayerAvatar from '@/src/assets/images/PlayerAvatar';
 import Text from '@/src/components/ui/text';
 import { miniGameCounterStyle } from '@/src/constants/typography';
 import GameFrame from '@/src/features/luvin-hell/components/GameFrame';
+import HelpBubble from '@/src/features/luvin-hell/components/HelpBubble';
 import { sceneColors } from '@/src/features/luvin-hell/constants/scene-colors';
 import DinoGround from '@/src/features/luvin-hell/games/dino-runner/components/DinoGround';
 
@@ -75,15 +76,15 @@ export default function DinoRunnerAboutScreen() {
             <BreadCharacter type="castella" state="dough" className="h-full w-full" />
           </View>
           <View className="absolute inset-0 bg-[rgba(29,29,29,0.5)]">
-            <View className="absolute left-[45px] top-[264px] max-w-[280px] rounded-tl-[20px] rounded-tr-[20px] rounded-br-[20px] bg-yellow-200 px-[20px] py-[10px]">
-              <Text variant="body-s" className="text-text-primary">
-                빵을 넘어서 피하는 게임이에요!
-              </Text>
-            </View>
-            <View className="absolute left-[102px] top-[324px] max-w-[280px] rounded-tl-[20px] rounded-tr-[20px] rounded-br-[20px] bg-yellow-200 px-[20px] py-[10px]">
-              <Text variant="body-s" className="text-text-primary">
-                하늘에서 날아오는 빵들은{'\n'}아래로 내려 드래그하고,{'\n'}땅에 있는 빵들은{'\n'}탭하여 뛰어넘어요
-              </Text>
+            {/* Figma 좌표(264·324) 대신 아래쪽 기준 열 — 글자가 커지면 위로 늘어나고 프레임 안에서 줄바꿈된다. */}
+            <View className="absolute bottom-[113px] left-[45px] right-[8px] flex-col items-start gap-[18px]">
+              <HelpBubble text={'빵을 넘어서 피하는 게임이에요!'} />
+              <View className="w-full flex-row">
+                <View className="w-[57px]" />
+                <HelpBubble
+                  text={'하늘에서 날아오는 빵들은\n아래로 내려 드래그하고,\n땅에 있는 빵들은\n탭하여 뛰어넘어요'}
+                />
+              </View>
             </View>
           </View>
 

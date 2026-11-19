@@ -27,7 +27,7 @@ export default function QuestionStatusCard({
         {message}
       </Text>
       {actionLabel ? (
-        <Button label={actionLabel} variant="filled" onPress={onActionPress} />
+        <Button label={actionLabel} variant="filledSelected" onPress={onActionPress} />
       ) : null}
     </View>
   );

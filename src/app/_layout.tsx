@@ -2,6 +2,7 @@ import "@/global.css";
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useFonts } from "expo-font";
+import { NavigationBar } from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -106,12 +107,20 @@ export default function RootLayout() {
       <QueryProvider>
         {/* 밝은 배경 위 어두운 글씨. */}
         <StatusBar style="dark" />
+        {/* 안드로이드 하단 시스템 내비게이션 바(뒤로·홈·최근 앱)를 앱 전체에서 숨긴다(iOS 는 무시).
+            app.json 플러그인의 hidden 만으로도 시작 때 숨지만, 그건 스와이프 동작을 정하지 않아
+            한 번 꺼내면 그대로 남는다. 여기서 한 번 더 숨겨야 가장자리 스와이프로 잠깐 나왔다가
+            다시 사라지는 동작이 걸린다. */}
+        <NavigationBar hidden />
         <Stack
           screenOptions={{
             // 화면 헤더는 각 시안이 직접 그리므로 네비게이터 헤더는 쓰지 않는다.
             headerShown: false,
             // 전환 중 흰색이 비치지 않도록 기본 배경을 토큰 색으로 맞춘다.
             contentStyle: { backgroundColor: theme.colors.default.bg },
+            // 플랫폼 기본 전환은 Android 에서 거의 즉시 바뀌어 화면이 휙휙 넘어간다는 피드백이
+            // 있었다(LUV-111). iOS 와 같은 오른쪽에서 밀려 들어오는 전환으로 맞춘다.
+            animation: 'slide_from_right',
           }}
         />
         {/* 회차 쪽지. 안 읽은 쪽지가 있으면 어느 화면이든 가장 먼저 뜬다(use-partner-letter). */}
