@@ -13,6 +13,7 @@ import InfernoEpisodeGateView from '@/src/features/inferno/components/inferno-ep
 import InfernoEpisodeFrame from '@/src/features/inferno/components/inferno-episode-frame';
 import InfernoEpisodeBlocker from '@/src/features/inferno/components/inferno-episode-blocker';
 import InfernoEpisodeDoneModal from '@/src/features/inferno/components/inferno-episode-done-modal';
+import InfernoEpisodeSavingModal from '@/src/features/inferno/components/inferno-episode-saving-modal';
 import InfernoSeasonReportGate from '@/src/features/inferno/components/inferno-season-report-gate';
 import useDoneModalGate from '@/src/features/inferno/hooks/use-done-modal-gate';
 import useEpisodePlayback from '@/src/features/inferno/hooks/use-episode-playback';
@@ -65,6 +66,7 @@ export default function InfernoEpisodeBody({
     handleLeavePress,
     handleLeaveFromModal,
     leaving,
+    savingOnExit,
     handleModalGone,
     handleSelect,
     handleChoiceNext,
@@ -171,6 +173,7 @@ export default function InfernoEpisodeBody({
         onClose={doneGate.handleClose}
         onDismiss={handleModalGone}
       />
+      <InfernoEpisodeSavingModal visible={savingOnExit && !leaving} onDismiss={handleModalGone} />
     </InfernoEpisodeFrame>
   );
 }
