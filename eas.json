@@ -13,7 +13,13 @@
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "android": {
+        "image": "auto"
+      },
+      "ios": {
+        "image": "auto"
+      }
     }
   },
   "submit": {
