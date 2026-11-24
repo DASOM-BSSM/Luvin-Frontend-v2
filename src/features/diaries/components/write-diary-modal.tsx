@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable } from 'react-native';
 
 import WriteDiaryForm, { type WriteDiaryFormProps } from '@/src/features/diaries/components/write-diary-form';
 
@@ -14,7 +14,9 @@ interface WriteDiaryModalProps extends WriteDiaryFormProps {
 export default function WriteDiaryModal({ visible, onClose, ...formProps }: WriteDiaryModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Android 도 padding 으로 피한다 — edge-to-edge(Expo 57)에서는 Modal 안의 adjustResize 가 동작하지 않아
+          behavior 를 비워 두면 키보드가 입력칸을 그대로 덮는다. */}
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         <Pressable
           className="flex-1 items-center justify-center bg-default-black/30 px-[33px]"
           onPress={onClose}

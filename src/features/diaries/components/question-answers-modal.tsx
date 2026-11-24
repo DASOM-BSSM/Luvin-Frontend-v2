@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, ScrollView, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import MyAnswerEditor from '@/src/features/diaries/components/my-answer-editor';
@@ -30,7 +30,9 @@ export default function QuestionAnswersModal({ question, onClose }: QuestionAnsw
 
   return (
     <Modal visible={question !== undefined} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Android 도 padding 으로 피한다 — edge-to-edge(Expo 57)에서는 Modal 안의 adjustResize 가 동작하지 않아
+          behavior 를 비워 두면 키보드가 입력칸을 그대로 덮는다. */}
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         <Pressable className="flex-1 bg-default-black/30" onPress={onClose}>
           <ScrollView
             className="flex-1"
