@@ -1,13 +1,10 @@
 import { type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import useDraggableSheet from '@/src/hooks/use-draggable-sheet';
-
-/** 시트가 올라오는 시간. 배경은 Modal 의 fade 로 제자리에서 어두워진다. */
-const SHEET_SLIDE_MS = 250;
 
 interface DraggableSheetProps {
   visible: boolean;
@@ -24,19 +21,10 @@ interface DraggableSheetProps {
 export default function DraggableSheet({ visible, onClose, children }: DraggableSheetProps) {
   return (
     // animationType="slide" 는 어두운 배경까지 같이 밀어 올린다 — 배경은 fade, 흰 시트만 아래에서 올린다.
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-      navigationBarTranslucent
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <Pressable className="flex-1 justify-end bg-default-black/30" onPress={onClose}>
-          <Animated.View entering={SlideInDown.duration(SHEET_SLIDE_MS)}>
-            <SheetBody onClose={onClose}>{children}</SheetBody>
-          </Animated.View>
+          <SheetBody onClose={onClose}>{children}</SheetBody>
         </Pressable>
       </GestureHandlerRootView>
     </Modal>
