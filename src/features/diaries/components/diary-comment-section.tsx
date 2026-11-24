@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import BreadCharacter from '@/src/assets/images/BreadCharacter';
 import Button from '@/src/components/ui/button';
 import Text from '@/src/components/ui/text';
 import TextField from '@/src/components/ui/text-field';
+import DiaryCommentItem from '@/src/features/diaries/components/diary-comment-item';
 import useCreateComment from '@/src/features/diaries/hooks/use-create-comment';
 import useDiaryComments from '@/src/features/diaries/hooks/use-diary-comments';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
 import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
-import type { DiaryComment, DiaryId, RoomId } from '@/src/features/diaries/types';
-import { formatRelativeTime, resolveAuthorName } from '@/src/features/diaries/utils/feed';
-import { toBreadType } from '@/src/features/survey/utils/map-bread-result';
+import type { DiaryId, RoomId } from '@/src/features/diaries/types';
+import { COMMENT_MAX_LENGTH, selectVisibleComments } from '@/src/features/diaries/utils/comment';
 
 interface DiaryCommentSectionProps {
   diaryId: DiaryId;
@@ -19,62 +18,19 @@ interface DiaryCommentSectionProps {
   roomId: RoomId;
 }
 
-interface CommentItemProps {
-  comment: DiaryComment;
-  now: Date;
-  /** 내 빵 이름 — 내 댓글이면 이 이름을 쓴다. */
-  myName: string;
-  /** 이 그룹에서 정한 작성자 닉네임(LUV-121). 없으면 null. */
-  groupNickname: string | null;
-}
-
 /**
- * 댓글 한 장(Figma 5950:6015) — 작성자 빵 · 닉네임 · 몇 분 전, 그 아래 내용. 빵 타입이 없으면
- * (설문 안 함 · 탈퇴) 일기 카드처럼 그림 자리를 비운다.
+ * 일기 상세의 댓글 입력칸 + 목록. Figma 5950:6011 · 7055:4398.
+ * 댓글은 `COMMENT_MAX_LENGTH` 자까지 쓸 수 있고, 목록은 최근 `VISIBLE_COMMENT_COUNT` 개만 보여준 뒤
+ * "이전 댓글 N개 더보기"로 펼친다(사용자 결정) — 댓글이 많아도 상세가 끝없이 늘어나지 않게.
  */
-const CommentItem = ({ comment, now, myName, groupNickname }: CommentItemProps) => {
-  const breadType = toBreadType(comment.authorBreadType);
-  // 실제 이름이 아니라 빵 이름으로 쓴다(사용자 결정, utils/feed.ts `resolveAuthorName`). 그룹 닉네임이 있으면 그걸 쓴다(LUV-121).
-  const authorName = resolveAuthorName(
-    {
-      isMine: comment.isMine,
-      nickname: comment.authorNickname,
-      breadName: comment.authorBreadName,
-      breadType: comment.authorBreadType,
-      groupNickname,
-    },
-    myName,
-  );
-
-  return (
-    <View className="w-full flex-col items-start gap-[8px] rounded-[8px] border border-default-gray bg-default-white p-[10px]">
-      <View className="flex-row items-center gap-[4px]">
-        {breadType ? (
-          <BreadCharacter
-            type={breadType}
-            state="dough"
-            className="h-[17px] w-[23px]"
-            accessibilityLabel={authorName}
-          />
-        ) : null}
-        <Text variant="body-xxs" className="text-center text-text-primary">
-          {authorName}
-        </Text>
-        <Text variant="body-xxs" className="text-center text-text-muted">
-          {formatRelativeTime(comment.createdAt, now)}
-        </Text>
-      </View>
-      <Text variant="body-xs" className="w-full text-text-primary">
-        {comment.content}
-      </Text>
-    </View>
-  );
-};
-
-/** 일기 상세의 댓글 입력칸 + 목록. Figma 5950:6011 · 7055:4398. */
 export default function DiaryCommentSection({ diaryId, roomId }: DiaryCommentSectionProps) {
   const [content, setContent] = useState('');
+  const [isAllCommentsShown, setIsAllCommentsShown] = useState(false);
   const commentsQuery = useDiaryComments(diaryId);
+  const { visible: visibleComments, hiddenCount } = selectVisibleComments(
+    commentsQuery.data ?? [],
+    isAllCommentsShown,
+  );
   const createCommentMutation = useCreateComment();
   const me = useMyDiaryAuthor(roomId);
   const getRoomNickname = useRoomNicknames(roomId);
@@ -94,11 +50,20 @@ export default function DiaryCommentSection({ diaryId, roomId }: DiaryCommentSec
     commentsQuery.refetch();
   }
 
+  function handleShowAllPress() {
+    setIsAllCommentsShown(true);
+  }
+
   return (
     <View className="w-full flex-col items-start gap-[8px]">
       <View className="w-full flex-row items-center gap-[4px]">
         <View className="flex-1">
-          <TextField value={content} onChangeText={setContent} placeholder="댓글을 남겨주세요" />
+          <TextField
+            value={content}
+            onChangeText={setContent}
+            placeholder="댓글을 남겨주세요"
+            maxLength={COMMENT_MAX_LENGTH}
+          />
         </View>
         <Button label="전송" variant="fieldAction" onPress={handleSendPress} />
       </View>
@@ -119,15 +84,24 @@ export default function DiaryCommentSection({ diaryId, roomId }: DiaryCommentSec
           </Text>
         </Pressable>
       ) : (
-        (commentsQuery.data ?? []).map((comment) => (
-          <CommentItem
-            key={comment.id}
-            comment={comment}
-            now={now}
-            myName={me.name}
-            groupNickname={getRoomNickname(comment.userId)}
-          />
-        ))
+        <>
+          {hiddenCount > 0 ? (
+            <Pressable accessibilityRole="button" hitSlop={8} onPress={handleShowAllPress}>
+              <Text variant="body-xxs" className="text-text-muted">
+                이전 댓글 {hiddenCount}개 더보기
+              </Text>
+            </Pressable>
+          ) : null}
+          {visibleComments.map((comment) => (
+            <DiaryCommentItem
+              key={comment.id}
+              comment={comment}
+              now={now}
+              myName={me.name}
+              groupNickname={getRoomNickname(comment.userId)}
+            />
+          ))}
+        </>
       )}
     </View>
   );
