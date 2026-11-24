@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import GroupIcon from '@/src/assets/icons/GroupIcon';
 import SectionHeader from '@/src/components/ui/section-header';
 import GroupFeedNotice from '@/src/features/diaries/components/group-feed-notice';
+import GroupSwitchTitle from '@/src/features/diaries/components/group-switch-title';
 import type { RoomId, RoomQuestion } from '@/src/features/diaries/types';
 
 /** 그룹 이름을 아직 모를 때 대신 쓰는 제목. 평소에는 바로가기 그룹의 이름을 쓴다(LUV-110). */
@@ -19,6 +20,10 @@ interface SectionShellProps {
 export interface GroupSectionShellProps extends SectionShellProps {
   /** 섹션 제목 — 바로가기 그룹의 이름. 없으면 "쫀쫀한 조합들". */
   roomName?: string;
+  /** 섹션이 보여주는 그룹(바로가기 그룹). */
+  roomId?: RoomId;
+  /** 제목을 눌러 다른 그룹을 고르면(내 그룹이 둘 이상일 때만 눌린다). */
+  onRoomSelect: (roomId: RoomId) => void;
   shortcutLabel: string;
   /** "바로가기→"를 누르면. */
   onShortcutPress: () => void;
@@ -38,6 +43,8 @@ export interface GroupSectionShellProps extends SectionShellProps {
 export const SectionShell = ({
   children,
   roomName,
+  roomId,
+  onRoomSelect,
   shortcutLabel,
   onShortcutPress,
   onReactionPress,
@@ -48,6 +55,13 @@ export const SectionShell = ({
   <View className="w-full flex-col items-start gap-[12px]">
     <SectionHeader
       title={roomName || FALLBACK_SECTION_TITLE}
+      titleSlot={
+        <GroupSwitchTitle
+          title={roomName || FALLBACK_SECTION_TITLE}
+          roomId={roomId}
+          onRoomSelect={onRoomSelect}
+        />
+      }
       icon={<GroupIcon />}
       actionLabel={shortcutLabel}
       onActionPress={onShortcutPress}

@@ -99,6 +99,7 @@ export default function GroupMainScreen() {
         <View className="w-full flex-col items-start gap-[12px] px-[30px]">
           <GroupMainHeader
             title={room?.name ?? ''}
+            roomId={roomId}
             onBackPress={handleBackPress}
             onCalendarPress={handleCalendarPress}
             onSettingsPress={handleSettingsPress}

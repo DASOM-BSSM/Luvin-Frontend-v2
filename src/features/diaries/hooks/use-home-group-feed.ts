@@ -1,7 +1,8 @@
 import useCommunityDiaries from '@/src/features/diaries/hooks/use-community-diaries';
 import useCurrentQuestion from '@/src/features/diaries/hooks/use-current-question';
 import useMyRooms from '@/src/features/diaries/hooks/use-my-rooms';
-import { getLastWrittenAt } from '@/src/features/diaries/utils/feed';
+import { useHomeRoomStore } from '@/src/features/diaries/store/home-room-store';
+import { getLastWrittenAt, pickShortcutRoomId } from '@/src/features/diaries/utils/feed';
 import { filterSlotDiaries } from '@/src/features/diaries/utils/hour-slot';
 import {
   filterSameHourSlot,
@@ -13,13 +14,16 @@ import {
  * 홈 "쫀쫀한 조합들"에 보여줄 것 — 내 그룹 · 커뮤니티 피드 · 그 그룹의 지금 질문을 묶는다.
  *
  * 바로가기는 가장 최근 일기의 그룹으로, 일기가 없으면 내 첫 번째 그룹으로 간다. 질문 알림도 이 그룹 것이다.
+ * 제목을 눌러 다른 그룹을 고르면 그 그룹을 보여주고 기억한다(여러 그룹 참여, `useHomeRoomStore`).
  * 오늘 질문이 있으면 그 질문과 같은 정각 칸에 쓴 일기만 남긴다(utils/question.ts `filterSameHourSlot`).
  * 질문이 없어도 지금 칸에 그 그룹에서 쓴 일기만 남긴다 — 지난 시간대에 올린 일기는 홈에 보이지 않는다(사용자 결정).
  */
 export default function useHomeGroupFeed() {
   const roomsQuery = useMyRooms();
   const feedQuery = useCommunityDiaries();
-  const shortcutRoomId = feedQuery.data?.[0]?.roomId ?? roomsQuery.data?.[0]?.id;
+  const selectedRoomId = useHomeRoomStore((state) => state.selectedRoomId);
+  const selectRoom = useHomeRoomStore((state) => state.selectRoom);
+  const shortcutRoomId = pickShortcutRoomId(roomsQuery.data, feedQuery.data, selectedRoomId);
   // 섹션 제목은 바로가기 그룹의 이름이다(LUV-110). 목록에 아직 없으면 undefined.
   const shortcutRoomName = roomsQuery.data?.find((room) => room.id === shortcutRoomId)?.name;
   // 그룹이 정해지기 전에는 NaN 이라 부르지 않는다(useCurrentQuestion 의 enabled).
@@ -46,6 +50,8 @@ export default function useHomeGroupFeed() {
     shortcutRoomId,
     /** 바로가기 그룹의 이름 — 섹션 제목으로 쓴다. */
     shortcutRoomName,
+    /** 홈에 보여줄 그룹을 바꾼다. */
+    selectRoom,
     announcedQuestion,
     /** 지금 칸(질문이 있으면 그 질문의 칸 — 같은 칸이다)에 그 그룹에서 쓴 일기 전부(최신순), 내 것 · 남의 것 모두. */
     slotDiaries: visibleFeed,
