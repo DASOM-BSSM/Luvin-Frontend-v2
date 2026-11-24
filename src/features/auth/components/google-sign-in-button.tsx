@@ -1,7 +1,6 @@
-import { Pressable } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import GoogleLogoIcon from '@/src/assets/icons/GoogleLogoIcon';
-import Text from '@/src/components/ui/text';
 
 interface GoogleSignInButtonProps {
   disabled?: boolean;
@@ -15,6 +14,11 @@ interface GoogleSignInButtonProps {
  * 라이브러리 `GoogleSigninButton` 은 230·312 x 48 고정 크기의 옛 디자인이라 옆의 Apple 공식 버튼과
  * 크기 · 모양이 맞지 않아 쓰지 않았다. 높이 40 · 모서리 8 · 가로 꽉은 `AppleSignInButton` 과 같다.
  * 글자는 가이드의 Roboto 대신 앱 폰트를 쓴다(§8 — 다른 폰트 금지).
+ *
+ * → 바뀜(사용자 요청, 2026-11-25): 바로 아래 Apple 공식 버튼은 글꼴을 바꿀 수 없어(시스템이 그림)
+ * 두 버튼 글꼴을 하나로 맞추려고 이 버튼도 시스템 글꼴(iOS SF · Android Roboto)을 쓴다.
+ * 그래서 `Text` 컴포넌트(앱 폰트 고정) 대신 RN `Text` 에 크기 토큰만 준다. 굵기는 Apple 버튼처럼
+ * 중간 굵기(fontWeight 금지 규칙은 앱 폰트용이다 — 시스템 글꼴은 굵기를 합성할 수 있다).
  */
 export default function GoogleSignInButton({ disabled, onPress }: GoogleSignInButtonProps) {
   return (
@@ -27,7 +31,7 @@ export default function GoogleSignInButton({ disabled, onPress }: GoogleSignInBu
       className={`h-[40px] w-full flex-row items-center justify-center gap-[10px] rounded-[8px] border border-google-button-border bg-default-white ${disabled ? 'opacity-50' : ''}`}
     >
       <GoogleLogoIcon size={20} />
-      <Text variant="body-m" className="text-text-primary">
+      <Text className="text-body-m font-medium text-text-primary">
         Google 계정으로 로그인
       </Text>
     </Pressable>
