@@ -41,9 +41,14 @@ export default function DiaryCalendarDay({ date, state, onPress, written, select
       ) : (
         <SentimentNavIcon size={16} color={written ? theme.pink[500] : theme.default.gray} />
       )}
-      <View className={`size-[16px] items-center justify-center rounded-full ${selected ? 'bg-default-black' : ''}`}>
+      {/* 시안은 16px 동그라미지만, 기기 글자 크기를 키우면(갤럭시 1.15배 등) 두 자리가 16px 를 넘어
+          둘째 글자가 다음 줄로 밀려 잘린다 — 최소 16px 에서 글자만큼 넓어지게 한다(그땐 고른 날 표시가 살짝 가로로 긴 알약 모양). */}
+      <View
+        className={`min-h-[16px] min-w-[16px] items-center justify-center rounded-full ${selected ? 'bg-default-black' : ''}`}
+      >
         <Text
           variant="body-xxs"
+          numberOfLines={1}
           className={`text-center ${selected ? 'text-default-white' : isOtherMonth ? 'text-default-gray' : 'text-text-primary'}`}
         >
           {date ? String(date.day).padStart(2, '0') : ''}
