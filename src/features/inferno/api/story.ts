@@ -25,8 +25,10 @@ import type {
   AiStoryLikeHttpRequest,
   AiEpisodeUnlockView,
   AiStoryStateView,
+  StoryTokenBalance,
 } from '@/src/features/inferno/api/story-types';
 import type { ChoicePoint } from '@/src/features/inferno/types/story';
+import type { UnlockPayment } from '@/src/features/inferno/utils/unlock-options';
 import {
   mapChoiceOutcome,
   mapEpisodeContent,
@@ -287,16 +289,24 @@ export async function saveStoryAge(age: number): Promise<void> {
  * 오류: 409 `INSUFFICIENT_TOKENS`(토큰 부족), `PREVIOUS_EPISODE_NOT_COMPLETED`, `STORY_NOT_STARTED`,
  * `SEASON_COMPLETED`.
  */
-export async function unlockEpisode(order: number) {
+export async function unlockEpisode(order: number, payWith: UnlockPayment) {
   const view = isStoryMock
-    ? await mockUnlockEpisode(order)
-    : (await httpClient.post<ApiEnvelope<AiEpisodeUnlockView>>(`${episodePath(order)}/unlock`)).data
-        .data;
-  return { unlocked: view.unlocked === true, tokenBalance: view.tokenBalance };
+    ? await mockUnlockEpisode(order, payWith)
+    : (
+        await httpClient.post<ApiEnvelope<AiEpisodeUnlockView>>(`${episodePath(order)}/unlock`, {
+          payWith,
+        })
+      ).data.data;
+  return {
+    unlocked: view.unlocked === true,
+    tokenBalance: view.tokenBalance,
+    breadTokenBalance: view.breadTokenBalance,
+  };
 }
 
-/** 회차 열기 화면에 보여줄 보유 토큰. 목 모드면 목 서버의 토큰을 쓴다. */
-export async function getStoryTokenBalance(): Promise<number> {
+/** 회차 열기 화면에 보여줄 보유 토큰. 소금빵(무료)·식빵(유료). 목 모드면 목 서버의 값을 쓴다. */
+export async function getStoryTokenBalance(): Promise<StoryTokenBalance> {
   if (isStoryMock) return mockTokenBalance();
-  return (await getMyTokenBalance()).tokenBalance;
+  const balance = await getMyTokenBalance();
+  return { salt: balance.tokenBalance, bread: balance.breadTokenBalance ?? 0 };
 }

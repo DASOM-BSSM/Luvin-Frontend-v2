@@ -23,6 +23,8 @@ export const STORY_ERROR_CODES = [
   'EPISODE_NOT_UNLOCKED',
   /** [DRAFT] 회차를 열 토큰이 모자란다. */
   'INSUFFICIENT_TOKENS',
+  /** [DRAFT] 소금빵으로 열려는데 앞 회차를 끝낸 뒤 하루가 아직 안 지났다. */
+  'EPISODE_COOLDOWN',
 ] as const;
 
 export type StoryErrorCode = (typeof STORY_ERROR_CODES)[number];

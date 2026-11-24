@@ -14,6 +14,7 @@ import MyProfileCard from '@/src/features/home/components/my-profile-card';
 import LegalLinks from '@/src/features/legal/components/legal-links';
 import AiPersonalizationToggle from '@/src/features/my-page/components/ai-personalization-toggle';
 import { useTokenStore } from '@/src/features/luvin-hell/store/token-store';
+import useStoryTokenBalance from '@/src/features/inferno/hooks/use-story-token-balance';
 import useTokenBalance from '@/src/features/tokens/hooks/use-token-balance';
 import { useProfileSettingsStore } from '@/src/features/my-page/store/profile-settings-store';
 import { toKnownGender } from '@/src/features/my-page/utils/gender';
@@ -28,6 +29,8 @@ import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 export default function MyPageScreen() {
   const { profile } = useBreadProfile();
   const balance = useTokenStore((state) => state.balance);
+  // 식빵(유료 토큰)은 가지고 있을 때만 소금빵 옆에 같이 보여준다.
+  const breadBalance = useStoryTokenBalance().data?.bread ?? 0;
   const gender = useProfileSettingsStore((state) => state.gender);
   const myProfileQuery = useMyProfile();
   useTokenBalance();
@@ -46,6 +49,10 @@ export default function MyPageScreen() {
 
   function handleEarnTokenPress() {
     router.push('/luvin-hell');
+  }
+
+  function handleBreadShopPress() {
+    router.push('/bread-shop');
   }
 
   return (
@@ -125,7 +132,7 @@ export default function MyPageScreen() {
                 Bread_Token
               </Text>
               <Text variant="body-s" className="text-text-primary">
-                {balance} 🥐
+                {balance} 🥐{breadBalance > 0 ? ` · ${breadBalance} 🍞` : ''}
               </Text>
             </View>
             <Button
@@ -133,6 +140,12 @@ export default function MyPageScreen() {
               variant="outline"
               className="w-full"
               onPress={handleEarnTokenPress}
+            />
+            <Button
+              label="식빵 구매하기"
+              variant="outline"
+              className="w-full"
+              onPress={handleBreadShopPress}
             />
           </View>
         </View>
