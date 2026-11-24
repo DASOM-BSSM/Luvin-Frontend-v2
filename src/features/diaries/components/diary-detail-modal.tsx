@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Modal, Pressable, ScrollView, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
@@ -10,6 +10,7 @@ import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import ReactionPicker from '@/src/features/diaries/components/reaction-picker';
 import useDeleteDiary from '@/src/features/diaries/hooks/use-delete-diary';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import useReactToDiary from '@/src/features/diaries/hooks/use-react-to-diary';
 import type { DiaryFeedItem } from '@/src/features/diaries/types';
 import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
@@ -33,7 +34,9 @@ interface DiaryDetailModalProps {
 export default function DiaryDetailModal({ diary, initialMenuOpen = false, onClose }: DiaryDetailModalProps) {
   return (
     <Modal visible={diary !== undefined} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      {/* Android 도 padding 으로 피한다 — edge-to-edge(Expo 57)에서는 Modal 안의 adjustResize 가 동작하지 않아
+          behavior 를 비워 두면 키보드가 입력칸을 그대로 덮는다. */}
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
         <Pressable className="flex-1 bg-default-black/30" onPress={onClose}>
           <ScrollView
             className="flex-1"
@@ -71,8 +74,9 @@ function DiaryDetailContent({ diary, initialMenuOpen, onDeleted }: DiaryDetailCo
   const [isEditing, setIsEditing] = useState(false);
   const reactMutation = useReactToDiary();
   const deleteMutation = useDeleteDiary();
-  const me = useMyDiaryAuthor();
-  const preview = toGroupDiaryPreview(diary, me.name);
+  const me = useMyDiaryAuthor(diary.roomId);
+  const getRoomNickname = useRoomNicknames(diary.roomId);
+  const preview = toGroupDiaryPreview(diary, me.name, getRoomNickname(diary.authorId));
 
   function handleReactionPress() {
     setIsPickerOpen((open) => !open);
@@ -136,7 +140,7 @@ function DiaryDetailContent({ diary, initialMenuOpen, onDeleted }: DiaryDetailCo
           {ERROR_MESSAGES.deleteDiaryFailed}
         </Text>
       ) : null}
-      <DiaryCommentSection diaryId={diary.diaryId} />
+      <DiaryCommentSection diaryId={diary.diaryId} roomId={diary.roomId} />
     </>
   );
 }

@@ -8,11 +8,14 @@ import DiaryCommentItem from '@/src/features/diaries/components/diary-comment-it
 import useCreateComment from '@/src/features/diaries/hooks/use-create-comment';
 import useDiaryComments from '@/src/features/diaries/hooks/use-diary-comments';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
-import type { DiaryId } from '@/src/features/diaries/types';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
+import type { DiaryId, RoomId } from '@/src/features/diaries/types';
 import { COMMENT_MAX_LENGTH, selectVisibleComments } from '@/src/features/diaries/utils/comment';
 
 interface DiaryCommentSectionProps {
   diaryId: DiaryId;
+  /** 일기가 속한 그룹 — 댓글 작성자의 그룹 닉네임을 찾는 데 쓴다(LUV-121). */
+  roomId: RoomId;
 }
 
 /**
@@ -20,7 +23,7 @@ interface DiaryCommentSectionProps {
  * 댓글은 `COMMENT_MAX_LENGTH` 자까지 쓸 수 있고, 목록은 최근 `VISIBLE_COMMENT_COUNT` 개만 보여준 뒤
  * "이전 댓글 N개 더보기"로 펼친다(사용자 결정) — 댓글이 많아도 상세가 끝없이 늘어나지 않게.
  */
-export default function DiaryCommentSection({ diaryId }: DiaryCommentSectionProps) {
+export default function DiaryCommentSection({ diaryId, roomId }: DiaryCommentSectionProps) {
   const [content, setContent] = useState('');
   const [isAllCommentsShown, setIsAllCommentsShown] = useState(false);
   const commentsQuery = useDiaryComments(diaryId);
@@ -29,7 +32,8 @@ export default function DiaryCommentSection({ diaryId }: DiaryCommentSectionProp
     isAllCommentsShown,
   );
   const createCommentMutation = useCreateComment();
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(roomId);
+  const getRoomNickname = useRoomNicknames(roomId);
   const now = new Date();
 
   function handleSendSuccess() {
@@ -89,7 +93,13 @@ export default function DiaryCommentSection({ diaryId }: DiaryCommentSectionProp
             </Pressable>
           ) : null}
           {visibleComments.map((comment) => (
-            <DiaryCommentItem key={comment.id} comment={comment} now={now} myName={me.name} />
+            <DiaryCommentItem
+              key={comment.id}
+              comment={comment}
+              now={now}
+              myName={me.name}
+              groupNickname={getRoomNickname(comment.userId)}
+            />
           ))}
         </>
       )}

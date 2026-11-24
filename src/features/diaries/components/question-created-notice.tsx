@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import type { RoomQuestion } from '@/src/features/diaries/types';
 import { resolveAuthorName } from '@/src/features/diaries/utils/feed';
 import { formatHourSlotLabel } from '@/src/features/diaries/utils/question';
@@ -20,12 +21,14 @@ interface QuestionCreatedNoticeProps {
  * 이름 줄은 두지 않는다(사용자 결정). 안쪽 여백은 위아래 12 · 양옆 16(사용자 지정).
  * 이름은 실제 이름(계정 닉네임)이 아니라 빵 이름이다(사용자 결정, `resolveAuthorName`). 만든 사람이 탈퇴해
  * 닉네임이 없으면 "15:00 질문이 생성됐어요!"로 쓴다. 내가 만든 질문(`creatorId` 가 내 id)이면 내 빵 이름을 쓴다.
+ * 그룹에서 정한 닉네임이 있으면 빵 이름 대신 쓴다(LUV-121).
  * 시각은 서버가 정한 칸(`slotStartAt`)이다.
  * "N분 전"은 사용자 요청으로 뺐다.
  * 글자 크기(Body/S 14px)는 반응 알림과 같다(사용자 결정).
  */
 export default function QuestionCreatedNotice({ question, onPress }: QuestionCreatedNoticeProps) {
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(question.roomId);
+  const getRoomNickname = useRoomNicknames(question.roomId);
   const myId = useMyProfile().data?.memberId;
   const slotLabel = formatHourSlotLabel(question.slotStartAt);
   const creatorName =
@@ -37,6 +40,7 @@ export default function QuestionCreatedNotice({ question, onPress }: QuestionCre
             nickname: question.creatorNickname,
             breadName: question.creatorBreadName,
             breadType: question.creatorBreadType,
+            groupNickname: getRoomNickname(question.creatorId),
           },
           me.name,
         );

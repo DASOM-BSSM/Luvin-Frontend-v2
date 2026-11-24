@@ -3,6 +3,7 @@ import { useState } from 'react';
 import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import ReactionPicker from '@/src/features/diaries/components/reaction-picker';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import useReactToDiary from '@/src/features/diaries/hooks/use-react-to-diary';
 import type { DiaryFeedItem } from '@/src/features/diaries/types';
 import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
@@ -20,7 +21,8 @@ interface ReactableDiaryCardProps {
 export default function ReactableDiaryCard({ diary, onMorePress }: ReactableDiaryCardProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const reactMutation = useReactToDiary();
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(diary.roomId);
+  const getRoomNickname = useRoomNicknames(diary.roomId);
 
   function handleReactionPress() {
     setIsPickerOpen((open) => !open);
@@ -32,7 +34,7 @@ export default function ReactableDiaryCard({ diary, onMorePress }: ReactableDiar
 
   return (
     <GroupDiaryCard
-      diary={toGroupDiaryPreview(diary, me.name)}
+      diary={toGroupDiaryPreview(diary, me.name, getRoomNickname(diary.authorId))}
       onMorePress={onMorePress}
       onReactionPress={handleReactionPress}
       reactionDisabled={reactMutation.isPending}

@@ -64,15 +64,21 @@ export interface AuthorNameSource {
   breadName: string | null;
   /** 서버 빵 타입 id(예: "salt_bread"). 모르면 null. */
   breadType: string | null;
+  /** 이 그룹에서 정한 닉네임(LUV-121, `useRoomNicknames`). 없으면 null · 생략. */
+  groupNickname?: string | null;
 }
 
 /**
  * 감정일기에서 보여줄 작성자 이름 — 실제 이름(계정 닉네임)은 러빈지옥 회차 밖에서는 쓰지 않고 늘 빵 이름이다
  * (사용자 결정). 나는 내 빵 이름, 남은 서버가 정한 빵 이름(`breadName`, 모든 화면에서 같은 이름)이다.
  * 빵 이름이 없으면 탈퇴한 사람은 `UNKNOWN_AUTHOR_NAME`, 그 밖에는 빵 종류("카스테라") · `UNKNOWN_BREAD_NAME`.
+ *
+ * LUV-121: 그룹에서 정한 닉네임(`groupNickname`)이 있으면 빵 이름보다 먼저 쓴다(사용자 결정 — 그룹 안 모든 곳).
+ * 계정 닉네임은 여전히 쓰지 않는다. 나는 `myName`(`useMyDiaryAuthor(roomId)` — 내 그룹 닉네임 · 빵 이름)이다.
  */
 export function resolveAuthorName(source: AuthorNameSource, myName: string): string {
   if (source.isMine) return myName;
+  if (source.groupNickname) return source.groupNickname;
   if (source.breadName) return source.breadName;
   if (source.nickname === null) return UNKNOWN_AUTHOR_NAME;
   const type = toBreadType(source.breadType);
@@ -87,8 +93,13 @@ export function toPlainBreadName(doughName: string): string {
 /**
  * 피드 항목을 그룹 일기 카드 값으로 바꾼다. 감정일기 홈 · 감정일기 메인이 같이 쓴다.
  * `myName` 은 내 빵 이름(`useMyDiaryAuthor`) — 내 일기면 그 이름을 쓴다.
+ * `groupNickname` 은 작성자가 이 그룹에서 정한 닉네임(LUV-121) — 있으면 빵 이름 대신 쓴다.
  */
-export function toGroupDiaryPreview(item: DiaryFeedItem, myName: string): GroupDiaryPreview {
+export function toGroupDiaryPreview(
+  item: DiaryFeedItem,
+  myName: string,
+  groupNickname: string | null = null,
+): GroupDiaryPreview {
   return {
     author: {
       type: toBreadType(item.authorBreadType),
@@ -99,6 +110,7 @@ export function toGroupDiaryPreview(item: DiaryFeedItem, myName: string): GroupD
           nickname: item.authorNickname,
           breadName: item.authorBreadName,
           breadType: item.authorBreadType,
+          groupNickname,
         },
         myName,
       ),

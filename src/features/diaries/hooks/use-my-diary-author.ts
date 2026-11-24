@@ -1,5 +1,6 @@
 import useBreadProfile from '@/src/features/bread/hooks/use-bread-profile';
-import type { GroupDiaryAuthor } from '@/src/features/diaries/types';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
+import type { GroupDiaryAuthor, RoomId } from '@/src/features/diaries/types';
 import { toPlainBreadName, UNKNOWN_BREAD_NAME } from '@/src/features/diaries/utils/feed';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
 
@@ -9,15 +10,19 @@ import useMyProfile from '@/src/features/user/hooks/use-my-profile';
  *
  * 이름은 서버가 정한 내 빵 이름(`GET /api/users/me` 의 `breadName`)이다 — 다른 사람에게 보이는 내 이름과 같다.
  * 그걸 받기 전 · 없을 때만 이 기기가 만든 반죽 이름에서 "반죽"을 뗀 값을 쓴다.
+ *
+ * LUV-121: 이 그룹(`roomId`)에서 정한 내 닉네임이 있으면 빵 이름 대신 그걸 쓴다 — 다른 사람에게 보이는
+ * 내 이름도 그 닉네임이다.
  */
-export default function useMyDiaryAuthor(): GroupDiaryAuthor {
+export default function useMyDiaryAuthor(roomId: RoomId | undefined): GroupDiaryAuthor {
   const { profile } = useBreadProfile();
-  const serverBreadName = useMyProfile().data?.breadName;
+  const myProfile = useMyProfile().data;
+  const getRoomNickname = useRoomNicknames(roomId);
   const localName = profile ? toPlainBreadName(profile.name) : UNKNOWN_BREAD_NAME;
 
   return {
     type: profile?.type ?? null,
     state: 'dough',
-    name: serverBreadName ?? localName,
+    name: getRoomNickname(myProfile?.memberId) ?? myProfile?.breadName ?? localName,
   };
 }
