@@ -22,6 +22,10 @@ interface InfernoNoticeModalProps {
   onClose: () => void;
   /** 버튼을 눌렀을 때. */
   onActionPress: () => void;
+  /** 두 번째 버튼 문구. 넘기면 첫 버튼 아래에 같은 모양 버튼이 하나 더 붙는다. 예: "그룹 참여하기". */
+  secondaryActionLabel?: string;
+  /** 두 번째 버튼을 눌렀을 때. `secondaryActionLabel` 과 같이 넘긴다. */
+  onSecondaryActionPress?: () => void;
   /**
    * 모달이 완전히 닫힌 뒤(iOS 는 닫힘 애니메이션까지 끝난 뒤) 한 번 불린다. 화면 방향이 바뀌는 곳으로
    * 이동할 때는 여기서 이동해야 한다 — iOS 는 모달이 닫히는 중에 보낸 회전 요청을 무시한다.
@@ -51,6 +55,8 @@ export default function InfernoNoticeModal({
   actionLabel = ACTION_LABEL,
   onClose,
   onActionPress,
+  secondaryActionLabel,
+  onSecondaryActionPress,
   onDismiss,
   isActionDisabled = false,
 }: InfernoNoticeModalProps) {
@@ -88,7 +94,12 @@ export default function InfernoNoticeModal({
                 </Text>
               ) : null}
             </View>
-            <Button label={actionLabel} variant="notice" disabled={isActionDisabled} onPress={onActionPress} />
+            <View className="w-full flex-col gap-[8px]">
+              <Button label={actionLabel} variant="notice" disabled={isActionDisabled} onPress={onActionPress} />
+              {secondaryActionLabel && onSecondaryActionPress ? (
+                <Button label={secondaryActionLabel} variant="notice" onPress={onSecondaryActionPress} />
+              ) : null}
+            </View>
           </View>
         </Pressable>
       </Pressable>

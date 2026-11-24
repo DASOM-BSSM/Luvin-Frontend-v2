@@ -36,6 +36,7 @@ export default function DiariesHomeScreen() {
   /**
    * 그룹 없이 "감정일기 시작하기"를 누르면 그룹을 먼저 만들라는 모달을 띄운다. Figma `모달`(7873:4580) —
    * NOTICE · 문구 · 버튼 하나라서 같은 모양인 `InfernoNoticeModal` 에 문구만 바꿔 넣는다.
+   * 초대받은 사람도 바로 들어갈 수 있게 "그룹 참여하기" 버튼을 아래에 하나 더 둔다(사용자 요청, 시안 없음).
    */
   function handleDiaryStartPress() {
     setIsStartModalVisible(true);
@@ -48,6 +49,11 @@ export default function DiariesHomeScreen() {
   function handleStartModalAction() {
     setIsStartModalVisible(false);
     router.push('/diaries/groups/create');
+  }
+
+  function handleStartModalJoinPress() {
+    setIsStartModalVisible(false);
+    router.push('/diaries/groups/join');
   }
 
   return (
@@ -73,8 +79,10 @@ export default function DiariesHomeScreen() {
         visible={isStartModalVisible}
         message="그룹을 먼저 만들어주세요!"
         actionLabel="그룹 만들기"
+        secondaryActionLabel="그룹 참여하기"
         onClose={handleStartModalClose}
         onActionPress={handleStartModalAction}
+        onSecondaryActionPress={handleStartModalJoinPress}
       />
     </Screen>
   );
