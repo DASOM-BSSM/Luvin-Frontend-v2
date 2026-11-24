@@ -12,7 +12,11 @@ export type AiSceneBlockView = Schemas['AiSceneBlockView'];
 export type AiStoryMessageView = Schemas['AiStoryMessageView'];
 export type AiStoryParticipantView = Schemas['AiStoryParticipantView'];
 export type AiStageIntroView = Schemas['AiStageIntroView'];
-export type AiStoryStateView = Schemas['AiStoryStateView'];
+/**
+ * [DRAFT] `story.nextUnlockAt`(소금빵으로 다음 회차를 열 수 있는 시각, ISO)은 아직 openapi 에 없다 —
+ * 서버 계약이 정해지면 `Schemas` 쪽으로 옮긴다. 없으면 대기 없음으로 읽는다.
+ */
+export type AiStoryStateView = Schemas['AiStoryStateView'] & { nextUnlockAt?: string };
 export type AiChoiceOutcomeView = Schemas['AiChoiceOutcomeView'];
 /** 선택 결과 장면 생성 상태(`choice`). 선택 응답과 `GET /me` 의 `story.choice` 에 온다. */
 export type AiChoiceStatusView = Schemas['AiChoiceStatusView'];
@@ -34,7 +38,16 @@ export type PartnerLetterView = Schemas['PartnerLetterView'];
  * 시즌 상태는 들어 있지 않아서 열고 나면 `GET /me` 를 다시 받는다. 열어 둔 회차(`unlockedOrders`)와
  * 토큰 수(`episodeTokenCost`)는 `AiStoryStateView` 에 있다.
  */
-export type AiEpisodeUnlockView = Schemas['AiEpisodeUnlockView'];
+export type AiEpisodeUnlockView = Schemas['AiEpisodeUnlockView'] & {
+  /** [DRAFT] 열고 난 뒤 식빵 잔액. 서버가 아직 안 주면 없다. */
+  breadTokenBalance?: number;
+};
+
+/** 회차 열기 화면의 보유 토큰. salt = 소금빵(무료), bread = 식빵(유료). */
+export interface StoryTokenBalance {
+  salt: number;
+  bread: number;
+}
 
 /** 409 `INSUFFICIENT_TOKENS` 의 `data`: 필요한 토큰(`required`)과 지금 잔액(`balance`). */
 export type AiInsufficientTokensView = Schemas['AiInsufficientTokensView'];

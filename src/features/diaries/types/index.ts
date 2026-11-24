@@ -110,7 +110,7 @@ export interface DiaryRoomMember {
   id: UserId;
   name: string;
   email?: string;
-  /** 이 방에서 쓰는 닉네임. 화면에는 쓰지 않고 빵 이름을 쓴다(사용자 결정). */
+  /** 이 방에서 쓰는 닉네임. 감정일기 그룹 안 이름은 이걸 먼저 쓰고, 없으면 빵 이름이다(LUV-121). */
   nickname?: string | null;
   role?: 'OWNER' | 'MEMBER';
   /** 빵 이름(예: "쫀쫀한 카스테라"). 설문 전이면 null. */

@@ -27,6 +27,8 @@ export const ERROR_MESSAGES = {
   completeFailed: '회차를 마치지 못했어요. 다시 시도해주세요',
   reportLoadFailed: '최종 리포트를 불러오지 못했어요. 다시 시도해주세요',
   insufficientTokens: '토큰이 부족해요',
+  insufficientSaltBread: '소금빵이 부족해요',
+  insufficientBread: '식빵이 부족해요',
   unlockFailed: '회차를 열지 못했어요. 다시 시도해주세요',
   /** 그룹 참여 — 초대코드가 틀렸을 때(서버 404). */
   invalidInviteCode: '초대코드가 올바르지 않아요. 다시 확인해주세요',

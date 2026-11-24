@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Calendar, type DateData } from 'react-native-calendars';
 
 import AngleUpIcon from '@/src/assets/icons/AngleUpIcon';
+import DraggableSheet from '@/src/components/ui/draggable-sheet';
 import Text from '@/src/components/ui/text';
 import { ERROR_MESSAGES } from '@/src/constants/error-messages';
 import DiaryCalendarDay, { type DiaryCalendarDayProps } from '@/src/features/diaries/components/diary-calendar-day';
@@ -76,59 +77,50 @@ export default function DiaryCalendarSheet({ visible, onClose, onDateSelect }: D
   }
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-default-black/30" onPress={onClose}>
-        {/* 안쪽을 눌렀을 때 닫히지 않도록 이벤트를 여기서 멈춘다. */}
-        <Pressable className="w-full flex-col items-start gap-[12px] rounded-t-[8px] bg-default-white px-[20px] pb-[20px] pt-[10px]">
-          <View className="w-full items-center">
-            <View className="h-[2px] w-[60px] rounded-full bg-text-muted" />
-          </View>
-
-          <View className="w-full flex-row items-center justify-between">
-            <Text variant="body-xs" className="text-text-primary">
-              {formatYearMonth(visibleMonth)}
-            </Text>
-            <View className="flex-row items-center gap-[8px]">
-              <Pressable accessibilityRole="button" accessibilityLabel="이전 달" hitSlop={8} onPress={handlePrevPress}>
-                <View className="-rotate-90">
-                  <AngleUpIcon />
-                </View>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="다음 달" hitSlop={8} onPress={handleNextPress}>
-                <View className="rotate-90">
-                  <AngleUpIcon />
-                </View>
-              </Pressable>
+    <DraggableSheet visible={visible} onClose={onClose}>
+      <View className="w-full flex-row items-center justify-between">
+        <Text variant="body-xs" className="text-text-primary">
+          {formatYearMonth(visibleMonth)}
+        </Text>
+        <View className="flex-row items-center gap-[8px]">
+          <Pressable accessibilityRole="button" accessibilityLabel="이전 달" hitSlop={8} onPress={handlePrevPress}>
+            <View className="-rotate-90">
+              <AngleUpIcon />
             </View>
-          </View>
+          </Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel="다음 달" hitSlop={8} onPress={handleNextPress}>
+            <View className="rotate-90">
+              <AngleUpIcon />
+            </View>
+          </Pressable>
+        </View>
+      </View>
 
-          {calendarQuery.isError ? (
-            <Pressable accessibilityRole="button" onPress={handleRetryPress}>
-              <Text variant="body-xxs" className="text-state-error">
-                {ERROR_MESSAGES.diaryCalendarFailed}
-              </Text>
-            </Pressable>
-          ) : null}
-
-          <View className="w-full flex-row items-center justify-around">
-            {WEEKDAY_LABELS.map((label) => (
-              <Text key={label} variant="body-xxs" className="text-center text-text-primary">
-                {label}
-              </Text>
-            ))}
-          </View>
-
-          <View className="w-full">
-            <Calendar
-              key={visibleMonth}
-              current={visibleMonth}
-              firstDay={0}
-              customHeader={EmptyHeader}
-              dayComponent={renderDay}
-            />
-          </View>
+      {calendarQuery.isError ? (
+        <Pressable accessibilityRole="button" onPress={handleRetryPress}>
+          <Text variant="body-xxs" className="text-state-error">
+            {ERROR_MESSAGES.diaryCalendarFailed}
+          </Text>
         </Pressable>
-      </Pressable>
-    </Modal>
+      ) : null}
+
+      <View className="w-full flex-row items-center justify-around">
+        {WEEKDAY_LABELS.map((label) => (
+          <Text key={label} variant="body-xxs" className="text-center text-text-primary">
+            {label}
+          </Text>
+        ))}
+      </View>
+
+      <View className="w-full">
+        <Calendar
+          key={visibleMonth}
+          current={visibleMonth}
+          firstDay={0}
+          customHeader={EmptyHeader}
+          dayComponent={renderDay}
+        />
+      </View>
+    </DraggableSheet>
   );
 }

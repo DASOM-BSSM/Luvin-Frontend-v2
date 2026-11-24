@@ -2,6 +2,7 @@ import { Pressable } from 'react-native';
 
 import Text from '@/src/components/ui/text';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import type { DiaryRecentReaction, RoomId } from '@/src/features/diaries/types';
 import { resolveAuthorName, toDisplayEmoji, UNKNOWN_BREAD_NAME } from '@/src/features/diaries/utils/feed';
 import useMyProfile from '@/src/features/user/hooks/use-my-profile';
@@ -23,7 +24,8 @@ interface RecentReactionNoticeProps {
  * 반응이 없을 때 무엇을 대신 보여줄지는 `GroupFeedNotice` 가 정한다.
  */
 export default function RecentReactionNotice({ reaction, onPress }: RecentReactionNoticeProps) {
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(reaction.roomId);
+  const getRoomNickname = useRoomNicknames(reaction.roomId);
   const myId = useMyProfile().data?.memberId;
 
   const reactorName = resolveAuthorName(
@@ -32,13 +34,14 @@ export default function RecentReactionNotice({ reaction, onPress }: RecentReacti
       nickname: reaction.reactorBreadName ?? '',
       breadName: reaction.reactorBreadName,
       breadType: reaction.reactorBreadType,
+      groupNickname: getRoomNickname(reaction.reactorId),
     },
     me.name,
   );
   const authorName =
     myId !== undefined && reaction.diaryAuthorId === myId
       ? me.name
-      : (reaction.diaryAuthorBreadName ?? UNKNOWN_BREAD_NAME);
+      : (getRoomNickname(reaction.diaryAuthorId) ?? reaction.diaryAuthorBreadName ?? UNKNOWN_BREAD_NAME);
 
   function handlePress() {
     onPress(reaction.roomId);

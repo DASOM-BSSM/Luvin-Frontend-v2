@@ -15,6 +15,7 @@ import LoadingScreen from "@/src/components/loading-screen";
 import theme from "@/src/constants/theme";
 import { getAccessToken } from "@/src/features/auth/lib/token-storage";
 import { useAuthStore } from "@/src/features/auth/store/auth-store";
+import EpisodeUnlockNotifier from "@/src/features/inferno/components/episode-unlock-notifier";
 import PartnerLetterModal from "@/src/features/inferno/components/partner-letter-modal";
 import useLandscapeRoutes from "@/src/hooks/use-landscape-routes";
 import QueryProvider from "@/src/providers/query-provider";
@@ -125,6 +126,8 @@ export default function RootLayout() {
         />
         {/* 회차 쪽지. 안 읽은 쪽지가 있으면 어느 화면이든 가장 먼저 뜬다(use-partner-letter). */}
         <PartnerLetterModal />
+        {/* 다음 회차가 열리는 시각에 로컬 알림을 건다. 알림을 누르면 그 회차로 들어간다. */}
+        <EpisodeUnlockNotifier />
       </QueryProvider>
     </GestureHandlerRootView>
   );

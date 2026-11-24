@@ -14,6 +14,7 @@ import Text from "@/src/components/ui/text";
 import { okMallangBStyle } from "@/src/constants/typography";
 import { sceneColors } from "@/src/features/luvin-hell/constants/scene-colors";
 import { useTokenStore } from "@/src/features/luvin-hell/store/token-store";
+import useStoryTokenBalance from "@/src/features/inferno/hooks/use-story-token-balance";
 import useTokenBalance from "@/src/features/tokens/hooks/use-token-balance";
 import SeasonHistoryList from "@/src/features/oven/components/season-history-list";
 
@@ -216,8 +217,15 @@ function BreadBakingPreviewCard({ showLabel }: BreadBakingPreviewCardProps) {
 export default function OvenScreen() {
   const balance = useTokenStore((state) => state.balance);
   useTokenBalance();
+  const tokens = useStoryTokenBalance();
+  // 식빵(유료 토큰)은 가지고 있을 때만 소금빵 옆에 같이 보여준다.
+  const breadBalance = tokens.data?.bread ?? 0;
   const [dinoPreviewLabelShown, setDinoPreviewLabelShown] = useState(false);
   const [bakingPreviewLabelShown, setBakingPreviewLabelShown] = useState(false);
+
+  function handleBreadShopNavigate() {
+    router.push("/bread-shop");
+  }
 
   function handleMiniGameNavigate() {
     router.push("/luvin-hell");
@@ -230,14 +238,22 @@ export default function OvenScreen() {
         contentContainerClassName="flex-col gap-[40px] px-[30px] pb-[24px] pt-[26px]"
         showsVerticalScrollIndicator={false}
       >
-        <View className="w-full flex-row items-center justify-between">
+        {/* 식빵까지 붙으면 폰 폭에 안 들어가서, 좁으면 토큰 줄이 로고 아래로 내려가게 wrap 한다. */}
+        <View className="w-full flex-row flex-wrap items-center justify-between gap-[8px]">
           {/* Figma "Luvin's Inferno"(6263:5926): 24px, pink-500 위 pink-200 테두리 ~1px —
               감정일기 홈 "Luvin EmoDi"와 같은 값이라 `display.logo` 토큰으로 올렸다(§8). */}
           <Text variant="display-logo">Luvin’s Inferno</Text>
           {/* Figma 에서 이 줄만 변수 바인딩 없이 #000000 이라 default/black 토큰으로 맞췄다(bread.tsx와 동일 패턴). */}
-          <Text variant="body-xs" className="text-default-black">
-            나의 토큰: 🥐x{balance}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="식빵 구매하러 가기"
+            onPress={handleBreadShopNavigate}
+          >
+            <Text variant="body-xs" className="text-default-black">
+              나의 토큰: 🥐x{tokens.data?.salt ?? balance}
+              {breadBalance > 0 ? ` 🍞x${breadBalance}` : ''}
+            </Text>
+          </Pressable>
         </View>
 
         <View className="w-full flex-col items-start gap-[12px]">

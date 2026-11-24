@@ -25,9 +25,13 @@ const POLL_INTERVAL_MS = 2000;
 const POLL_LIMIT_MS = 240000;
 
 export class EpisodeGenerationFailedError extends Error {
-  constructor() {
-    super('Episode generation failed');
+  /** 서버가 알려 준 실패 이유. 화면에는 보이지 않고, 오류 로그로 원인을 찾을 때 쓴다. */
+  readonly errorCode: string | null;
+
+  constructor(errorCode: string | null = null) {
+    super(`Episode generation failed (${errorCode ?? 'unknown'})`);
     this.name = 'EpisodeGenerationFailedError';
+    this.errorCode = errorCode;
   }
 }
 
@@ -56,7 +60,7 @@ export default function useEpisodeContent(order: number, enabled = true) {
       // 타임아웃이 났다(실서버 로그, 5화 09:08·11:47).
       if (content.status === 'failed') {
         waitingSince.current = null;
-        throw new EpisodeGenerationFailedError();
+        throw new EpisodeGenerationFailedError(content.errorCode);
       }
       if (content.status === 'generating') {
         if (content.blocks.length > receivedBlocks.current) waitingSince.current = Date.now();
