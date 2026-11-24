@@ -271,6 +271,7 @@ export function mapStoryState(
     })),
     unlockedOrders: view?.unlockedOrders ?? [],
     episodeTokenCost: view?.episodeTokenCost ?? null,
+    nextUnlockAt: view?.nextUnlockAt ?? null,
     completion:
       view?.completion?.order !== undefined && view.completion.status
         ? {

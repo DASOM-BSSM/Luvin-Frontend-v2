@@ -40,7 +40,9 @@ import type {
   AiStoryStateView,
   AiEpisodeUnlockView,
   PartnerLetterView,
+  StoryTokenBalance,
 } from '@/src/features/inferno/api/story-types';
+import type { UnlockPayment } from '@/src/features/inferno/utils/unlock-options';
 import type { AiReportView } from '@/src/features/inferno/api/ai-season-types';
 import type { InfernoParticipant } from '@/src/features/inferno/types';
 import type {
@@ -53,8 +55,14 @@ import type { SeasonSetting } from '@/src/features/inferno/types/story';
 import { applyChoice, resolveChoice } from '@/src/features/inferno/api/mocks/mock-choice-rules';
 
 const MOCK_DELAY_MS = 300;
-/** 목 서버가 정한 회차 열기 비용. 실제 값은 서버가 `episodeTokenCost` 로 준다. */
-const MOCK_EPISODE_TOKEN_COST = 1;
+/** 목 서버가 정한 회차 열기 비용(소금빵·식빵 모두). 실제 값은 서버가 `episodeTokenCost` 로 준다. */
+const MOCK_EPISODE_TOKEN_COST = 5;
+/**
+ * 앞 회차를 끝낸 뒤 소금빵으로 다음 회차를 열 수 있기까지의 대기. 기본 하루(발표용으로 3일에서 줄임).
+ * `EXPO_PUBLIC_MOCK_COOLDOWN_SECONDS` 로 줄여 기다린 뒤 열기까지 기기에서 확인할 수 있다.
+ */
+const MOCK_COOLDOWN_MS = (parseNumber(process.env.EXPO_PUBLIC_MOCK_COOLDOWN_SECONDS) ?? 24 * 60 * 60) * 1000;
+const DEFAULT_MOCK_BREAD_TOKENS = 0;
 const MOCK_FREE_ORDERS = [1, 2, 3];
 const DEFAULT_MOCK_TOKENS = 3;
 const LAST_ORDER = 10;
@@ -75,7 +83,12 @@ interface MockServer {
   likes: string[];
   feedbacks: AiStoryFeedbackView[];
   unlocked: number[];
+  /** 소금빵(무료 토큰). */
   tokens: number;
+  /** 식빵(유료 토큰). */
+  breadTokens: number;
+  /** 마지막으로 회차를 끝낸 시각. 소금빵으로 다음 회차를 여는 하루 대기의 기준. */
+  lastCompletedAt: number | null;
   /** 회차를 끝낼 때마다 한 통씩 쌓이는 쪽지. 계약 v5 처럼 `partnerName` 을 채운다. */
   letters: PartnerLetterView[];
   readLetterIds: number[];
@@ -119,6 +132,9 @@ function initialMockServer(): MockServer {
   feedbacks: [],
   unlocked: MOCK_ALL_FREE ? [...ALL_ORDERS] : [...MOCK_FREE_ORDERS],
   tokens: parseNumber(process.env.EXPO_PUBLIC_MOCK_TOKENS) ?? DEFAULT_MOCK_TOKENS,
+  breadTokens: parseNumber(process.env.EXPO_PUBLIC_MOCK_BREAD_TOKENS) ?? DEFAULT_MOCK_BREAD_TOKENS,
+  // 앞 회차를 막 끝낸 것으로 시작해서 하루 대기가 바로 걸린다.
+  lastCompletedAt: MOCK_START_ORDER > 1 ? Date.now() : null,
   letters: [],
   readLetterIds: [],
   };
@@ -245,6 +261,15 @@ function statusText(mockId: string): string {
   return picks.length > 0 ? '친해짐' : '알아가는 중';
 }
 
+/** 다음 회차가 소금빵으로 열릴 시각. 무료·이미 연 회차거나 대기가 끝났으면 null. */
+function nextUnlockAt(): string | null {
+  if (server.lastCompletedAt === null) return null;
+  const next = Math.max(0, ...server.completed) + 1;
+  if (next > LAST_ORDER || server.unlocked.includes(next)) return null;
+  const at = server.lastCompletedAt + MOCK_COOLDOWN_MS;
+  return at > Date.now() ? new Date(at).toISOString() : null;
+}
+
 function storyState(): AiStoryStateView {
   const confession = server.season.choices.find((choice) => choice.pointId === 3);
   return {
@@ -262,6 +287,7 @@ function storyState(): AiStoryStateView {
     })),
     unlockedOrders: [...server.unlocked].sort((a, b) => a - b),
     episodeTokenCost: MOCK_EPISODE_TOKEN_COST,
+    nextUnlockAt: nextUnlockAt() ?? undefined,
     breads: SCENE_CAST.filter((person) => !person.isMine).map((person) => ({
       breadId: uuidFor(person.id),
       name: person.name,
@@ -358,6 +384,7 @@ export async function mockCompleteEpisode(order: number): Promise<AiStoryStateVi
     throw mockError(409, 'CHOICE_REQUIRED');
   if (!server.completed.includes(order)) {
     server.completed.push(order);
+    server.lastCompletedAt = Date.now();
     server.letters.push(mockLetter(order));
   }
   return storyState();
@@ -409,20 +436,30 @@ export function setMockAge(age: number) {
 }
 
 /** `POST .../episodes/{order}/unlock`. 이미 열었거나 무료 회차면 토큰을 쓰지 않는다. */
-export async function mockUnlockEpisode(order: number): Promise<AiEpisodeUnlockView> {
+export async function mockUnlockEpisode(
+  order: number,
+  payWith: UnlockPayment,
+): Promise<AiEpisodeUnlockView> {
   await wait();
   if (order < 1 || order > LAST_ORDER) throw mockError(400, null);
   if (!server.unlocked.includes(order)) {
-    if (server.tokens < MOCK_EPISODE_TOKEN_COST) throw mockError(409, 'INSUFFICIENT_TOKENS');
-    server.tokens -= MOCK_EPISODE_TOKEN_COST;
+    if (payWith === 'BREAD') {
+      // 식빵은 하루 대기를 무시하고 바로 연다.
+      if (server.breadTokens < MOCK_EPISODE_TOKEN_COST) throw mockError(409, 'INSUFFICIENT_TOKENS');
+      server.breadTokens -= MOCK_EPISODE_TOKEN_COST;
+    } else {
+      if (nextUnlockAt() !== null) throw mockError(409, 'EPISODE_COOLDOWN');
+      if (server.tokens < MOCK_EPISODE_TOKEN_COST) throw mockError(409, 'INSUFFICIENT_TOKENS');
+      server.tokens -= MOCK_EPISODE_TOKEN_COST;
+    }
     server.unlocked.push(order);
   }
-  return { order, unlocked: true, tokenBalance: server.tokens };
+  return { order, unlocked: true, tokenBalance: server.tokens, breadTokenBalance: server.breadTokens };
 }
 
-/** 목 모드의 보유 토큰. 회차 열기 화면이 보여준다. */
-export function mockTokenBalance(): number {
-  return server.tokens;
+/** 목 모드의 보유 토큰(소금빵·식빵). 회차 열기 화면이 보여준다. */
+export function mockTokenBalance(): StoryTokenBalance {
+  return { salt: server.tokens, bread: server.breadTokens };
 }
 
 /** 회차 쪽지를 보내는 빵: 연애 흐름이면 상대, 아니면 친구. */

@@ -43,6 +43,7 @@ Detailed rules live in skills under `.claude/skills/` (typography/Ok Mallang B, 
 | Native UI | `@expo/ui`, `expo-glass-effect` — prefer over reimplementing native looks |
 | Auth | Google (`@react-native-google-signin`) and Apple (`expo-apple-authentication`); no separate sign-up |
 | Deep linking | `expo-linking`, scheme `luvinfrontendv2` |
+| Notifications | `expo-notifications` — local scheduled notifications only (episode unlock); no remote push yet |
 
 `app.json` enables `experiments.typedRoutes` and `experiments.reactCompiler`:
 

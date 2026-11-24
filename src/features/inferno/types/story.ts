@@ -128,6 +128,8 @@ export interface StoryState {
   unlockedOrders: number[];
   /** [DRAFT] 4화 이상을 처음 열 때 드는 토큰 수(서버 값). 아직 모르면 null. */
   episodeTokenCost: number | null;
+  /** [DRAFT] 소금빵으로 다음 회차를 열 수 있는 시각(ISO). 앞 회차를 끝낸 뒤 하루. 대기가 없으면 null. */
+  nextUnlockAt: string | null;
   /** 서버가 정리 중인 회차 완료(비동기). 끝나면 null 이 되고 completedOrders 에 들어간다. */
   completion: StoryCompletion | null;
 }

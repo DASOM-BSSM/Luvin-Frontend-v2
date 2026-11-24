@@ -53,7 +53,8 @@
         {
           "hidden": true
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
