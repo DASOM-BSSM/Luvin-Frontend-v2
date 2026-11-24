@@ -4,6 +4,7 @@ import Text from '@/src/components/ui/text';
 import MyAnswerEditor from '@/src/features/diaries/components/my-answer-editor';
 import QuestionAnswerItem from '@/src/features/diaries/components/question-answer-item';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import type { RoomQuestion } from '@/src/features/diaries/types';
 import { resolveAuthorName } from '@/src/features/diaries/utils/feed';
 import { formatHourSlotLabel, formatQuestionDate } from '@/src/features/diaries/utils/question';
@@ -23,7 +24,8 @@ interface QuestionAnswersModalProps {
  */
 export default function QuestionAnswersModal({ question, onClose }: QuestionAnswersModalProps) {
   const now = new Date();
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(question?.roomId);
+  const getRoomNickname = useRoomNicknames(question?.roomId);
   const otherAnswers = (question?.answers ?? []).filter(
     ({ answerId }) => answerId !== question?.myAnswer?.answerId,
   );
@@ -67,6 +69,7 @@ export default function QuestionAnswersModal({ question, onClose }: QuestionAnsw
                             nickname: answer.authorNickname,
                             breadName: answer.authorBreadName,
                             breadType: answer.authorBreadType,
+                            groupNickname: getRoomNickname(answer.authorId),
                           },
                           me.name,
                         )}

@@ -10,6 +10,7 @@ import GroupDiaryCard from '@/src/features/diaries/components/group-diary-card';
 import ReactionPicker from '@/src/features/diaries/components/reaction-picker';
 import useDeleteDiary from '@/src/features/diaries/hooks/use-delete-diary';
 import useMyDiaryAuthor from '@/src/features/diaries/hooks/use-my-diary-author';
+import useRoomNicknames from '@/src/features/diaries/hooks/use-room-nicknames';
 import useReactToDiary from '@/src/features/diaries/hooks/use-react-to-diary';
 import type { DiaryFeedItem } from '@/src/features/diaries/types';
 import { toGroupDiaryPreview } from '@/src/features/diaries/utils/feed';
@@ -73,8 +74,9 @@ function DiaryDetailContent({ diary, initialMenuOpen, onDeleted }: DiaryDetailCo
   const [isEditing, setIsEditing] = useState(false);
   const reactMutation = useReactToDiary();
   const deleteMutation = useDeleteDiary();
-  const me = useMyDiaryAuthor();
-  const preview = toGroupDiaryPreview(diary, me.name);
+  const me = useMyDiaryAuthor(diary.roomId);
+  const getRoomNickname = useRoomNicknames(diary.roomId);
+  const preview = toGroupDiaryPreview(diary, me.name, getRoomNickname(diary.authorId));
 
   function handleReactionPress() {
     setIsPickerOpen((open) => !open);
@@ -138,7 +140,7 @@ function DiaryDetailContent({ diary, initialMenuOpen, onDeleted }: DiaryDetailCo
           {ERROR_MESSAGES.deleteDiaryFailed}
         </Text>
       ) : null}
-      <DiaryCommentSection diaryId={diary.diaryId} />
+      <DiaryCommentSection diaryId={diary.diaryId} roomId={diary.roomId} />
     </>
   );
 }

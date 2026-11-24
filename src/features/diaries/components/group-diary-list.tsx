@@ -67,7 +67,7 @@ export default function GroupDiaryList({
   canWrite,
   onWritePress, onDiaryPress, onDiaryMorePress }: GroupDiaryListProps) {
   const diariesQuery = useRoomDiaries(roomId);
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(roomId);
   const [tickedAt, setTickedAt] = useState(Date.now);
   // 화면을 오래 켜 둔 채 새 일기를 쓰면 tickedAt 이 옛 시각이라, 목록을 받은 시각까지 당겨 쓴다.
   const now = Math.max(tickedAt, diariesQuery.dataUpdatedAt);
