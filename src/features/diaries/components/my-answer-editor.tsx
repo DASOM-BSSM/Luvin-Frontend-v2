@@ -26,7 +26,7 @@ interface MyAnswerEditorProps {
  */
 export default function MyAnswerEditor({ question, now }: MyAnswerEditorProps) {
   const { roomId, questionId, myAnswer } = question;
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(roomId);
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState('');
   const answerMutation = useAnswerQuestion();

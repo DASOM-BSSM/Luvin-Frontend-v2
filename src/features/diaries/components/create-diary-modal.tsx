@@ -14,7 +14,7 @@ interface CreateDiaryModalProps {
 
 /** 일기 올리기 = `WriteDiaryModal` + `POST /api/diaries`. 성공하면 닫고 피드는 훅이 다시 불러온다. */
 export default function CreateDiaryModal({ visible, roomId, lastWrittenAt, onClose }: CreateDiaryModalProps) {
-  const author = useMyDiaryAuthor();
+  const author = useMyDiaryAuthor(roomId);
   const createDiaryMutation = useCreateDiary();
 
   function handleClose() {

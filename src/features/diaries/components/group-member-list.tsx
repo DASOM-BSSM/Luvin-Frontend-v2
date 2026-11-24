@@ -23,6 +23,7 @@ interface MemberRowProps {
 /**
  * 이 그룹에서 쓰는 닉네임. 닉네임이 없는 멤버(닉네임이 생기기 전에 들어온 멤버)는 계정 이름.
  * 지금은 빵 이름이다 — 실제 이름 · 닉네임은 감정일기에서 쓰지 않는다(사용자 결정, `resolveAuthorName`).
+ * LUV-121: 그룹 닉네임이 있으면 그걸 쓰고, 없을 때만 빵 이름이다.
  */
 const getMemberDisplayName = (member: DiaryRoomMember) =>
   resolveAuthorName(
@@ -31,6 +32,7 @@ const getMemberDisplayName = (member: DiaryRoomMember) =>
       nickname: member.name,
       breadName: member.breadName ?? null,
       breadType: member.breadType ?? null,
+      groupNickname: member.nickname?.trim() || null,
     },
     '',
   );

@@ -28,7 +28,7 @@ export default function HomeQuestionBlock({
   diaries,
   lastWrittenAt,
 }: HomeQuestionBlockProps) {
-  const me = useMyDiaryAuthor();
+  const me = useMyDiaryAuthor(question.roomId);
   const [isWriteOpen, setIsWriteOpen] = useState(false);
   const canWrite = getCooldownSeconds(lastWrittenAt, Date.now()) === 0;
 
