@@ -47,6 +47,7 @@ export default function GroupFeedSection({
   const {
     shortcutRoomId,
     shortcutRoomName,
+    selectRoom,
     announcedQuestion,
     slotDiaries,
     hasNoRoom,
@@ -65,6 +66,8 @@ export default function GroupFeedSection({
   }
   const shellProps = {
     roomName: shortcutRoomName,
+    roomId: shortcutRoomId,
+    onRoomSelect: selectRoom,
     shortcutLabel,
     onShortcutPress: handleShortcutPress,
     onReactionPress: onGroupPress,
