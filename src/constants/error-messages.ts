@@ -60,4 +60,6 @@ export const ERROR_MESSAGES = {
   balanceGameAlreadyAnswered: '이미 고른 질문이에요',
   /** 밸런스 게임 고르기 실패 — 위 경우가 아닌 나머지. */
   answerBalanceGameFailed: '답을 보내지 못했어요. 다시 눌러 주세요',
+  /** 그룹 바꾸기 시트 — 내 그룹 목록을 받지 못했을 때. */
+  myRoomsFailed: '그룹 목록을 불러오지 못했어요. 다시 시도',
 };

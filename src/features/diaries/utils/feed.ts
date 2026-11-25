@@ -2,7 +2,9 @@ import type {
   DiaryCalendarDay,
   DiaryFeedItem,
   DiaryReactionResult,
+  DiaryRoom,
   GroupDiaryPreview,
+  RoomId,
 } from '@/src/features/diaries/types';
 import { getBreadFlavorName } from '@/src/features/inferno/utils/character-persona';
 import { toBreadType } from '@/src/features/survey/utils/map-bread-result';
@@ -221,4 +223,20 @@ export function toYearMonth(dateString: string): { year: number; month: number }
 /** 달력 API 응답 → 내가 일기를 쓴 날짜("YYYY-MM-DD", 한국 시간) 모음. */
 export function toWrittenDates(days: DiaryCalendarDay[]): Set<string> {
   return new Set(days.map((day) => day.date));
+}
+
+/**
+ * 홈 "쫀쫀한 조합들"이 보여줄 그룹. 사용자가 고른 그룹이 아직 내 그룹이면 그 그룹, 아니면(고른 적 없음 ·
+ * 나갔음 · 지워짐) 가장 최근 일기의 그룹, 일기도 없으면 내 첫 번째 그룹(최근 참여 순)이다.
+ * 그룹 목록을 아직 모르면 고른 그룹이 남아 있는지 알 수 없어 피드 · 목록 순서만 본다.
+ */
+export function pickShortcutRoomId(
+  rooms: DiaryRoom[] | undefined,
+  feed: DiaryFeedItem[] | undefined,
+  selectedRoomId: RoomId | undefined,
+): RoomId | undefined {
+  if (selectedRoomId !== undefined && rooms?.some((room) => room.id === selectedRoomId)) {
+    return selectedRoomId;
+  }
+  return feed?.[0]?.roomId ?? rooms?.[0]?.id;
 }
