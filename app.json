@@ -54,7 +54,8 @@
           "hidden": true
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "./plugins/with-fixed-font-scale"
     ],
     "experiments": {
       "typedRoutes": true,
