@@ -54,6 +54,7 @@
           "hidden": true
         }
       ],
+      "./plugins/with-no-push-entitlement",
       "expo-notifications",
       "./plugins/with-fixed-font-scale"
     ],
